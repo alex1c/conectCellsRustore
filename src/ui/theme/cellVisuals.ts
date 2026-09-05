@@ -1,43 +1,40 @@
 /**
- * Simple visual mapping from cell value → colors.
- * Original palette — not copied from any third-party game.
+ * Visual styles for hex cell values — original palette, not a clone.
  */
 
-export interface CellVisual {
-	background: string
+export interface HexCellVisual {
+	fill: string
 	text: string
-	border: string
+	stroke: string
 }
 
-const LEVELS: Record<number, CellVisual> = {
-	1: { background: '#dbeafe', text: '#1e3a8a', border: '#93c5fd' },
-	2: { background: '#c7f0db', text: '#14532d', border: '#86efac' },
-	3: { background: '#fef3c7', text: '#92400e', border: '#fcd34d' },
-	4: { background: '#ffedd5', text: '#9a3412', border: '#fdba74' },
-	5: { background: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
-	6: { background: '#e0e7ff', text: '#3730a3', border: '#a5b4fc' },
-	7: { background: '#ede9fe', text: '#5b21b6', border: '#c4b5fd' },
-	8: { background: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+const TABLE: Record<number, HexCellVisual> = {
+	1: { fill: '#7dd3c0', text: '#0f3d36', stroke: '#2a9d8f' },
+	2: { fill: '#8ec5f0', text: '#0c3a5c', stroke: '#3a86c8' },
+	4: { fill: '#f2c14e', text: '#5c3d00', stroke: '#d4a017' },
+	8: { fill: '#f0a07a', text: '#5c2208', stroke: '#e07a4f' },
+	16: { fill: '#d4a5ff', text: '#3b1d5c', stroke: '#9b5de5' },
+	32: { fill: '#ff8fab', text: '#5c1030', stroke: '#f15bb5' },
+	64: { fill: '#80ed99', text: '#0b3d1f', stroke: '#38b000' },
+	128: { fill: '#90e0ef', text: '#023e4d', stroke: '#00b4d8' },
+	256: { fill: '#ffd6a5', text: '#5c3a00', stroke: '#fb8500' },
 }
 
-const HIGH: CellVisual = {
-	background: '#1f2937',
-	text: '#f9fafb',
-	border: '#fbbf24',
+const HIGH: HexCellVisual = {
+	fill: '#1d3557',
+	text: '#f1faee',
+	stroke: '#e9c46a',
 }
 
-const EMPTY: CellVisual = {
-	background: '#eef2f7',
+const EMPTY: HexCellVisual = {
+	fill: '#e9eef5',
 	text: '#94a3b8',
-	border: '#d8e0ea',
+	stroke: '#c9d4e3',
 }
 
-export function getCellVisual (value: number | null): CellVisual {
+export function getHexCellVisual (value: number | null): HexCellVisual {
 	if (value === null) {
 		return EMPTY
 	}
-	if (value >= 8) {
-		return LEVELS[8] ?? HIGH
-	}
-	return LEVELS[value] ?? HIGH
+	return TABLE[value] ?? HIGH
 }

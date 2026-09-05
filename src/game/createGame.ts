@@ -1,16 +1,11 @@
 /**
- * Build GameState instances from explicit boards (fixtures / screenshot seeds).
+ * Build custom hex GameState instances for fixtures / tests.
  */
 
 import { cloneBoard, findLargestValue } from './board'
 import { hasLegalMoves } from './moves'
 import { createRng } from './random'
-import {
-	cloneRules,
-	DEFAULT_RULE_PRESET,
-	getRulesForPreset,
-	type RulePresetId,
-} from './rules'
+import { cloneHexRules, getDefaultHexRules } from './rules'
 import type { Board, GameState } from './types'
 
 export interface CustomGameOptions {
@@ -18,24 +13,22 @@ export interface CustomGameOptions {
 	seed?: number
 	score?: number
 	moveCount?: number
-	largestChain?: number
+	largestGroup?: number
+	largestCascade?: number
+	merges?: number
+	cascades?: number
 	rngState?: number
-	rulesetId?: RulePresetId
 }
 
-/**
- * Create a serializable GameState from a hand-crafted board.
- * Status is derived from whether legal moves exist.
- */
 export function createGameFromBoard (options: CustomGameOptions): GameState {
-	const seed = options.seed ?? 1
+	const rules = getDefaultHexRules()
 	const board = cloneBoard(options.board)
-	const rulesetId = options.rulesetId ?? DEFAULT_RULE_PRESET
-	const rules = getRulesForPreset(rulesetId)
-	// Fixtures may use a board sized for the preset; keep rules.boardSize aligned.
-	rules.boardSize = board.length
-	const largestValue = findLargestValue(board)
-	const status = hasLegalMoves(board) ? 'playing' : 'game_over'
+	rules.boardRows = board.length
+	rules.boardCols = board[0]?.length ?? rules.boardCols
+	const seed = options.seed ?? 1
+	const status = hasLegalMoves(board, rules.boardCols, rules.boardRows)
+		? 'playing'
+		: 'game_over'
 	return {
 		board,
 		score: options.score ?? 0,
@@ -43,17 +36,35 @@ export function createGameFromBoard (options: CustomGameOptions): GameState {
 		status,
 		rng: createRng(options.rngState ?? seed),
 		seed,
-		largestValue,
-		largestChain: options.largestChain ?? 0,
-		rulesetId,
-		rules: cloneRules(rules),
+		largestValue: findLargestValue(board),
+		largestGroup: options.largestGroup ?? 0,
+		largestCascade: options.largestCascade ?? 0,
+		merges: options.merges ?? 0,
+		cascades: options.cascades ?? 0,
+		cellsSpawned: 0,
+		cellsCleared: 0,
+		rules: cloneHexRules(rules),
 		undoSnapshot: null,
 	}
 }
 
-/** Non-cryptographic seed for fresh player runs (outside engine RNG). */
 export function createFreshSeed (): number {
 	const timePart = Date.now() >>> 0
 	const noise = Math.floor(Math.random() * 0xffffffff) >>> 0
 	return (timePart ^ noise) >>> 0
+}
+
+export function createEmptyHexBoard (
+	cols = getDefaultHexRules().boardCols,
+	rows = getDefaultHexRules().boardRows,
+): Board {
+	const board: Board = []
+	for (let row = 0; row < rows; row += 1) {
+		const line: (number | null)[] = []
+		for (let col = 0; col < cols; col += 1) {
+			line.push(null)
+		}
+		board.push(line)
+	}
+	return board
 }

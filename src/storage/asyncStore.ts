@@ -13,7 +13,7 @@ import {
 	type SavedGamePayload,
 } from './savedGame'
 
-export const STORAGE_KEY_SAVED_GAME = 'connectcells.savedGame.v1'
+export const STORAGE_KEY_SAVED_GAME = 'connectcells.savedGame.v3'
 export const STORAGE_KEY_BEST_SCORE = 'connectcells.bestScore.v1'
 
 export async function loadSavedGame (): Promise<SavedGamePayload | null> {

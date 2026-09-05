@@ -1,86 +1,57 @@
 /**
- * Deterministic spawn helpers driven by GameRules.
+ * Post-turn spawn — only when the move produced no merges.
+ * Spawn never auto-triggers merge resolution.
  */
 
 import { listEmptyPositions, setCell } from './board'
-import { nextFloat, nextIndex } from './random'
-import type { GameRules } from './rules'
-import type { Board, GameEvent, RngState } from './types'
+import { nextIndex } from './random'
+import type { HexRules } from './rules'
+import { pickWeighted, pickWeightedCount } from './weighted'
+import type { Board, GameEvent, Position, RngState } from './types'
 
 export interface SpawnResult {
 	board: Board
-	events: GameEvent[]
 	rng: RngState
-	didSpawn: boolean
+	events: GameEvent[]
+	spawned: number
 }
 
-/** Pick a spawn value from weighted table using RNG. */
-export function pickSpawnValue (rng: RngState, rules: GameRules): number {
-	const weights = rules.spawnWeights
-	if (weights.length === 0) {
-		return rules.minCellValue
-	}
-	let total = 0
-	for (const entry of weights) {
-		total += entry.weight
-	}
-	if (total <= 0) {
-		return weights[0]?.value ?? rules.minCellValue
-	}
-	let roll = nextFloat(rng) * total
-	for (const entry of weights) {
-		roll -= entry.weight
-		if (roll < 0) {
-			return entry.value
-		}
-	}
-	return weights[weights.length - 1]?.value ?? rules.minCellValue
-}
-
-/**
- * Maybe spawn one cell after settle.
- * Always consumes one RNG float for the probability check when empties exist,
- * then additional RNG only if a spawn occurs.
- */
-export function maybeSpawn (
+export function spawnCells (
 	board: Board,
 	rng: RngState,
-	rules: GameRules,
+	rules: HexRules,
 ): SpawnResult {
 	const empties = listEmptyPositions(board)
 	if (empties.length === 0) {
-		return { board, events: [], rng, didSpawn: false }
+		return { board, rng, events: [], spawned: 0 }
 	}
 
-	// Skip the probability roll when spawn is guaranteed / impossible so
-	// baseline (probability 1) keeps the Phase 2 RNG stream.
-	if (rules.spawnProbability <= 0) {
-		return { board, events: [], rng, didSpawn: false }
-	}
-	if (rules.spawnProbability < 1) {
-		const roll = nextFloat(rng)
-		if (roll >= rules.spawnProbability) {
-			return { board, events: [], rng, didSpawn: false }
+	const desired = pickWeightedCount(rng, rules.spawnCountWeights)
+	const count = Math.min(desired, empties.length)
+	const remaining = empties.slice()
+	const placed: { position: Position; value: number }[] = []
+	let nextBoard = board
+
+	for (let i = 0; i < count; i += 1) {
+		const index = nextIndex(rng, remaining.length)
+		const position = remaining[index]
+		if (!position) {
+			break
 		}
+		remaining.splice(index, 1)
+		const value = pickWeighted(rng, rules.spawnValueWeights)
+		nextBoard = setCell(nextBoard, position, value)
+		placed.push({ position: { ...position }, value })
 	}
 
-	const index = nextIndex(rng, empties.length)
-	const spawnAt = empties[index]
-	if (!spawnAt) {
-		return { board, events: [], rng, didSpawn: false }
+	if (placed.length === 0) {
+		return { board: nextBoard, rng, events: [], spawned: 0 }
 	}
-	const value = pickSpawnValue(rng, rules)
-	const nextBoard = setCell(board, spawnAt, value)
+
 	return {
 		board: nextBoard,
 		rng,
-		didSpawn: true,
-		events: [
-			{
-				type: 'SPAWN',
-				position: { ...spawnAt },
-				value,
-			},
-		],
+		spawned: placed.length,
+		events: [{ type: 'SPAWN', cells: placed }],
 	}
 }

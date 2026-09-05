@@ -1,20 +1,18 @@
 /**
- * Game screen controller: engine I/O, persistence, selection, event playback.
- * Engine remains the sole source of truth for rules; UI only renders results.
+ * Hex game controller: selection, path moves, event playback, persistence.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
+	ANIM_STEP_MS,
 	applyMove,
 	canUndo,
-	CHAIN_STEP_DELAY_MS,
 	cloneBoard,
-	DEFAULT_RULE_PRESET,
 	createFreshSeed,
 	createInitialGame,
 	getCell,
-	getLegalMoves,
+	getReachableFrom,
 	isGameOver,
 	loadFixture,
 	samePosition,
@@ -25,7 +23,6 @@ import {
 	type GameState,
 	type Move,
 	type Position,
-	type RulePresetId,
 } from '../../game'
 import {
 	loadBestScore,
@@ -46,18 +43,7 @@ function posKey (position: Position): string {
 }
 
 function delay (ms: number): Promise<void> {
-	return new Promise((resolve) => {
-		setTimeout(resolve, ms)
-	})
-}
-
-function legalTargetsFor (
-	state: GameState,
-	selected: Position,
-): Position[] {
-	return getLegalMoves(state)
-		.filter((move) => samePosition(move.from, selected))
-		.map((move) => move.to)
+	return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export interface GameController {
@@ -67,15 +53,13 @@ export interface GameController {
 	bestScore: number
 	gainFlash: number | null
 	selected: Position | null
-	legalTargets: Position[]
 	pulseKey: string | null
-	spawnKey: string | null
-	shakeKey: string | null
+	spawnKeys: string[]
 	inputLocked: boolean
 	showGameOver: boolean
 	showRestartDialog: boolean
 	canUndoMove: boolean
-	activePreset: RulePresetId
+	pathBlockedFlash: boolean
 	lastMetrics: RunMetrics | null
 	handleCellPress: (position: Position) => void
 	handleUndo: () => void
@@ -83,14 +67,14 @@ export interface GameController {
 	cancelRestart: () => void
 	confirmRestart: () => void
 	handleLoadFixture: (id: FixtureId) => void
-	handleSelectPreset: (id: RulePresetId) => void
+	handleNewSeed: () => void
 	handleNewGameFromOver: () => void
 }
 
 export function useGameController (): GameController {
 	const [ready, setReady] = useState(false)
 	const [game, setGame] = useState<GameState>(() =>
-		createInitialGame(createFreshSeed(), DEFAULT_RULE_PRESET),
+		createInitialGame(createFreshSeed()),
 	)
 	const [displayBoard, setDisplayBoard] = useState<Board>(() =>
 		cloneBoard(game.board),
@@ -100,10 +84,10 @@ export function useGameController (): GameController {
 	const [gainFlash, setGainFlash] = useState<number | null>(null)
 	const [selected, setSelected] = useState<Position | null>(null)
 	const [pulseKey, setPulseKey] = useState<string | null>(null)
-	const [spawnKey, setSpawnKey] = useState<string | null>(null)
-	const [shakeKey, setShakeKey] = useState<string | null>(null)
+	const [spawnKeys, setSpawnKeys] = useState<string[]>([])
 	const [inputLocked, setInputLocked] = useState(false)
 	const [showRestartDialog, setShowRestartDialog] = useState(false)
+	const [pathBlockedFlash, setPathBlockedFlash] = useState(false)
 	const [lastMetrics, setLastMetrics] = useState<RunMetrics | null>(null)
 	const [startedAt, setStartedAt] = useState(() => Date.now())
 
@@ -126,12 +110,12 @@ export function useGameController (): GameController {
 			const nextBest = await saveBestScore(state.score)
 			setBestScore(nextBest)
 		} catch {
-			// Persistence failures must not crash gameplay.
+			// Persistence must not crash gameplay.
 		}
 	}, [])
 
 	const beginNewGame = useCallback(
-		(next: GameState, options?: { persistClearMetrics?: boolean }) => {
+		(next: GameState) => {
 			animTokenRef.current += 1
 			metricsLoggedRef.current = false
 			const now = Date.now()
@@ -140,14 +124,12 @@ export function useGameController (): GameController {
 			syncDisplay(next)
 			setSelected(null)
 			setPulseKey(null)
-			setSpawnKey(null)
-			setShakeKey(null)
+			setSpawnKeys([])
 			setGainFlash(null)
 			setInputLocked(false)
 			setShowRestartDialog(false)
-			if (options?.persistClearMetrics !== false) {
-				void persist(next, now)
-			}
+			setPathBlockedFlash(false)
+			void persist(next, now)
 		},
 		[persist, syncDisplay],
 	)
@@ -168,10 +150,7 @@ export function useGameController (): GameController {
 				setGame(saved.game)
 				syncDisplay(saved.game)
 			} else {
-				const fresh = createInitialGame(
-					createFreshSeed(),
-					DEFAULT_RULE_PRESET,
-				)
+				const fresh = createInitialGame(createFreshSeed())
 				const now = Date.now()
 				setStartedAt(now)
 				setGame(fresh)
@@ -191,20 +170,17 @@ export function useGameController (): GameController {
 				return
 			}
 			metricsLoggedRef.current = true
-			const durationSec = Math.max(
-				0,
-				Math.round((Date.now() - started) / 1000),
-			)
 			const metrics: RunMetrics = {
 				moves: state.moveCount,
 				finalScore: state.score,
 				largestValue: state.largestValue,
-				largestChain: state.largestChain,
-				durationSec,
+				largestGroup: state.largestGroup,
+				largestCascade: state.largestCascade,
+				durationSec: Math.max(0, Math.round((Date.now() - started) / 1000)),
 			}
 			setLastMetrics(metrics)
 			if (__DEV__) {
-				console.log('[ConnectCells] run metrics', metrics)
+				console.log('[ConnectCells] hex run', metrics)
 			}
 		},
 		[],
@@ -229,61 +205,61 @@ export function useGameController (): GameController {
 				}
 				if (event.type === 'MOVE') {
 					board = cloneBoard(board)
-					const row = board[event.from.row]
-					if (row) {
-						row[event.from.col] = null
+					const fromRow = board[event.from.row]
+					if (fromRow) {
+						fromRow[event.from.col] = null
+					}
+					const toRow = board[event.to.row]
+					if (toRow) {
+						toRow[event.to.col] = event.value
 					}
 					setDisplayBoard(board)
 					setPulseKey(posKey(event.to))
-					await delay(CHAIN_STEP_DELAY_MS)
+					await delay(ANIM_STEP_MS)
 				} else if (event.type === 'MERGE') {
 					board = cloneBoard(board)
-					const row = board[event.position.row]
-					if (row) {
-						row[event.position.col] = event.toValue
+					for (const cleared of event.cleared) {
+						const row = board[cleared.row]
+						if (row) {
+							row[cleared.col] = null
+						}
+					}
+					const resultRow = board[event.resultAt.row]
+					if (resultRow) {
+						resultRow[event.resultAt.col] = event.resultValue
 					}
 					setDisplayBoard(board)
-					setPulseKey(posKey(event.position))
-					void hapticMerge()
-					await delay(CHAIN_STEP_DELAY_MS)
-				} else if (event.type === 'CHAIN_STEP') {
-					board = cloneBoard(board)
-					const absorbedRow = board[event.absorbed.row]
-					if (absorbedRow) {
-						absorbedRow[event.absorbed.col] = null
-					}
-					const anchorRow = board[event.position.row]
-					if (anchorRow) {
-						anchorRow[event.position.col] = event.toValue
-					}
-					setDisplayBoard(board)
-					setPulseKey(posKey(event.position))
-					if (event.chainLevel >= 2) {
+					setPulseKey(posKey(event.resultAt))
+					if (event.cascadeLevel >= 2) {
 						void hapticChain()
+					} else {
+						void hapticMerge()
 					}
-					await delay(CHAIN_STEP_DELAY_MS)
+					await delay(ANIM_STEP_MS + 40)
 				} else if (event.type === 'SCORE_GAIN') {
 					score = event.total
 					setDisplayScore(score)
 					setGainFlash(event.amount)
-					await delay(120)
+					await delay(100)
 					if (animTokenRef.current === token) {
 						setGainFlash(null)
 					}
 				} else if (event.type === 'SPAWN') {
 					board = cloneBoard(board)
-					const row = board[event.position.row]
-					if (row) {
-						row[event.position.col] = event.value
+					const keys: string[] = []
+					for (const cell of event.cells) {
+						const row = board[cell.position.row]
+						if (row) {
+							row[cell.position.col] = cell.value
+						}
+						keys.push(posKey(cell.position))
 					}
 					setDisplayBoard(board)
-					setSpawnKey(posKey(event.position))
-					await delay(CHAIN_STEP_DELAY_MS)
+					setSpawnKeys(keys)
+					await delay(ANIM_STEP_MS)
 					if (animTokenRef.current === token) {
-						setSpawnKey(null)
+						setSpawnKeys([])
 					}
-				} else if (event.type === 'GAME_OVER') {
-					// Overlay is driven by final state status after playback.
 				}
 			}
 
@@ -292,7 +268,7 @@ export function useGameController (): GameController {
 			}
 			syncDisplay(finalState)
 			setPulseKey(null)
-			setSpawnKey(null)
+			setSpawnKeys([])
 			setInputLocked(false)
 			if (isGameOver(finalState)) {
 				logRunMetrics(finalState, startedAt)
@@ -309,17 +285,15 @@ export function useGameController (): GameController {
 			const result = applyMove(current, move)
 			if (!result.ok) {
 				void hapticInvalid()
-				setShakeKey(posKey(move.from))
-				await delay(120)
-				setShakeKey(null)
+				setPathBlockedFlash(true)
+				await delay(160)
+				setPathBlockedFlash(false)
 				return
 			}
-
 			setSelected(null)
 			setInputLocked(true)
 			setGame(result.state)
 			void persist(result.state, startedAt)
-
 			const token = animTokenRef.current + 1
 			animTokenRef.current = token
 			await playEvents(
@@ -344,17 +318,21 @@ export function useGameController (): GameController {
 			}
 
 			const value = getCell(current.board, position)
-			if (value === null) {
-				setSelected(null)
-				return
-			}
 
 			if (!selected) {
-				const targets = legalTargetsFor(current, position)
-				if (targets.length === 0) {
+				if (value === null) {
+					return
+				}
+				const reachable = getReachableFrom(
+					current.board,
+					position,
+					current.rules.boardCols,
+					current.rules.boardRows,
+				)
+				if (reachable.length === 0) {
 					void hapticInvalid()
-					setShakeKey(posKey(position))
-					setTimeout(() => setShakeKey(null), 140)
+					setPathBlockedFlash(true)
+					setTimeout(() => setPathBlockedFlash(false), 160)
 					return
 				}
 				void hapticSelection()
@@ -367,28 +345,23 @@ export function useGameController (): GameController {
 				return
 			}
 
-			const move: Move = { from: selected, to: position }
-			const legal = getLegalMoves(current).some(
-				(candidate) =>
-					samePosition(candidate.from, move.from) &&
-					samePosition(candidate.to, move.to),
-			)
-			if (legal) {
-				void commitMove(move)
+			if (value !== null) {
+				const reachable = getReachableFrom(
+					current.board,
+					position,
+					current.rules.boardCols,
+					current.rules.boardRows,
+				)
+				if (reachable.length > 0) {
+					void hapticSelection()
+					setSelected(position)
+					return
+				}
+				void hapticInvalid()
 				return
 			}
 
-			// Retarget selection to the newly tapped cell when possible.
-			const targets = legalTargetsFor(current, position)
-			if (targets.length > 0) {
-				void hapticSelection()
-				setSelected(position)
-				return
-			}
-
-			void hapticInvalid()
-			setShakeKey(posKey(position))
-			setTimeout(() => setShakeKey(null), 140)
+			void commitMove({ from: selected, to: position })
 		},
 		[commitMove, inputLocked, ready, selected],
 	)
@@ -408,50 +381,15 @@ export function useGameController (): GameController {
 		syncDisplay(restored)
 		setSelected(null)
 		setPulseKey(null)
-		setSpawnKey(null)
+		setSpawnKeys([])
 		setGainFlash(null)
 		setInputLocked(false)
 		void persist(restored, startedAt)
 	}, [inputLocked, persist, startedAt, syncDisplay])
 
 	const confirmRestart = useCallback(() => {
-		const next = createInitialGame(
-			createFreshSeed(),
-			gameRef.current.rulesetId,
-		)
-		beginNewGame(next)
+		beginNewGame(createInitialGame(createFreshSeed()))
 	}, [beginNewGame])
-
-	const handleSelectPreset = useCallback(
-		(id: RulePresetId) => {
-			if (!__DEV__) {
-				return
-			}
-			const next = createInitialGame(createFreshSeed(), id)
-			beginNewGame(next)
-		},
-		[beginNewGame],
-	)
-
-	const handleLoadFixture = useCallback(
-		(id: FixtureId) => {
-			if (!__DEV__) {
-				return
-			}
-			const next = loadFixture(id)
-			beginNewGame(next)
-		},
-		[beginNewGame],
-	)
-
-	const legalTargets = useMemo(() => {
-		if (!selected || inputLocked) {
-			return []
-		}
-		return legalTargetsFor(game, selected)
-	}, [game, inputLocked, selected])
-
-	const showGameOver = ready && isGameOver(game) && !inputLocked
 
 	return {
 		ready,
@@ -460,15 +398,13 @@ export function useGameController (): GameController {
 		bestScore,
 		gainFlash,
 		selected,
-		legalTargets,
 		pulseKey,
-		spawnKey,
-		shakeKey,
+		spawnKeys,
 		inputLocked,
-		showGameOver,
+		showGameOver: ready && isGameOver(game) && !inputLocked,
 		showRestartDialog,
 		canUndoMove: canUndo(game) && !inputLocked,
-		activePreset: game.rulesetId,
+		pathBlockedFlash,
 		lastMetrics,
 		handleCellPress,
 		handleUndo,
@@ -479,8 +415,16 @@ export function useGameController (): GameController {
 		},
 		cancelRestart: () => setShowRestartDialog(false),
 		confirmRestart,
-		handleLoadFixture,
-		handleSelectPreset,
+		handleLoadFixture: (id: FixtureId) => {
+			if (__DEV__) {
+				beginNewGame(loadFixture(id))
+			}
+		},
+		handleNewSeed: () => {
+			if (__DEV__) {
+				beginNewGame(createInitialGame(createFreshSeed()))
+			}
+		},
 		handleNewGameFromOver: confirmRestart,
 	}
 }

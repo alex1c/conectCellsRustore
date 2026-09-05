@@ -1,29 +1,23 @@
 /**
- * Development-only fixtures, rule presets, and run metrics.
- * Hidden unless __DEV__ is true.
+ * Compact development tools for hex fixtures (no square presets).
  */
 
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import {
-	FIXTURE_IDS,
-	RULE_PRESET_IDS,
-	type FixtureId,
-	type RulePresetId,
-} from '../../game'
+import { FIXTURE_IDS, type FixtureId } from '../../game'
 
 export interface RunMetrics {
 	moves: number
 	finalScore: number
 	largestValue: number
-	largestChain: number
+	largestGroup: number
+	largestCascade: number
 	durationSec: number | null
 }
 
 export interface DevPanelProps {
-	activePreset: RulePresetId
-	onSelectPreset: (id: RulePresetId) => void
 	onLoadFixture: (id: FixtureId) => void
+	onNewSeed: () => void
 	lastMetrics: RunMetrics | null
 }
 
@@ -32,29 +26,16 @@ export function DevPanel (props: DevPanelProps) {
 		return null
 	}
 
-	const { activePreset, onSelectPreset, onLoadFixture, lastMetrics } = props
+	const { onLoadFixture, onNewSeed, lastMetrics } = props
 
 	return (
 		<View style={styles.wrap}>
-			<Text style={styles.title}>Dev ruleset</Text>
-			<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-				<View style={styles.row}>
-					{RULE_PRESET_IDS.map((id) => {
-						const active = id === activePreset
-						return (
-							<Pressable
-								key={id}
-								style={[styles.chip, active && styles.chipActive]}
-								onPress={() => onSelectPreset(id)}
-							>
-								<Text style={styles.chipText}>{id}</Text>
-							</Pressable>
-						)
-					})}
-				</View>
-			</ScrollView>
-
-			<Text style={[styles.title, styles.titleSpaced]}>Dev fixtures</Text>
+			<View style={styles.headerRow}>
+				<Text style={styles.title}>Dev</Text>
+				<Pressable style={styles.seedBtn} onPress={onNewSeed}>
+					<Text style={styles.seedText}>New seed</Text>
+				</Pressable>
+			</View>
 			<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 				<View style={styles.row}>
 					{FIXTURE_IDS.map((id) => (
@@ -70,16 +51,14 @@ export function DevPanel (props: DevPanelProps) {
 			</ScrollView>
 			{lastMetrics ? (
 				<Text style={styles.metrics}>
-					Last run · moves {lastMetrics.moves} · score{' '}
-					{lastMetrics.finalScore} · max {lastMetrics.largestValue} ·
-					chain {lastMetrics.largestChain}
+					moves {lastMetrics.moves} · score {lastMetrics.finalScore} · max{' '}
+					{lastMetrics.largestValue} · group {lastMetrics.largestGroup} ·
+					cascade {lastMetrics.largestCascade}
 					{lastMetrics.durationSec !== null
 						? ` · ${lastMetrics.durationSec}s`
 						: ''}
 				</Text>
-			) : (
-				<Text style={styles.metrics}>Play a full run to see metrics.</Text>
-			)}
+			) : null}
 		</View>
 	)
 }
@@ -87,43 +66,52 @@ export function DevPanel (props: DevPanelProps) {
 const styles = StyleSheet.create({
 	wrap: {
 		width: '100%',
-		marginTop: 16,
-		paddingTop: 12,
+		marginTop: 8,
+		paddingTop: 8,
 		borderTopWidth: 1,
-		borderTopColor: '#dbe3ef',
+		borderTopColor: '#d5dee8',
+	},
+	headerRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 6,
 	},
 	title: {
-		fontSize: 12,
+		fontSize: 11,
 		fontWeight: '700',
 		color: '#64748b',
-		marginBottom: 8,
 		textTransform: 'uppercase',
 	},
-	titleSpaced: {
-		marginTop: 12,
-	},
-	row: {
-		flexDirection: 'row',
-		gap: 8,
-		paddingBottom: 4,
-	},
-	chip: {
-		backgroundColor: '#1e293b',
+	seedBtn: {
+		backgroundColor: '#334155',
 		paddingHorizontal: 10,
-		paddingVertical: 8,
+		paddingVertical: 6,
 		borderRadius: 8,
 	},
-	chipActive: {
-		backgroundColor: '#2563eb',
-	},
-	chipText: {
-		color: '#f8fafc',
+	seedText: {
+		color: '#fff',
 		fontSize: 12,
 		fontWeight: '600',
 	},
+	row: {
+		flexDirection: 'row',
+		gap: 6,
+	},
+	chip: {
+		backgroundColor: '#1e293b',
+		paddingHorizontal: 8,
+		paddingVertical: 6,
+		borderRadius: 8,
+	},
+	chipText: {
+		color: '#f8fafc',
+		fontSize: 11,
+		fontWeight: '600',
+	},
 	metrics: {
-		marginTop: 8,
-		fontSize: 12,
+		marginTop: 6,
+		fontSize: 11,
 		color: '#64748b',
 	},
 })

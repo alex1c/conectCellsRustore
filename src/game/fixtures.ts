@@ -1,187 +1,339 @@
 /**
- * Deterministic gameplay / screenshot fixtures.
- * Use only from development tools — not production navigation.
+ * Deterministic hex fixtures for development / screenshot foundations.
  */
 
-import { createGameFromBoard } from './createGame'
-import type { Board, Cell, GameState } from './types'
+import { createEmptyHexBoard, createGameFromBoard } from './createGame'
+import { setCell } from './board'
+import type { Board, GameState } from './types'
 
-function fill (
-	size: number,
-	factory: (row: number, col: number) => Cell,
+function boardFromSparse (
+	cells: { row: number; col: number; value: number }[],
 ): Board {
-	const board: Board = []
-	for (let row = 0; row < size; row += 1) {
-		const line: Cell[] = []
-		for (let col = 0; col < size; col += 1) {
-			line.push(factory(row, col))
-		}
-		board.push(line)
+	let board = createEmptyHexBoard()
+	for (const cell of cells) {
+		board = setCell(board, { row: cell.row, col: cell.col }, cell.value)
 	}
 	return board
 }
 
-/** Checker-ish balanced board with several merge options. */
+/** Balanced mid-game-looking field with open movement. */
 export function fixtureBalancedBoard (): GameState {
 	return createGameFromBoard({
-		seed: 1001,
-		score: 120,
-		moveCount: 4,
-		board: [
-			[1, 1, 2, 3, 1],
-			[2, 3, 1, 2, 3],
-			[1, 2, 2, 1, 2],
-			[3, 1, 3, 3, 1],
-			[2, 3, 1, 2, 2],
-		],
+		seed: 2001,
+		score: 40,
+		moveCount: 6,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 1 },
+			{ row: 1, col: 2, value: 2 },
+			{ row: 2, col: 2, value: 1 },
+			{ row: 2, col: 4, value: 2 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 4, col: 4, value: 2 },
+			{ row: 5, col: 0, value: 1 },
+			{ row: 5, col: 3, value: 2 },
+			{ row: 6, col: 1, value: 1 },
+			{ row: 6, col: 4, value: 2 },
+		]),
 	})
 }
 
-/** Two equal cells ready for a one-step merge (no chain). */
-export function fixtureSimpleMerge (): GameState {
+/** Selected piece can move into a neighboring empty hex. */
+export function fixtureSimpleMove (): GameState {
 	return createGameFromBoard({
-		seed: 1002,
-		board: [
-			[1, 1, 3, 4, 5],
-			[6, 7, 8, 9, 2],
-			[2, 3, 4, 5, 6],
-			[3, 4, 5, 6, 7],
-			[4, 5, 6, 7, 8],
-		],
+		seed: 2002,
+		board: boardFromSparse([
+			{ row: 3, col: 2, value: 1 },
+			{ row: 0, col: 0, value: 2 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 7, col: 0, value: 1 },
+			{ row: 7, col: 5, value: 1 },
+		]),
 	})
 }
 
-/** Merge of 1+1 next to a 2 → visible chain length 2. */
-export function fixtureChain2 (): GameState {
+/** Long clear corridor for pathfinding demos. */
+export function fixtureLongPath (): GameState {
 	return createGameFromBoard({
-		seed: 1003,
-		board: [
-			[1, 1, 2, 4, 5],
-			[6, 7, 8, 9, 3],
-			[2, 3, 4, 5, 6],
-			[3, 4, 5, 6, 7],
-			[4, 5, 6, 7, 8],
-		],
+		seed: 2003,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 7, col: 5, value: 2 },
+			{ row: 3, col: 5, value: 2 },
+		]),
 	})
 }
 
-/** Longer chain: 1+1 → 2 → 3 → 4. */
-export function fixtureChain3 (): GameState {
+/** Destination blocked / no path around wall of cells. */
+export function fixtureBlockedPath (): GameState {
 	return createGameFromBoard({
-		seed: 1004,
-		board: [
-			[1, 1, 2, 3, 5],
-			[6, 7, 8, 9, 4],
-			[2, 4, 5, 6, 7],
-			[3, 5, 6, 7, 8],
-			[4, 6, 7, 8, 9],
-		],
+		seed: 2004,
+		board: boardFromSparse([
+			{ row: 2, col: 1, value: 1 },
+			{ row: 1, col: 2, value: 2 },
+			{ row: 2, col: 2, value: 2 },
+			{ row: 3, col: 2, value: 2 },
+			{ row: 2, col: 3, value: 2 },
+			{ row: 1, col: 3, value: 2 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 2, col: 4, value: 1 },
+		]),
 	})
 }
 
-/** High values for visual / layout stress. */
+/** Four 1s already connected — any setup move nearby or pre-merge ready. */
+export function fixtureMerge4 (): GameState {
+	return createGameFromBoard({
+		seed: 2005,
+		board: boardFromSparse([
+			{ row: 3, col: 2, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 2, col: 2, value: 1 },
+			{ row: 0, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 2 },
+		]),
+	})
+}
+
+/** Five connected 1s. */
+export function fixtureMerge5 (): GameState {
+	return createGameFromBoard({
+		seed: 2006,
+		board: boardFromSparse([
+			{ row: 3, col: 2, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 4, col: 3, value: 1 },
+			{ row: 2, col: 2, value: 1 },
+			{ row: 0, col: 5, value: 2 },
+		]),
+	})
+}
+
+/** Six connected 2s. */
+export function fixtureMerge6 (): GameState {
+	return createGameFromBoard({
+		seed: 2007,
+		board: boardFromSparse([
+			{ row: 3, col: 2, value: 2 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 4, col: 2, value: 2 },
+			{ row: 4, col: 3, value: 2 },
+			{ row: 2, col: 2, value: 2 },
+			{ row: 2, col: 3, value: 2 },
+			{ row: 0, col: 0, value: 1 },
+		]),
+	})
+}
+
+/**
+ * Three 1s clustered; moving a fourth 1 from afar completes merge → 4.
+ * from (0,0)=1 path to (3,1) empty adjacent to the trio.
+ */
+export function fixtureMergeTo4 (): GameState {
+	return createGameFromBoard({
+		seed: 2008,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 3, col: 2, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 7, col: 5, value: 2 },
+		]),
+	})
+}
+
+/** Four 2s → result 8. */
+export function fixtureMergeTo8 (): GameState {
+	return createGameFromBoard({
+		seed: 2009,
+		board: boardFromSparse([
+			{ row: 0, col: 5, value: 2 },
+			{ row: 3, col: 2, value: 2 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 4, col: 2, value: 2 },
+			{ row: 7, col: 0, value: 1 },
+		]),
+	})
+}
+
+/** Four 4s → result 16. */
+export function fixtureMergeTo16 (): GameState {
+	return createGameFromBoard({
+		seed: 2010,
+		board: boardFromSparse([
+			{ row: 1, col: 0, value: 4 },
+			{ row: 3, col: 2, value: 4 },
+			{ row: 3, col: 3, value: 4 },
+			{ row: 4, col: 2, value: 4 },
+			{ row: 7, col: 5, value: 1 },
+		]),
+	})
+}
+
+/**
+ * Cascade2: move remote 1 into a trio of 1s adjacent to three 4s.
+ * First merge → 4, which connects with existing 4s → second merge → 16.
+ */
+export function fixtureCascade2 (): GameState {
+	return createGameFromBoard({
+		seed: 2011,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			// Trio of 1s (need one more via move into (4,2))
+			{ row: 3, col: 2, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 4, col: 3, value: 1 },
+			// Existing 4s touching (4,2) and/or the trio so the new 4 cascades.
+			{ row: 4, col: 1, value: 4 },
+			{ row: 5, col: 2, value: 4 },
+			{ row: 5, col: 1, value: 4 },
+			{ row: 7, col: 5, value: 2 },
+		]),
+	})
+}
+
+/** Cascade3 setup with stacked values ready for multi-step collapse. */
+export function fixtureCascade3 (): GameState {
+	return createGameFromBoard({
+		seed: 2012,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 4, col: 3, value: 1 },
+			{ row: 5, col: 2, value: 1 },
+			{ row: 3, col: 2, value: 4 },
+			{ row: 3, col: 3, value: 4 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 1, col: 2, value: 16 },
+			{ row: 1, col: 3, value: 16 },
+			{ row: 0, col: 2, value: 16 },
+			{ row: 7, col: 0, value: 2 },
+		]),
+	})
+}
+
+/** High values for layout / screenshot stress. */
 export function fixtureHighValues (): GameState {
 	return createGameFromBoard({
-		seed: 1005,
-		score: 9000,
+		seed: 2013,
+		score: 5000,
 		moveCount: 40,
-		largestChain: 5,
-		board: [
-			[8, 7, 6, 5, 4],
-			[7, 8, 5, 6, 3],
-			[6, 5, 9, 4, 2],
-			[5, 6, 4, 8, 7],
-			[4, 3, 2, 7, 8],
-		],
+		largestGroup: 6,
+		largestCascade: 3,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 16 },
+			{ row: 2, col: 2, value: 8 },
+			{ row: 3, col: 1, value: 32 },
+			{ row: 3, col: 3, value: 8 },
+			{ row: 4, col: 2, value: 16 },
+			{ row: 5, col: 4, value: 4 },
+			{ row: 6, col: 1, value: 2 },
+			{ row: 6, col: 3, value: 4 },
+		]),
 	})
 }
 
-/** High score presentation board with open merges. */
-export function fixtureHighScore (): GameState {
-	return createGameFromBoard({
-		seed: 1006,
-		score: 12840,
-		moveCount: 55,
-		largestChain: 4,
-		board: [
-			[4, 4, 2, 3, 1],
-			[2, 5, 5, 1, 3],
-			[1, 3, 6, 2, 4],
-			[3, 1, 2, 6, 5],
-			[2, 4, 1, 3, 2],
-		],
-	})
-}
-
-/** Only one legal pair remains — next spawn may end the run. */
+/** Dense near-lock field with little free space. */
 export function fixtureNearGameOver (): GameState {
+	let board = createEmptyHexBoard()
+	for (let row = 0; row < 8; row += 1) {
+		for (let col = 0; col < 6; col += 1) {
+			// Checker of 1/2 leaves almost no same-value hex groups of 4,
+			// but keeps a couple of empties for last moves.
+			if ((row === 3 && col === 2) || (row === 4 && col === 3)) {
+				continue
+			}
+			board = setCell(
+				board,
+				{ row, col },
+				(row + col) % 2 === 0 ? 1 : 2,
+			)
+		}
+	}
 	return createGameFromBoard({
-		seed: 1007,
-		score: 640,
-		moveCount: 18,
-		board: [
-			[1, 2, 1, 2, 1],
-			[2, 1, 2, 1, 2],
-			[1, 2, 3, 3, 1],
-			[2, 1, 2, 1, 2],
-			[1, 2, 1, 2, 1],
-		],
-	})
-}
-
-/** No legal adjacent equals — immediate game over. */
-export function fixtureGameOver (): GameState {
-	return createGameFromBoard({
-		seed: 1008,
-		score: 2100,
+		seed: 2014,
+		score: 800,
 		moveCount: 30,
-		largestChain: 3,
-		board: fill(5, (row, col) => ((row + col) % 2 === 0 ? 1 : 2)),
+		board,
 	})
 }
 
-/** Big chain setup for screenshot / animation demos. */
-export function fixtureBigChain (): GameState {
+/** Fully occupied / no movement possible. */
+export function fixtureGameOver (): GameState {
+	let board = createEmptyHexBoard()
+	for (let row = 0; row < 8; row += 1) {
+		for (let col = 0; col < 6; col += 1) {
+			board = setCell(
+				board,
+				{ row, col },
+				(row + col) % 2 === 0 ? 1 : 2,
+			)
+		}
+	}
 	return createGameFromBoard({
-		seed: 1009,
-		score: 500,
-		moveCount: 12,
-		board: [
-			[1, 1, 2, 3, 4],
-			[5, 6, 7, 8, 5],
-			[2, 3, 4, 5, 6],
-			[3, 4, 5, 6, 7],
-			[4, 5, 6, 7, 8],
-		],
+		seed: 2015,
+		score: 1200,
+		moveCount: 45,
+		board,
+	})
+}
+
+/** No-merge turn setup: isolated pieces so a move won't form a group of 4. */
+export function fixtureNoMergeSpawn (): GameState {
+	return createGameFromBoard({
+		seed: 2016,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 7, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 1 },
+			{ row: 3, col: 2, value: 1 },
+		]),
 	})
 }
 
 export type FixtureId =
 	| 'balancedBoard'
-	| 'simpleMerge'
-	| 'chain2'
-	| 'chain3'
+	| 'simpleMove'
+	| 'longPath'
+	| 'blockedPath'
+	| 'merge4'
+	| 'merge5'
+	| 'merge6'
+	| 'mergeTo4'
+	| 'mergeTo8'
+	| 'mergeTo16'
+	| 'cascade2'
+	| 'cascade3'
+	| 'highValues'
 	| 'nearGameOver'
 	| 'gameOver'
-	| 'highValues'
-	| 'highScore'
-	| 'bigChain'
+	| 'noMergeSpawn'
 
 export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	balancedBoard: fixtureBalancedBoard,
-	simpleMerge: fixtureSimpleMerge,
-	chain2: fixtureChain2,
-	chain3: fixtureChain3,
+	simpleMove: fixtureSimpleMove,
+	longPath: fixtureLongPath,
+	blockedPath: fixtureBlockedPath,
+	merge4: fixtureMerge4,
+	merge5: fixtureMerge5,
+	merge6: fixtureMerge6,
+	mergeTo4: fixtureMergeTo4,
+	mergeTo8: fixtureMergeTo8,
+	mergeTo16: fixtureMergeTo16,
+	cascade2: fixtureCascade2,
+	cascade3: fixtureCascade3,
+	highValues: fixtureHighValues,
 	nearGameOver: fixtureNearGameOver,
 	gameOver: fixtureGameOver,
-	highValues: fixtureHighValues,
-	highScore: fixtureHighScore,
-	bigChain: fixtureBigChain,
+	noMergeSpawn: fixtureNoMergeSpawn,
 }
 
 export function loadFixture (id: FixtureId): GameState {
-	const builder = FIXTURE_BUILDERS[id]
-	return builder()
+	return FIXTURE_BUILDERS[id]()
 }
 
 export const FIXTURE_IDS = Object.keys(FIXTURE_BUILDERS) as FixtureId[]

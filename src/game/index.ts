@@ -1,27 +1,20 @@
 /**
- * Public game-engine surface.
+ * Public hex game-engine surface.
  */
 
 export {
-	BOARD_SIZE,
-	CHAIN_STEP_DELAY_MS,
-	DEFAULT_RULE_PRESET,
-	MAX_INITIAL_VALUE,
-	MIN_CELL_VALUE,
+	ANIM_STEP_MS,
+	BOARD_COLS,
+	BOARD_ROWS,
+	INITIAL_CELL_COUNT,
+	MERGE_RESULT_FACTOR,
+	MERGE_THRESHOLD,
 	SAVE_SCHEMA_VERSION,
-	SCORE_BASE,
-	SPAWN_VALUE,
-} from './constants'
-
-export {
-	RULE_PRESET_IDS,
-	RULE_PRESETS,
-	cloneRules,
-	getRulesForPreset,
-	rulesEqual,
-	type GameRules,
-	type RulePresetId,
-	type SpawnWeight,
+	SPAWN_COUNT_WEIGHTS,
+	SPAWN_VALUE_WEIGHTS,
+	cloneHexRules,
+	getDefaultHexRules,
+	type HexRules,
 } from './rules'
 
 export type {
@@ -44,37 +37,47 @@ export {
 	createInitialGame,
 	deserializeGame,
 	gameStatesEqual,
-	getLegalMoves,
 	isGameOver,
 	restart,
 	serializeGame,
 	undo,
 } from './gameState'
 
-export { createFreshSeed, createGameFromBoard } from './createGame'
+export {
+	createEmptyHexBoard,
+	createFreshSeed,
+	createGameFromBoard,
+} from './createGame'
+
 export {
 	FIXTURE_BUILDERS,
 	FIXTURE_IDS,
 	loadFixture,
 	type FixtureId,
 } from './fixtures'
+
 export { isValidGameState, tryParseGameState } from './validate'
-export { pickSpawnValue } from './spawn'
-
 export {
-	selectBoardSize,
-	selectCellAt,
-	selectHasLegalMoves,
-	selectLargestChain,
-	selectLargestValue,
-	selectLegalMoves,
-	selectMoveCount,
-	selectRulesetId,
-	selectScore,
-	selectStatus,
-} from './selectors'
-
-export { isLegalMove, listLegalMoves } from './moves'
-export { scoreForStep } from './scoring'
+	getReachableFrom,
+	hasLegalMoves,
+	isLegalMove,
+	listLegalMoves,
+} from './moves'
+export { findPath, listReachableEmpty } from './pathfinding'
+export { findConnectedGroups, findMergeableGroups } from './groups'
+export { peekWouldMerge } from './merge'
 export { createRng, nextFloat, nextInt } from './random'
-export { boardSizeOf, cloneBoard, getCell, samePosition } from './board'
+export {
+	cloneBoard,
+	countOccupied,
+	getCell,
+	listEmptyPositions,
+	listOccupiedPositions,
+	setCell,
+} from './board'
+export {
+	getHexNeighbors,
+	inHexBounds,
+	positionKey,
+	samePosition,
+} from './hex'

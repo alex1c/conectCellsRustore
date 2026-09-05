@@ -1,22 +1,11 @@
 /**
- * Structural validation for persisted / fixture GameState payloads.
+ * Structural validation for hex GameState persistence.
  */
 
 import { cloneGameState } from './gameState'
-import {
-	MIN_CELL_VALUE,
-	RULE_PRESET_IDS,
-	type GameRules,
-	type RulePresetId,
-} from './rules'
-import type {
-	Board,
-	Cell,
-	GameState,
-	GameStateSnapshot,
-	Position,
-	RngState,
-} from './types'
+import { SAVE_SCHEMA_VERSION } from './rules'
+import type { HexRules } from './rules'
+import type { Board, Cell, GameState, GameStateSnapshot, RngState } from './types'
 
 function isPlainObject (value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -26,77 +15,65 @@ function isFiniteNumber (value: unknown): value is number {
 	return typeof value === 'number' && Number.isFinite(value)
 }
 
-function isRulePresetId (value: unknown): value is RulePresetId {
-	return typeof value === 'string' && (RULE_PRESET_IDS as string[]).includes(value)
-}
-
-function isRules (value: unknown): value is GameRules {
-	if (!isPlainObject(value)) {
+function isWeightList (
+	value: unknown,
+	key: 'value' | 'count',
+): boolean {
+	if (!Array.isArray(value) || value.length === 0) {
 		return false
 	}
-	if (!Number.isInteger(value.boardSize) || (value.boardSize as number) < 2) {
-		return false
-	}
-	if (!Number.isInteger(value.minCellValue) || (value.minCellValue as number) < 1) {
-		return false
-	}
-	if (
-		!Number.isInteger(value.maxInitialValue) ||
-		(value.maxInitialValue as number) < (value.minCellValue as number)
-	) {
-		return false
-	}
-	if (
-		!isFiniteNumber(value.spawnProbability) ||
-		(value.spawnProbability as number) < 0 ||
-		(value.spawnProbability as number) > 1
-	) {
-		return false
-	}
-	if (!isFiniteNumber(value.scoreBase) || (value.scoreBase as number) < 0) {
-		return false
-	}
-	if (
-		!isFiniteNumber(value.initialEmptyRatio) ||
-		(value.initialEmptyRatio as number) < 0 ||
-		(value.initialEmptyRatio as number) > 1
-	) {
-		return false
-	}
-	if (!Array.isArray(value.spawnWeights) || value.spawnWeights.length === 0) {
-		return false
-	}
-	for (const entry of value.spawnWeights) {
+	for (const entry of value) {
 		if (!isPlainObject(entry)) {
 			return false
 		}
-		if (!Number.isInteger(entry.value) || (entry.value as number) < 1) {
+		if (!isFiniteNumber(entry.weight) || entry.weight <= 0) {
 			return false
 		}
-		if (!isFiniteNumber(entry.weight) || (entry.weight as number) <= 0) {
+		if (!Number.isInteger(entry[key]) || (entry[key] as number) < 1) {
 			return false
 		}
 	}
 	return true
 }
 
-function isCell (value: unknown, minValue: number): value is Cell {
+function isRules (value: unknown): value is HexRules {
+	if (!isPlainObject(value)) {
+		return false
+	}
+	return (
+		Number.isInteger(value.boardCols) &&
+		(value.boardCols as number) >= 2 &&
+		Number.isInteger(value.boardRows) &&
+		(value.boardRows as number) >= 2 &&
+		Number.isInteger(value.mergeThreshold) &&
+		(value.mergeThreshold as number) >= 2 &&
+		Number.isInteger(value.mergeResultFactor) &&
+		(value.mergeResultFactor as number) >= 2 &&
+		Number.isInteger(value.initialCellCount) &&
+		(value.initialCellCount as number) >= 0 &&
+		isWeightList(value.spawnCountWeights, 'count') &&
+		isWeightList(value.spawnValueWeights, 'value') &&
+		isWeightList(value.initialValueWeights, 'value')
+	)
+}
+
+function isCell (value: unknown): value is Cell {
 	if (value === null) {
 		return true
 	}
-	return Number.isInteger(value) && (value as number) >= minValue
+	return Number.isInteger(value) && (value as number) >= 1
 }
 
-function isBoard (value: unknown, size: number, minValue: number): value is Board {
-	if (!Array.isArray(value) || value.length !== size) {
+function isBoard (value: unknown, cols: number, rows: number): value is Board {
+	if (!Array.isArray(value) || value.length !== rows) {
 		return false
 	}
 	for (const row of value) {
-		if (!Array.isArray(row) || row.length !== size) {
+		if (!Array.isArray(row) || row.length !== cols) {
 			return false
 		}
 		for (const cell of row) {
-			if (!isCell(cell, minValue)) {
+			if (!isCell(cell)) {
 				return false
 			}
 		}
@@ -104,46 +81,42 @@ function isBoard (value: unknown, size: number, minValue: number): value is Boar
 	return true
 }
 
-function isRngState (value: unknown): value is RngState {
+function isRng (value: unknown): value is RngState {
 	return isPlainObject(value) && isFiniteNumber(value.s)
 }
 
 function isSnapshot (value: unknown): value is GameStateSnapshot {
-	if (!isPlainObject(value)) {
+	if (!isPlainObject(value) || !isRules(value.rules)) {
 		return false
 	}
-	if (!isRulePresetId(value.rulesetId) || !isRules(value.rules)) {
-		return false
-	}
-	const size = value.rules.boardSize
-	const minValue = value.rules.minCellValue
+	const cols = value.rules.boardCols
+	const rows = value.rules.boardRows
 	return (
-		isBoard(value.board, size, minValue) &&
+		isBoard(value.board, cols, rows) &&
 		isFiniteNumber(value.score) &&
 		value.score >= 0 &&
 		Number.isInteger(value.moveCount) &&
 		(value.moveCount as number) >= 0 &&
 		(value.status === 'playing' || value.status === 'game_over') &&
-		isRngState(value.rng) &&
+		isRng(value.rng) &&
 		isFiniteNumber(value.seed) &&
 		Number.isInteger(value.largestValue) &&
-		(value.largestValue as number) >= 0 &&
-		Number.isInteger(value.largestChain) &&
-		(value.largestChain as number) >= 0
+		Number.isInteger(value.largestGroup) &&
+		Number.isInteger(value.largestCascade) &&
+		Number.isInteger(value.merges) &&
+		Number.isInteger(value.cascades) &&
+		Number.isInteger(value.cellsSpawned) &&
+		Number.isInteger(value.cellsCleared)
 	)
 }
 
-/** True when unknown JSON parses as a usable GameState. */
 export function isValidGameState (value: unknown): value is GameState {
-	if (!isPlainObject(value)) {
+	if (!isPlainObject(value) || !isRules(value.rules)) {
 		return false
 	}
-	if (!isRulePresetId(value.rulesetId) || !isRules(value.rules)) {
-		return false
-	}
-	const size = value.rules.boardSize
-	const minValue = value.rules.minCellValue ?? MIN_CELL_VALUE
-	if (!isBoard(value.board, size, minValue)) {
+	const cols = value.rules.boardCols
+	const rows = value.rules.boardRows
+	if (!isBoard(value.board, cols, rows)) {
 		return false
 	}
 	if (!isFiniteNumber(value.score) || value.score < 0) {
@@ -155,16 +128,18 @@ export function isValidGameState (value: unknown): value is GameState {
 	if (value.status !== 'playing' && value.status !== 'game_over') {
 		return false
 	}
-	if (!isRngState(value.rng)) {
+	if (!isRng(value.rng) || !isFiniteNumber(value.seed)) {
 		return false
 	}
-	if (!isFiniteNumber(value.seed)) {
-		return false
-	}
-	if (!Number.isInteger(value.largestValue) || (value.largestValue as number) < 0) {
-		return false
-	}
-	if (!Number.isInteger(value.largestChain) || (value.largestChain as number) < 0) {
+	if (
+		!Number.isInteger(value.largestValue) ||
+		!Number.isInteger(value.largestGroup) ||
+		!Number.isInteger(value.largestCascade) ||
+		!Number.isInteger(value.merges) ||
+		!Number.isInteger(value.cascades) ||
+		!Number.isInteger(value.cellsSpawned) ||
+		!Number.isInteger(value.cellsCleared)
+	) {
 		return false
 	}
 	if (value.undoSnapshot !== null && !isSnapshot(value.undoSnapshot)) {
@@ -173,10 +148,6 @@ export function isValidGameState (value: unknown): value is GameState {
 	return true
 }
 
-/**
- * Parse and clone a GameState from unknown data.
- * Returns null when the payload is corrupt or incompatible.
- */
 export function tryParseGameState (value: unknown): GameState | null {
 	if (!isValidGameState(value)) {
 		return null
@@ -184,16 +155,4 @@ export function tryParseGameState (value: unknown): GameState | null {
 	return cloneGameState(value)
 }
 
-export function isPosition (value: unknown, size: number): value is Position {
-	if (!isPlainObject(value)) {
-		return false
-	}
-	return (
-		Number.isInteger(value.row) &&
-		Number.isInteger(value.col) &&
-		(value.row as number) >= 0 &&
-		(value.row as number) < size &&
-		(value.col as number) >= 0 &&
-		(value.col as number) < size
-	)
-}
+export { SAVE_SCHEMA_VERSION }

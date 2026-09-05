@@ -1,156 +1,78 @@
-# Connect Cells — Game Rules (Phase 1)
+# Connect Cells — Game Rules (Phase 2.6)
 
-Original internal rules for our endless merge puzzle. Not a clone of any
-existing commercial title. Prefer simplicity; mark uncertain knobs as
-**TUNABLE**.
+## History
 
-The engine implements one unambiguous behavior for every rule below.
+Phase 1–2.5 prototype used an incorrect square adjacent-merge model and was
+superseded by this hex path-merge specification.
 
 ---
 
-## Board
+## Board geometry
 
 | Rule | Value | Notes |
 |------|-------|-------|
-| Size | **5 × 5** | **TUNABLE** (4–6 are reasonable alternatives) |
-| Coordinates | `row` 0..4, `col` 0..4 | Row-major; origin top-left |
-| Cell | `null` (empty) or positive integer `value >= 1` | No zero, no negatives |
+| Size | **6 × 8** (cols × rows) | Compact phone-friendly field |
+| Topology | **Pointy-top hex**, odd-r offset coords | Six neighbors per cell |
+| Cell | `null` (empty) or positive integer value | Values grow by ×4 on merge |
 
-## Cell representation
+Coordinates: `row` 0..7, `col` 0..5. Origin top-left.
 
-- `value` is the merge level (1, 2, 3, …).
-- There is no separate “color” or type field in Phase 1 — equality is by
-  numeric value only.
-- **TUNABLE:** later themes may map values to visuals; engine stays numeric.
+## Player movement
 
-## Neighborhood
+1. Select an **occupied** cell.
+2. Choose an **empty** destination.
+3. The piece may travel any length through **contiguous empty hexes** (BFS).
+4. Occupied cells block the path (the origin is treated as empty while moving).
+5. If no path exists → move rejected (“Путь закрыт”).
 
-- Orthogonally adjacent only: up / down / left / right.
-- Diagonals are **not** neighbors.
+## Merge
 
-## Initial layout
+After a successful move settles:
 
-1. Create an empty 5×5 board.
-2. Using the deterministic RNG from the run seed, fill **every** cell with an
-   integer uniformly chosen from `1 .. MAX_INITIAL_VALUE`.
-3. `MAX_INITIAL_VALUE = 3` (**TUNABLE**).
-4. `score = 0`, `moveCount = 0`, `largestValue` = max on board,
-   `largestChain = 0`, status `playing`.
-5. If no legal move exists after generation, status becomes `game_over`
-   immediately (rare on 5×5 with values 1–3).
+1. Find connected components of equal values (hex adjacency).
+2. Any group with size **≥ 4** merges.
+3. **Result value** = `value × 4`  
+   Examples: `4×1 → 4`, `4×2 → 8`, `4×4 → 16`.
+4. **Score gain** = `value × groupSize` (pre-merge value × number of cells).
+5. Cleared cells become empty; the result is written to a deterministic anchor
+   (prefer the move destination when it belonged to the group; otherwise the
+   lexicographically smallest cell in the group).
 
-## Legal move
+Groups of 3 or fewer never merge.
 
-A move is an ordered pair of positions `(from, to)` such that:
+## Cascade
 
-1. Both positions are in bounds.
-2. Both cells are non-empty.
-3. `from` and `to` are orthogonally adjacent.
-4. `board[from] === board[to]` (same value).
+Merges resolve repeatedly until no group ≥ 4 remains. Each successive merge in
+the same turn increases `cascadeLevel` for events / haptics / metrics.
 
-UI sends this intent; the engine validates. Illegal moves leave state unchanged
-and produce no events (or a rejected result — engine returns the same state
-with an empty event list and a `ok: false` flag).
+## Spawn
 
-## Merge (primary)
+- Spawn happens **only if the turn produced no merge**.
+- Spawn **does not** auto-resolve merges.
+- Count (TUNABLE temporary weights): **1 → 25%, 2 → 50%, 3 → 25%**.
+- Values (TUNABLE): **1 → 50%, 2 → 50%**.
+- Placed into random empty cells via deterministic RNG.
 
-On a legal move with shared value `V`:
+## Initial fill
 
-1. Emit `MOVE`.
-2. Clear `from` (`null`).
-3. Set `to` to `V + 1`.
-4. Emit `MERGE` with `chainLevel = 1`, `fromValue = V`, `toValue = V + 1`.
-5. Add score for this step (see Scoring).
-
-## Chain reaction
-
-After the primary merge, while the cell at `to` is non-empty:
-
-1. Collect all orthogonally adjacent neighbors whose value equals the
-   **current** value at `to`.
-2. If none — stop chaining.
-3. If several — pick the neighbor with smallest `row`, then smallest `col`
-   (deterministic).
-4. Clear that neighbor; increment value at `to` by 1; emit `CHAIN_STEP`
-   with increasing `chainLevel` (2, 3, …).
-5. Add score for that step.
-6. Repeat from step 1 with the new value.
-
-The engine returns the **final** board plus the full ordered `events` list so
-UI can animate later without re-deriving merge logic.
-
-**TUNABLE:** whether multiple equal neighbors at one step should all merge in
-one step vs one-at-a-time. Phase 1 uses **one-at-a-time** for clearer chains.
-
-## Scoring
-
-For a merge/chain step that replaces value `V` with `V + 1` at `chainLevel` L:
-
-```
-gain = SCORE_BASE * V * L
-```
-
-- `SCORE_BASE = 10` (**TUNABLE**)
-- Score never decreases on a successful move.
-- `largestValue` updates if the cell at `to` exceeds the previous max.
-- `largestChain` updates if this move's max `chainLevel` is a new high for the run.
-
-Emit a single `SCORE_GAIN` after the move's merge+chain finishes (total gain
-for the move). Emit `NEW_BEST_CANDIDATE` when `largestValue` increases.
-
-## Spawning
-
-After merge + chain settle:
-
-1. Collect empty cells.
-2. If none — skip spawn.
-3. Otherwise pick one empty cell uniformly via RNG; place `SPAWN_VALUE`.
-4. `SPAWN_VALUE = 1` (**TUNABLE**).
-5. Emit `SPAWN`.
-6. Spawning does **not** immediately trigger extra merges; the player must
-   choose the next pair. (**TUNABLE:** auto-resolve after spawn.)
+Fresh games place `INITIAL_CELL_COUNT` cells (default **12**, TUNABLE) with
+values 1/2 using the same value weights. Remaining cells stay empty.
 
 ## Game Over
 
-After a successful move (and spawn), if `getLegalMoves(state)` is empty:
+Game Over when **no legal movement** remains:
 
-- Set `status = game_over`
-- Emit `GAME_OVER`
+- No occupied cell can reach any empty destination through empty hexes.
 
-Also possible right after initial generation if the board has no pairs.
+Merge availability alone does **not** define Game Over. A full / blocked board
+with zero reachable empties is Game Over.
 
-## Restart
+## Undo / Restart
 
-`restart(seed)` creates a fresh initial game from `seed` (may equal or differ
-from the previous run). Clears undo snapshot.
+- One Undo snapshot before each successful move (board, score, RNG, rules, stats).
+- Restart asks for confirmation; Best score is preserved.
 
-## Undo
+## Determinism
 
-- Phase 1: **one** undo slot.
-- Before applying a **successful** legal move, store a serializable snapshot of
-  the full run state (board, score, moveCount, status, RNG state, largest*,
-  seed) with `undoSnapshot: null` inside the snapshot (no nested undo history).
-- `undo` restores that snapshot exactly, including RNG — no drift.
-- After undo, undo is consumed (`undoSnapshot = null`) until the next successful
-  move.
-- Re-applying the same move after undo must yield the same resulting state.
-
-## Deterministic RNG
-
-- Engine never calls `Math.random()`.
-- Mulberry32-style PRNG; state is a single 32-bit unsigned integer field,
-  serialized with the game.
-- Same `seed` + same move sequence ⇒ same boards, scores, and events.
-
-## Serialization
-
-`GameState` is JSON-safe: plain data only (no functions, class instances, or
-React objects). Round-trip `JSON.stringify` / `JSON.parse` (+ validate) must
-restore an equivalent state for resume/tests.
-
-## Explicit non-goals (rules layer)
-
-- No diagonal merges
-- No multi-cell path drawing beyond adjacent pairs
-- No timed moves
-- No networked rules
+Engine never uses `Math.random()` for rules. Same seed + move sequence ⇒ same
+outcome. State is JSON-serializable (schema version **3**).

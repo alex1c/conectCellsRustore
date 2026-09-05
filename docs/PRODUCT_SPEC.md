@@ -1,4 +1,4 @@
-# Connect Cells — Product Specification (Phase 1)
+# Connect Cells — Product Specification
 
 Working title: **Connect Cells**. Final RuStore display name may change later;
 architecture must not depend on the marketing string.
@@ -7,70 +7,52 @@ architecture must not depend on the marketing string.
 
 This is **not** a mini-game collection.
 
-It is one high-quality endless puzzle mechanic inspired by the *general idea*
-of connecting/merging equal cells — implemented as an original game without
-copying any third-party title's name, art, assets, sounds, UI, copy, or visual
-identity.
+It is one high-quality endless puzzle with a hex path-merge core loop —
+inspired by the *general idea* of merging numbered cells, implemented as an
+original game without copying third-party names, art, assets, sounds, UI, copy,
+or visual identity.
 
 ### Core value
 
 - Extremely understandable rules
-- Very short time-to-first-fun
+- Short time-to-first-fun
 - Endless single-run sessions
-- Satisfaction from merges
-- Especially satisfying **chain reactions**
+- Satisfaction from group merges
+- Especially satisfying **cascades**
 - Desire to beat one's own high score
 
 ## Core loop
 
-The player:
+```
+select cell
+→ choose empty destination
+→ pathfinding across empty hexes
+→ merge / cascade   OR   spawn pressure
+→ plan the next move
+```
 
-1. Sees the board.
-2. Chooses a legal merge pair (two orthogonally adjacent equal cells).
-3. Creates a valid connection / merge.
-4. Equal cells combine into the next value.
-5. Sequential **chain reactions** may fire when the new value touches equals.
-6. Score increases.
-7. A new low-value cell may spawn into an empty slot.
-8. The run continues while at least one legal merge exists.
+1. Player sees the hex field.
+2. Selects an occupied cell (wobble feedback).
+3. Moves it along a free path to an empty hex.
+4. Connected groups of **≥ 4** equal values merge (`value × 4`).
+5. Cascades may continue automatically.
+6. If no merge occurred, 1–3 new cells (values 1/2) spawn.
+7. Score updates; the run continues while any piece can still move.
 
 ## Design principles
 
-- Rules must be explainable in a few seconds.
-- Outcomes of a chosen move must be predictable (no hidden randomness that
-  alters an already-resolved move).
+- Rules explainable in a few seconds.
+- Outcomes of a chosen move are predictable (no hidden post-hoc randomness).
 - Randomness (initial layout, spawns) is seeded and deterministic.
-- Chain reaction is the central emotional beat.
+- Cascade is the central emotional beat.
 - UI must not obscure the board.
-- Future ads must not break the play rhythm (integration deferred).
-- **Game engine is fully separated from UI** (pure TypeScript, no React Native
-  imports inside `src/game`).
+- Future ads must not break play rhythm (deferred).
+- **Game engine is fully separated from UI**.
 
-## V1.0 scope (future — not Phase 1)
+## V1.0 scope (future)
 
-In scope for a later v1.0:
+Endless mode, score/best, Undo, auto-save, Restart, Game Over, short onboarding,
+local stats, themes, sound/haptics, ads, AppMetrica, RuStore assets.
 
-- Endless main mode
-- Score + best score
-- Undo
-- Auto-save / resume after restart
-- Restart
-- Game Over
-- Short onboarding
-- Local statistics
-- Visual themes
-- Sound + haptic
-- Ads + AppMetrica
-- RuStore release assets
-
-Explicitly **out** of v1.0:
-
-- Accounts, cloud sync, leaderboards
-- Daily Challenge, PvP, social features
-- Dozens of modes, achievements
-- Server / backend
-
-## Phase 1 deliverable
-
-Foundation only: specs, pure engine, unit tests, minimal launch screen.
-Playable polished UI and store polish belong to later phases.
+Out of v1.0: accounts, cloud, leaderboards, Daily Challenge, PvP, achievements,
+server/backend.

@@ -1,126 +1,80 @@
 /**
- * Typed gameplay rules and named presets for Phase 2.5 tuning.
- * Production default remains baseline until human review picks a winner.
+ * Central hex gameplay rules (Phase 2.6).
+ * Spawn / initial fill knobs are TUNABLE — not final store balance.
  */
 
-export type RulePresetId =
-	| 'baseline'
-	| 'largerBoard'
-	| 'sparseSpawn'
-	| 'largerSparse'
-	| 'weightedSpawn'
-	| 'softStart'
+export const SAVE_SCHEMA_VERSION = 3
 
-/** Weight entry for deterministic weighted spawn values. */
-export interface SpawnWeight {
-	value: number
-	weight: number
-}
+/** Columns × rows for the playable hex field. */
+export const BOARD_COLS = 6
+export const BOARD_ROWS = 8
+
+/** Merge requires at least this many connected equal cells. */
+export const MERGE_THRESHOLD = 4
+
+/** Merged group becomes value * MERGE_RESULT_FACTOR. */
+export const MERGE_RESULT_FACTOR = 4
+
+/** Animation step delay (UI). */
+export const ANIM_STEP_MS = 140
 
 /**
- * Serializable rule knobs. Stored on GameState so restore/undo keep behavior.
+ * How many cells to place on a fresh board.
+ * TUNABLE — revisit after human playtest.
  */
-export interface GameRules {
-	boardSize: number
-	minCellValue: number
-	maxInitialValue: number
-	/** Probability in [0, 1] of spawning after a successful settle. */
-	spawnProbability: number
-	/** Non-empty weights; values must be >= minCellValue. */
-	spawnWeights: SpawnWeight[]
-	scoreBase: number
-	/**
-	 * Fraction of initial cells left empty (0 = fully filled).
-	 * Applied per-cell via RNG during fill.
-	 */
-	initialEmptyRatio: number
+export const INITIAL_CELL_COUNT = 12
+
+/**
+ * Weighted spawn batch size after a non-merge turn.
+ * TUNABLE temporary defaults from Phase 2.6 spec.
+ */
+export const SPAWN_COUNT_WEIGHTS: readonly { count: number; weight: number }[] = [
+	{ count: 1, weight: 25 },
+	{ count: 2, weight: 50 },
+	{ count: 3, weight: 25 },
+]
+
+/**
+ * Weighted values for each spawned cell (1 or 2 only).
+ * TUNABLE temporary defaults.
+ */
+export const SPAWN_VALUE_WEIGHTS: readonly { value: number; weight: number }[] = [
+	{ value: 1, weight: 50 },
+	{ value: 2, weight: 50 },
+]
+
+/** Initial fill uses the same value table as spawn (1/2). */
+export const INITIAL_VALUE_WEIGHTS = SPAWN_VALUE_WEIGHTS
+
+export interface HexRules {
+	boardCols: number
+	boardRows: number
+	mergeThreshold: number
+	mergeResultFactor: number
+	initialCellCount: number
+	spawnCountWeights: { count: number; weight: number }[]
+	spawnValueWeights: { value: number; weight: number }[]
+	initialValueWeights: { value: number; weight: number }[]
 }
 
-/** UI timing knob (not part of core ruleset identity). */
-export const CHAIN_STEP_DELAY_MS = 160
-
-/** Persist schema version — v2 requires ruleset on GameState. */
-export const SAVE_SCHEMA_VERSION = 2
-
-/** Production / default preset until human review decides otherwise. */
-export const DEFAULT_RULE_PRESET: RulePresetId = 'baseline'
-
-const BASELINE_RULES: GameRules = {
-	boardSize: 5,
-	minCellValue: 1,
-	maxInitialValue: 3,
-	spawnProbability: 1,
-	spawnWeights: [{ value: 1, weight: 1 }],
-	scoreBase: 10,
-	initialEmptyRatio: 0,
-}
-
-/** Named presets used by Dev switcher and benchmarks. */
-export const RULE_PRESETS: Record<RulePresetId, GameRules> = {
-	baseline: { ...BASELINE_RULES, spawnWeights: [{ value: 1, weight: 1 }] },
-	largerBoard: {
-		...BASELINE_RULES,
-		boardSize: 6,
-		spawnWeights: [{ value: 1, weight: 1 }],
-	},
-	sparseSpawn: {
-		...BASELINE_RULES,
-		spawnProbability: 0.65,
-		spawnWeights: [{ value: 1, weight: 1 }],
-	},
-	largerSparse: {
-		...BASELINE_RULES,
-		boardSize: 6,
-		spawnProbability: 0.65,
-		spawnWeights: [{ value: 1, weight: 1 }],
-	},
-	weightedSpawn: {
-		...BASELINE_RULES,
-		spawnProbability: 1,
-		spawnWeights: [
-			{ value: 1, weight: 3 },
-			{ value: 2, weight: 1 },
-		],
-	},
-	/** Extra candidate: light empties + softer spawn pressure on 5×5. */
-	softStart: {
-		...BASELINE_RULES,
-		spawnProbability: 0.7,
-		initialEmptyRatio: 0.12,
-		spawnWeights: [{ value: 1, weight: 1 }],
-	},
-}
-
-export const RULE_PRESET_IDS = Object.keys(RULE_PRESETS) as RulePresetId[]
-
-/** Resolve a preset id to a fresh rules object (cloned weights). */
-export function getRulesForPreset (id: RulePresetId): GameRules {
-	const source = RULE_PRESETS[id]
+export function getDefaultHexRules (): HexRules {
 	return {
-		...source,
-		spawnWeights: source.spawnWeights.map((entry) => ({ ...entry })),
+		boardCols: BOARD_COLS,
+		boardRows: BOARD_ROWS,
+		mergeThreshold: MERGE_THRESHOLD,
+		mergeResultFactor: MERGE_RESULT_FACTOR,
+		initialCellCount: INITIAL_CELL_COUNT,
+		spawnCountWeights: SPAWN_COUNT_WEIGHTS.map((e) => ({ ...e })),
+		spawnValueWeights: SPAWN_VALUE_WEIGHTS.map((e) => ({ ...e })),
+		initialValueWeights: INITIAL_VALUE_WEIGHTS.map((e) => ({ ...e })),
 	}
 }
 
-/** Deep-clone rules for immutable state updates. */
-export function cloneRules (rules: GameRules): GameRules {
+export function cloneHexRules (rules: HexRules): HexRules {
 	return {
 		...rules,
-		spawnWeights: rules.spawnWeights.map((entry) => ({ ...entry })),
+		spawnCountWeights: rules.spawnCountWeights.map((e) => ({ ...e })),
+		spawnValueWeights: rules.spawnValueWeights.map((e) => ({ ...e })),
+		initialValueWeights: rules.initialValueWeights.map((e) => ({ ...e })),
 	}
 }
-
-/** Structural equality for rules (used by tests / persistence checks). */
-export function rulesEqual (a: GameRules, b: GameRules): boolean {
-	return JSON.stringify(a) === JSON.stringify(b)
-}
-
-/**
- * Backward-compatible constant aliases for baseline knobs.
- * Prefer reading `state.rules` inside engine logic.
- */
-export const BOARD_SIZE = BASELINE_RULES.boardSize
-export const MAX_INITIAL_VALUE = BASELINE_RULES.maxInitialValue
-export const MIN_CELL_VALUE = BASELINE_RULES.minCellValue
-export const SPAWN_VALUE = 1
-export const SCORE_BASE = BASELINE_RULES.scoreBase

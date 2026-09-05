@@ -10,9 +10,11 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "doctor": "npx expo-doctor"
+    "test": "jest --testPathIgnorePatterns=benchmark",
+    "test:benchmark": "jest src/game/__tests__/hex.benchmark.test.ts --testTimeout=120000",
+    "test:watch": "jest --watch --testPathIgnorePatterns=benchmark",
+    "doctor": "npx expo-doctor",
+    "start:dev-client": "expo start --dev-client --port 8082"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -20,7 +22,8 @@
     "expo-haptics": "~57.0.2",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-native": "0.86.3"
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

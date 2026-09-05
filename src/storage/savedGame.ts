@@ -1,15 +1,14 @@
 /**
- * Versioned save-game payload helpers (pure, testable — no AsyncStorage).
+ * Versioned save-game payload helpers for hex state.
  */
 
-import { SAVE_SCHEMA_VERSION } from '../game/constants'
+import { SAVE_SCHEMA_VERSION } from '../game/rules'
 import { tryParseGameState } from '../game/validate'
 import type { GameState } from '../game/types'
 
 export interface SavedGamePayload {
 	version: number
 	game: GameState
-	/** Epoch ms when the run started (for rough duration metrics). */
 	startedAt?: number
 }
 
@@ -24,10 +23,6 @@ export function buildSavedGamePayload (
 	}
 }
 
-/**
- * Parse a saved payload from unknown JSON.
- * Returns null for corrupt / unsupported data so callers can fall back safely.
- */
 export function parseSavedGamePayload (raw: unknown): SavedGamePayload | null {
 	if (!raw || typeof raw !== 'object') {
 		return null
@@ -55,8 +50,7 @@ export function deserializeSavedGamePayload (
 	json: string,
 ): SavedGamePayload | null {
 	try {
-		const parsed: unknown = JSON.parse(json)
-		return parseSavedGamePayload(parsed)
+		return parseSavedGamePayload(JSON.parse(json) as unknown)
 	} catch {
 		return null
 	}
