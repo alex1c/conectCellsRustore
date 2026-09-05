@@ -24,10 +24,13 @@ npm run typecheck
 npm run lint
 npm test
 npm run test:benchmark
-npm start
-# with existing native dev client:
+# existing native dev client (always port 8082):
 npm run start:dev-client
+# or:
+npx expo start --dev-client --port 8082
 ```
+
+Do not let Metro fall over to 8083 — stop whatever owns 8082 first if needed.
 
 ## Docs
 

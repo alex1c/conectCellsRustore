@@ -6,22 +6,28 @@ import { useMemo, useState } from 'react'
 import {
 	ActivityIndicator,
 	LayoutChangeEvent,
+	Platform,
 	Pressable,
+	StatusBar as RNStatusBar,
 	StyleSheet,
 	Text,
 	View,
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { HexBoardView } from './components/HexBoardView'
 import { DevPanel } from './components/DevPanel'
 import { GameOverOverlay } from './components/GameOverOverlay'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
+import { UiErrorBoundary } from './components/UiErrorBoundary'
 import { useGameController } from './hooks/useGameController'
 
 const H_PAD = 16
+// Existing native dev client may lack react-native-safe-area-context;
+// pad with RN StatusBar height instead of RNCSafeAreaProvider.
+const TOP_INSET =
+	Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) : 0
 
 export function GameScreen () {
 	const game = useGameController()
@@ -38,17 +44,16 @@ export function GameScreen () {
 
 	if (!game.ready) {
 		return (
-			<SafeAreaView style={styles.loading} edges={['top', 'bottom']}>
+			<View style={[styles.loading, { paddingTop: TOP_INSET }]}>
 				<ActivityIndicator size="large" color="#1d4ed8" />
 				<Text style={styles.loadingText}>Загрузка…</Text>
-			</SafeAreaView>
+			</View>
 		)
 	}
 
 	return (
-		<SafeAreaView
-			style={styles.safe}
-			edges={['top', 'bottom']}
+		<View
+			style={[styles.safe, { paddingTop: TOP_INSET }]}
 			onLayout={handleLayout}
 		>
 			<StatusBar style="dark" />
@@ -69,15 +74,17 @@ export function GameScreen () {
 				)}
 
 				<View style={styles.boardWrap}>
-					<HexBoardView
-						board={game.displayBoard}
-						selected={game.selected}
-						pulseKey={game.pulseKey}
-						spawnKeys={game.spawnKeys}
-						inputLocked={game.inputLocked}
-						boardWidth={boardWidth}
-						onCellPress={game.handleCellPress}
-					/>
+					<UiErrorBoundary label="HexBoard">
+						<HexBoardView
+							board={game.displayBoard}
+							selected={game.selected}
+							pulseKey={game.pulseKey}
+							spawnKeys={game.spawnKeys}
+							inputLocked={game.inputLocked}
+							boardWidth={boardWidth}
+							onCellPress={game.handleCellPress}
+						/>
+					</UiErrorBoundary>
 				</View>
 
 				<View style={styles.actions}>
@@ -104,11 +111,13 @@ export function GameScreen () {
 					</Pressable>
 				</View>
 
-				<DevPanel
-					onLoadFixture={game.handleLoadFixture}
-					onNewSeed={game.handleNewSeed}
-					lastMetrics={game.lastMetrics}
-				/>
+				<UiErrorBoundary label="DevPanel">
+					<DevPanel
+						onLoadFixture={game.handleLoadFixture}
+						onNewSeed={game.handleNewSeed}
+						lastMetrics={game.lastMetrics}
+					/>
+				</UiErrorBoundary>
 			</View>
 
 			<GameOverOverlay
@@ -124,7 +133,7 @@ export function GameScreen () {
 				onCancel={game.cancelRestart}
 				onConfirm={game.confirmRestart}
 			/>
-		</SafeAreaView>
+		</View>
 	)
 }
 

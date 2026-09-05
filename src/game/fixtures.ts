@@ -333,7 +333,33 @@ export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 }
 
 export function loadFixture (id: FixtureId): GameState {
-	return FIXTURE_BUILDERS[id]()
+	const builder = FIXTURE_BUILDERS[id]
+	if (!builder) {
+		throw new Error(`Unknown fixture id: ${id}`)
+	}
+	return builder()
 }
 
-export const FIXTURE_IDS = Object.keys(FIXTURE_BUILDERS) as FixtureId[]
+/**
+ * Explicit ordered fixture ids for DevPanel.
+ * Keep as a literal array (not Object.keys) so the export cannot be
+ * undefined during barrel evaluation / partial module init.
+ */
+export const FIXTURE_IDS: FixtureId[] = [
+	'balancedBoard',
+	'simpleMove',
+	'longPath',
+	'blockedPath',
+	'merge4',
+	'merge5',
+	'merge6',
+	'mergeTo4',
+	'mergeTo8',
+	'mergeTo16',
+	'cascade2',
+	'cascade3',
+	'highValues',
+	'nearGameOver',
+	'gameOver',
+	'noMergeSpawn',
+]

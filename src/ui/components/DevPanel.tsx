@@ -1,10 +1,14 @@
 /**
  * Compact development tools for hex fixtures (no square presets).
+ * Imports fixtures directly — avoids barrel circular init leaving FIXTURE_IDS undefined.
  */
 
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { FIXTURE_IDS, type FixtureId } from '../../game'
+import {
+	FIXTURE_IDS,
+	type FixtureId,
+} from '../../game/fixtures'
 
 export interface RunMetrics {
 	moves: number
@@ -27,6 +31,13 @@ export function DevPanel (props: DevPanelProps) {
 	}
 
 	const { onLoadFixture, onNewSeed, lastMetrics } = props
+
+	// Contract: FIXTURE_IDS is a compile-time literal array in fixtures.ts.
+	if (!Array.isArray(FIXTURE_IDS) || FIXTURE_IDS.length === 0) {
+		throw new Error(
+			'DevPanel: FIXTURE_IDS missing — hex fixtures module failed to load',
+		)
+	}
 
 	return (
 		<View style={styles.wrap}>
@@ -96,13 +107,14 @@ const styles = StyleSheet.create({
 	},
 	row: {
 		flexDirection: 'row',
-		gap: 6,
+		columnGap: 6,
 	},
 	chip: {
 		backgroundColor: '#1e293b',
 		paddingHorizontal: 8,
 		paddingVertical: 6,
 		borderRadius: 8,
+		marginRight: 6,
 	},
 	chipText: {
 		color: '#f8fafc',
