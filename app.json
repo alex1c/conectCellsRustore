@@ -1,15 +1,18 @@
 {
   "expo": {
-    "name": "conectCellsRustore",
-    "slug": "conectCellsRustore",
+    "name": "Connect Cells",
+    "slug": "connect-cells",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "connectcells",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ru.forestmusic.connectcells"
     },
     "android": {
+      "package": "ru.forestmusic.connectcells",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
