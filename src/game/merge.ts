@@ -97,6 +97,7 @@ export function applyMergeAndChain (
 		events.push({
 			type: 'CHAIN_STEP',
 			position: { ...to },
+			absorbed: { ...neighbor },
 			fromValue,
 			toValue,
 			chainLevel,

@@ -5,8 +5,10 @@
 
 export {
 	BOARD_SIZE,
+	CHAIN_STEP_DELAY_MS,
 	MAX_INITIAL_VALUE,
 	MIN_CELL_VALUE,
+	SAVE_SCHEMA_VERSION,
 	SCORE_BASE,
 	SPAWN_VALUE,
 } from './constants'
@@ -38,6 +40,15 @@ export {
 	undo,
 } from './gameState'
 
+export { createFreshSeed, createGameFromBoard } from './createGame'
+export {
+	FIXTURE_BUILDERS,
+	FIXTURE_IDS,
+	loadFixture,
+	type FixtureId,
+} from './fixtures'
+export { isValidGameState, tryParseGameState } from './validate'
+
 export {
 	selectBoardSize,
 	selectCellAt,
@@ -53,3 +64,4 @@ export {
 export { isLegalMove, listLegalMoves } from './moves'
 export { scoreForStep } from './scoring'
 export { createRng, nextFloat, nextInt } from './random'
+export { cloneBoard, getCell, samePosition } from './board'

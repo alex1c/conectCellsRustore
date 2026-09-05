@@ -4,17 +4,18 @@ Endless merge puzzle for Android / RuStore.
 
 Working title: **Connect Cells**. Package id: `ru.forestmusic.connectcells`.
 
-## Phase 1
+## Phase 2
 
-Foundation only:
+Playable prototype on a single game screen:
 
-- Expo SDK 57 + React Native + TypeScript (strict)
-- Product and rules specs under `docs/`
-- Pure TypeScript game engine in `src/game` (no React Native imports)
-- Jest unit tests for the engine
-- Minimal launch screen (`App.tsx`)
+- Real 5×5 board with tap → tap merge interaction
+- Score / Best (AsyncStorage)
+- Undo (one free), Restart with confirm, Game Over overlay
+- Event playback for merge / chain / spawn
+- Auto-save / restore current run
+- Dev-only fixtures + run metrics (`__DEV__`)
 
-Playable UI, themes, sound, ads, and RuStore submission come later.
+Engine remains pure TypeScript under `src/game` (no React Native imports).
 
 ## Scripts
 
@@ -26,18 +27,14 @@ npm test
 npm start
 ```
 
-## Engine
+## Engine API
 
-Import from `src/game`:
-
-- `createInitialGame(seed)`
-- `getLegalMoves(state)`
-- `applyMove(state, move)`
+- `createInitialGame(seed)` / `createFreshSeed()`
+- `getLegalMoves(state)` / `applyMove(state, move)`
 - `canUndo(state)` / `undo(state)`
-- `restart(seed)`
-- `isGameOver(state)`
+- `loadFixture(id)` — development fixtures
 
-Same seed + same move sequence ⇒ same outcome (deterministic RNG).
+Tunables live in `src/game/constants.ts`.
 
 ## Docs
 

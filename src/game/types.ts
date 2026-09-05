@@ -55,6 +55,8 @@ export type GameEvent =
 	| {
 			type: 'CHAIN_STEP'
 			position: Position
+			/** Neighbor cell absorbed into the chain anchor. */
+			absorbed: Position
 			fromValue: number
 			toValue: number
 			chainLevel: number
