@@ -5,6 +5,12 @@
 import { cloneBoard, findLargestValue } from './board'
 import { hasLegalMoves } from './moves'
 import { createRng } from './random'
+import {
+	cloneRules,
+	DEFAULT_RULE_PRESET,
+	getRulesForPreset,
+	type RulePresetId,
+} from './rules'
 import type { Board, GameState } from './types'
 
 export interface CustomGameOptions {
@@ -14,6 +20,7 @@ export interface CustomGameOptions {
 	moveCount?: number
 	largestChain?: number
 	rngState?: number
+	rulesetId?: RulePresetId
 }
 
 /**
@@ -23,6 +30,10 @@ export interface CustomGameOptions {
 export function createGameFromBoard (options: CustomGameOptions): GameState {
 	const seed = options.seed ?? 1
 	const board = cloneBoard(options.board)
+	const rulesetId = options.rulesetId ?? DEFAULT_RULE_PRESET
+	const rules = getRulesForPreset(rulesetId)
+	// Fixtures may use a board sized for the preset; keep rules.boardSize aligned.
+	rules.boardSize = board.length
 	const largestValue = findLargestValue(board)
 	const status = hasLegalMoves(board) ? 'playing' : 'game_over'
 	return {
@@ -34,6 +45,8 @@ export function createGameFromBoard (options: CustomGameOptions): GameState {
 		seed,
 		largestValue,
 		largestChain: options.largestChain ?? 0,
+		rulesetId,
+		rules: cloneRules(rules),
 		undoSnapshot: null,
 	}
 }

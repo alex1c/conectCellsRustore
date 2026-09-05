@@ -106,6 +106,8 @@ export function GameScreen () {
 				</Text>
 
 				<DevPanel
+					activePreset={game.activePreset}
+					onSelectPreset={game.handleSelectPreset}
 					onLoadFixture={game.handleLoadFixture}
 					lastMetrics={game.lastMetrics}
 				/>

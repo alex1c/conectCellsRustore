@@ -1,17 +1,28 @@
 /**
  * Public game-engine surface.
- * UI and tests should import from here rather than deep paths when practical.
  */
 
 export {
 	BOARD_SIZE,
 	CHAIN_STEP_DELAY_MS,
+	DEFAULT_RULE_PRESET,
 	MAX_INITIAL_VALUE,
 	MIN_CELL_VALUE,
 	SAVE_SCHEMA_VERSION,
 	SCORE_BASE,
 	SPAWN_VALUE,
 } from './constants'
+
+export {
+	RULE_PRESET_IDS,
+	RULE_PRESETS,
+	cloneRules,
+	getRulesForPreset,
+	rulesEqual,
+	type GameRules,
+	type RulePresetId,
+	type SpawnWeight,
+} from './rules'
 
 export type {
 	ApplyMoveResult,
@@ -48,6 +59,7 @@ export {
 	type FixtureId,
 } from './fixtures'
 export { isValidGameState, tryParseGameState } from './validate'
+export { pickSpawnValue } from './spawn'
 
 export {
 	selectBoardSize,
@@ -57,6 +69,7 @@ export {
 	selectLargestValue,
 	selectLegalMoves,
 	selectMoveCount,
+	selectRulesetId,
 	selectScore,
 	selectStatus,
 } from './selectors'
@@ -64,4 +77,4 @@ export {
 export { isLegalMove, listLegalMoves } from './moves'
 export { scoreForStep } from './scoring'
 export { createRng, nextFloat, nextInt } from './random'
-export { cloneBoard, getCell, samePosition } from './board'
+export { boardSizeOf, cloneBoard, getCell, samePosition } from './board'

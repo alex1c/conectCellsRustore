@@ -2,8 +2,8 @@
  * Orthogonal neighborhood utilities.
  */
 
-import { inBounds } from './board'
-import type { Position } from './types'
+import { boardSizeOf, inBounds } from './board'
+import type { Board, Position } from './types'
 
 const ORTHOGONAL_DELTAS: readonly (readonly [number, number])[] = [
 	[-1, 0],
@@ -12,22 +12,26 @@ const ORTHOGONAL_DELTAS: readonly (readonly [number, number])[] = [
 	[0, 1],
 ]
 
-/** Four orthogonal neighbors that lie inside the board. */
-export function getOrthogonalNeighbors (position: Position): Position[] {
+/** Four orthogonal neighbors that lie inside the given board. */
+export function getOrthogonalNeighbors (
+	position: Position,
+	board: Board,
+): Position[] {
+	const size = boardSizeOf(board)
 	const result: Position[] = []
 	for (const [dRow, dCol] of ORTHOGONAL_DELTAS) {
 		const next: Position = {
 			row: position.row + dRow,
 			col: position.col + dCol,
 		}
-		if (inBounds(next)) {
+		if (inBounds(next, size)) {
 			result.push(next)
 		}
 	}
 	return result
 }
 
-/** True when two in-bounds positions share an orthogonal edge. */
+/** True when two positions share an orthogonal edge. */
 export function areOrthogonalNeighbors (a: Position, b: Position): boolean {
 	const rowDiff = Math.abs(a.row - b.row)
 	const colDiff = Math.abs(a.col - b.col)

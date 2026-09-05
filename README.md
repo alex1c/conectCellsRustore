@@ -4,11 +4,20 @@ Endless merge puzzle for Android / RuStore.
 
 Working title: **Connect Cells**. Package id: `ru.forestmusic.connectcells`.
 
+## Phase 2.5
+
+Rule presets + autoplay benchmark for gameplay tuning.
+
+- Presets (dev switcher): `baseline`, `largerBoard`, `sparseSpawn`, `largerSparse`, `weightedSpawn`, `softStart`
+- Production default remains **`baseline`** until human review
+- Tunables live in `src/game/rules.ts`
+- Benchmark: `src/game/benchmark/autoplay.ts`
+
 ## Phase 2
 
 Playable prototype on a single game screen:
 
-- Real 5×5 board with tap → tap merge interaction
+- Real board with tap → tap merge interaction
 - Score / Best (AsyncStorage)
 - Undo (one free), Restart with confirm, Game Over overlay
 - Event playback for merge / chain / spawn

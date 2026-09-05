@@ -34,7 +34,7 @@ function pickChainNeighbor (
 	anchor: Position,
 	targetValue: number,
 ): Position | null {
-	const candidates = getOrthogonalNeighbors(anchor).filter((pos) => {
+	const candidates = getOrthogonalNeighbors(anchor, board).filter((pos) => {
 		return getCell(board, pos) === targetValue
 	})
 	if (candidates.length === 0) {
@@ -53,6 +53,7 @@ export function applyMergeAndChain (
 	from: Position,
 	to: Position,
 	value: number,
+	scoreBase: number,
 ): MergeChainResult {
 	const events: GameEvent[] = []
 	let scoreGain = 0
@@ -77,7 +78,7 @@ export function applyMergeAndChain (
 		toValue: primaryToValue,
 		chainLevel: 1,
 	})
-	scoreGain += scoreForStep(value, 1)
+	scoreGain += scoreForStep(value, 1, scoreBase)
 
 	let currentValue = primaryToValue
 	let chainLevel = 1
@@ -102,7 +103,7 @@ export function applyMergeAndChain (
 			toValue,
 			chainLevel,
 		})
-		scoreGain += scoreForStep(fromValue, chainLevel)
+		scoreGain += scoreForStep(fromValue, chainLevel, scoreBase)
 		currentValue = toValue
 	}
 

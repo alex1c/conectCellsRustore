@@ -40,10 +40,12 @@ export function BoardView (props: BoardViewProps) {
 		boardWidth,
 	} = props
 
+	const size = board.length || BOARD_SIZE
+
 	const cellSize = useMemo(() => {
-		const totalGap = GAP * (BOARD_SIZE - 1)
-		return Math.floor((boardWidth - totalGap) / BOARD_SIZE)
-	}, [boardWidth])
+		const totalGap = GAP * Math.max(0, size - 1)
+		return Math.floor((boardWidth - totalGap) / size)
+	}, [boardWidth, size])
 
 	const legalSet = useMemo(() => {
 		return new Set(legalTargets.map(posKey))

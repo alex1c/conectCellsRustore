@@ -3,15 +3,17 @@
  * Use only from development tools — not production navigation.
  */
 
-import { BOARD_SIZE } from './constants'
 import { createGameFromBoard } from './createGame'
 import type { Board, Cell, GameState } from './types'
 
-function fill (factory: (row: number, col: number) => Cell): Board {
+function fill (
+	size: number,
+	factory: (row: number, col: number) => Cell,
+): Board {
 	const board: Board = []
-	for (let row = 0; row < BOARD_SIZE; row += 1) {
+	for (let row = 0; row < size; row += 1) {
 		const line: Cell[] = []
-		for (let col = 0; col < BOARD_SIZE; col += 1) {
+		for (let col = 0; col < size; col += 1) {
 			line.push(factory(row, col))
 		}
 		board.push(line)
@@ -134,7 +136,7 @@ export function fixtureGameOver (): GameState {
 		score: 2100,
 		moveCount: 30,
 		largestChain: 3,
-		board: fill((row, col) => ((row + col) % 2 === 0 ? 1 : 2)),
+		board: fill(5, (row, col) => ((row + col) % 2 === 0 ? 1 : 2)),
 	})
 }
 

@@ -10,6 +10,7 @@ import {
 	canUndo,
 	CHAIN_STEP_DELAY_MS,
 	cloneBoard,
+	DEFAULT_RULE_PRESET,
 	createFreshSeed,
 	createInitialGame,
 	getCell,
@@ -24,6 +25,7 @@ import {
 	type GameState,
 	type Move,
 	type Position,
+	type RulePresetId,
 } from '../../game'
 import {
 	loadBestScore,
@@ -73,6 +75,7 @@ export interface GameController {
 	showGameOver: boolean
 	showRestartDialog: boolean
 	canUndoMove: boolean
+	activePreset: RulePresetId
 	lastMetrics: RunMetrics | null
 	handleCellPress: (position: Position) => void
 	handleUndo: () => void
@@ -80,13 +83,14 @@ export interface GameController {
 	cancelRestart: () => void
 	confirmRestart: () => void
 	handleLoadFixture: (id: FixtureId) => void
+	handleSelectPreset: (id: RulePresetId) => void
 	handleNewGameFromOver: () => void
 }
 
 export function useGameController (): GameController {
 	const [ready, setReady] = useState(false)
 	const [game, setGame] = useState<GameState>(() =>
-		createInitialGame(createFreshSeed()),
+		createInitialGame(createFreshSeed(), DEFAULT_RULE_PRESET),
 	)
 	const [displayBoard, setDisplayBoard] = useState<Board>(() =>
 		cloneBoard(game.board),
@@ -164,7 +168,10 @@ export function useGameController (): GameController {
 				setGame(saved.game)
 				syncDisplay(saved.game)
 			} else {
-				const fresh = createInitialGame(createFreshSeed())
+				const fresh = createInitialGame(
+					createFreshSeed(),
+					DEFAULT_RULE_PRESET,
+				)
 				const now = Date.now()
 				setStartedAt(now)
 				setGame(fresh)
@@ -408,9 +415,23 @@ export function useGameController (): GameController {
 	}, [inputLocked, persist, startedAt, syncDisplay])
 
 	const confirmRestart = useCallback(() => {
-		const next = createInitialGame(createFreshSeed())
+		const next = createInitialGame(
+			createFreshSeed(),
+			gameRef.current.rulesetId,
+		)
 		beginNewGame(next)
 	}, [beginNewGame])
+
+	const handleSelectPreset = useCallback(
+		(id: RulePresetId) => {
+			if (!__DEV__) {
+				return
+			}
+			const next = createInitialGame(createFreshSeed(), id)
+			beginNewGame(next)
+		},
+		[beginNewGame],
+	)
 
 	const handleLoadFixture = useCallback(
 		(id: FixtureId) => {
@@ -447,6 +468,7 @@ export function useGameController (): GameController {
 		showGameOver,
 		showRestartDialog,
 		canUndoMove: canUndo(game) && !inputLocked,
+		activePreset: game.rulesetId,
 		lastMetrics,
 		handleCellPress,
 		handleUndo,
@@ -458,6 +480,7 @@ export function useGameController (): GameController {
 		cancelRestart: () => setShowRestartDialog(false),
 		confirmRestart,
 		handleLoadFixture,
+		handleSelectPreset,
 		handleNewGameFromOver: confirmRestart,
 	}
 }

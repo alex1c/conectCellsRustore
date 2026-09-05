@@ -25,9 +25,10 @@ import { getCell } from '../board'
 import { createRng, nextInt } from '../random'
 
 function assertInvariants (state: GameState): void {
+	const size = state.rules.boardSize
 	const occupied = new Set<string>()
-	for (let row = 0; row < BOARD_SIZE; row += 1) {
-		for (let col = 0; col < BOARD_SIZE; col += 1) {
+	for (let row = 0; row < size; row += 1) {
+		for (let col = 0; col < size; col += 1) {
 			const cell = getCell(state.board, { row, col })
 			if (cell === null) {
 				continue
@@ -39,12 +40,15 @@ function assertInvariants (state: GameState): void {
 			occupied.add(key)
 		}
 	}
+	expect(state.board).toHaveLength(size)
 	expect(Number.isFinite(state.score)).toBe(true)
 	expect(state.score).toBeGreaterThanOrEqual(0)
 	expect(Number.isNaN(state.score)).toBe(false)
 	expect(state.moveCount).toBeGreaterThanOrEqual(0)
 	expect(state.largestValue).toBeGreaterThanOrEqual(0)
 	expect(state.largestChain).toBeGreaterThanOrEqual(0)
+	expect(state.rulesetId).toBeTruthy()
+	expect(state.rules.boardSize).toBe(size)
 }
 
 function findMoveWithValue (state: GameState, value: number): Move | null {

@@ -2,15 +2,15 @@
  * Legal-move enumeration and move validation.
  */
 
-import { getCell, inBounds, samePosition } from './board'
+import { boardSizeOf, getCell, inBounds, samePosition } from './board'
 import { areOrthogonalNeighbors } from './neighbors'
-import { BOARD_SIZE } from './constants'
 import type { Board, Move, Position } from './types'
 
 /** True when `move` is a legal merge pair on `board`. */
 export function isLegalMove (board: Board, move: Move): boolean {
+	const size = boardSizeOf(board)
 	const { from, to } = move
-	if (!inBounds(from) || !inBounds(to)) {
+	if (!inBounds(from, size) || !inBounds(to, size)) {
 		return false
 	}
 	if (samePosition(from, to)) {
@@ -32,21 +32,21 @@ export function isLegalMove (board: Board, move: Move): boolean {
  * Both orientations are listed when A↔B share a value so UI can highlight either.
  */
 export function listLegalMoves (board: Board): Move[] {
+	const size = boardSizeOf(board)
 	const moves: Move[] = []
-	for (let row = 0; row < BOARD_SIZE; row += 1) {
-		for (let col = 0; col < BOARD_SIZE; col += 1) {
+	for (let row = 0; row < size; row += 1) {
+		for (let col = 0; col < size; col += 1) {
 			const from: Position = { row, col }
 			const fromValue = getCell(board, from)
 			if (fromValue === null) {
 				continue
 			}
-			// Only check right and down to build undirected pairs, then emit both orders.
 			const candidates: Position[] = [
 				{ row, col: col + 1 },
 				{ row: row + 1, col },
 			]
 			for (const to of candidates) {
-				if (!inBounds(to)) {
+				if (!inBounds(to, size)) {
 					continue
 				}
 				const toValue = getCell(board, to)

@@ -1,11 +1,16 @@
 /**
- * Development-only fixture panel and run metrics.
+ * Development-only fixtures, rule presets, and run metrics.
  * Hidden unless __DEV__ is true.
  */
 
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { FIXTURE_IDS, type FixtureId } from '../../game'
+import {
+	FIXTURE_IDS,
+	RULE_PRESET_IDS,
+	type FixtureId,
+	type RulePresetId,
+} from '../../game'
 
 export interface RunMetrics {
 	moves: number
@@ -16,6 +21,8 @@ export interface RunMetrics {
 }
 
 export interface DevPanelProps {
+	activePreset: RulePresetId
+	onSelectPreset: (id: RulePresetId) => void
 	onLoadFixture: (id: FixtureId) => void
 	lastMetrics: RunMetrics | null
 }
@@ -25,11 +32,29 @@ export function DevPanel (props: DevPanelProps) {
 		return null
 	}
 
-	const { onLoadFixture, lastMetrics } = props
+	const { activePreset, onSelectPreset, onLoadFixture, lastMetrics } = props
 
 	return (
 		<View style={styles.wrap}>
-			<Text style={styles.title}>Dev fixtures</Text>
+			<Text style={styles.title}>Dev ruleset</Text>
+			<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+				<View style={styles.row}>
+					{RULE_PRESET_IDS.map((id) => {
+						const active = id === activePreset
+						return (
+							<Pressable
+								key={id}
+								style={[styles.chip, active && styles.chipActive]}
+								onPress={() => onSelectPreset(id)}
+							>
+								<Text style={styles.chipText}>{id}</Text>
+							</Pressable>
+						)
+					})}
+				</View>
+			</ScrollView>
+
+			<Text style={[styles.title, styles.titleSpaced]}>Dev fixtures</Text>
 			<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 				<View style={styles.row}>
 					{FIXTURE_IDS.map((id) => (
@@ -74,6 +99,9 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 		textTransform: 'uppercase',
 	},
+	titleSpaced: {
+		marginTop: 12,
+	},
 	row: {
 		flexDirection: 'row',
 		gap: 8,
@@ -84,6 +112,9 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 10,
 		paddingVertical: 8,
 		borderRadius: 8,
+	},
+	chipActive: {
+		backgroundColor: '#2563eb',
 	},
 	chipText: {
 		color: '#f8fafc',

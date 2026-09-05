@@ -108,8 +108,8 @@ describe('fixtures', () => {
 		for (const id of FIXTURE_IDS) {
 			const state = loadFixture(id)
 			expect(isValidGameState(state)).toBe(true)
-			expect(state.board).toHaveLength(5)
-			expect(state.board[0]).toHaveLength(5)
+		expect(state.board).toHaveLength(state.rules.boardSize)
+		expect(state.board[0]).toHaveLength(state.rules.boardSize)
 		}
 	})
 

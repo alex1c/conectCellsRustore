@@ -3,6 +3,8 @@
  * Serializable plain data only — no functions or class instances.
  */
 
+import type { GameRules, RulePresetId } from './rules'
+
 /** Board cell: empty or a positive merge level. */
 export type Cell = number | null
 
@@ -36,7 +38,6 @@ export interface Move {
 
 /**
  * Structured engine events for future animation / sound / haptics / analytics.
- * Not wired to any SDK in Phase 1.
  */
 export type GameEvent =
 	| {
@@ -92,6 +93,8 @@ export interface GameStateSnapshot {
 	seed: number
 	largestValue: number
 	largestChain: number
+	rulesetId: RulePresetId
+	rules: GameRules
 }
 
 /** Full serializable run state. */
@@ -104,6 +107,8 @@ export interface GameState {
 	seed: number
 	largestValue: number
 	largestChain: number
+	rulesetId: RulePresetId
+	rules: GameRules
 	/** Previous snapshot before last successful move; null if undo unavailable. */
 	undoSnapshot: GameStateSnapshot | null
 }

@@ -11,7 +11,7 @@ import {
 } from '../index'
 
 function playSeed (seed: number) {
-	let state = createInitialGame(seed)
+	let state = createInitialGame(seed, 'baseline')
 	const startLegal = getLegalMoves(state).length
 	let moves = 0
 	let chainMoves = 0

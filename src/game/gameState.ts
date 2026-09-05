@@ -8,13 +8,17 @@ import {
 	fillInitialBoard,
 	findLargestValue,
 	getCell,
-	listEmptyPositions,
-	setCell,
 } from './board'
-import { SPAWN_VALUE } from './constants'
 import { applyMergeAndChain } from './merge'
 import { hasLegalMoves, isLegalMove, listLegalMoves } from './moves'
-import { cloneRng, createRng, nextIndex } from './random'
+import { cloneRng, createRng } from './random'
+import {
+	cloneRules,
+	DEFAULT_RULE_PRESET,
+	getRulesForPreset,
+	type RulePresetId,
+} from './rules'
+import { maybeSpawn } from './spawn'
 import type {
 	ApplyMoveResult,
 	GameEvent,
@@ -22,6 +26,21 @@ import type {
 	GameStateSnapshot,
 	Move,
 } from './types'
+
+function cloneSnapshot (snapshot: GameStateSnapshot): GameStateSnapshot {
+	return {
+		board: cloneBoard(snapshot.board),
+		score: snapshot.score,
+		moveCount: snapshot.moveCount,
+		status: snapshot.status,
+		rng: cloneRng(snapshot.rng),
+		seed: snapshot.seed,
+		largestValue: snapshot.largestValue,
+		largestChain: snapshot.largestChain,
+		rulesetId: snapshot.rulesetId,
+		rules: cloneRules(snapshot.rules),
+	}
+}
 
 /** Capture undo-safe snapshot without nested undo history. */
 function toSnapshot (state: GameState): GameStateSnapshot {
@@ -34,20 +53,15 @@ function toSnapshot (state: GameState): GameStateSnapshot {
 		seed: state.seed,
 		largestValue: state.largestValue,
 		largestChain: state.largestChain,
+		rulesetId: state.rulesetId,
+		rules: cloneRules(state.rules),
 	}
 }
 
 /** Restore a full GameState from a snapshot (undo consumed). */
 function fromSnapshot (snapshot: GameStateSnapshot): GameState {
 	return {
-		board: cloneBoard(snapshot.board),
-		score: snapshot.score,
-		moveCount: snapshot.moveCount,
-		status: snapshot.status,
-		rng: cloneRng(snapshot.rng),
-		seed: snapshot.seed,
-		largestValue: snapshot.largestValue,
-		largestChain: snapshot.largestChain,
+		...cloneSnapshot(snapshot),
 		undoSnapshot: null,
 	}
 }
@@ -63,28 +77,25 @@ export function cloneGameState (state: GameState): GameState {
 		seed: state.seed,
 		largestValue: state.largestValue,
 		largestChain: state.largestChain,
+		rulesetId: state.rulesetId,
+		rules: cloneRules(state.rules),
 		undoSnapshot: state.undoSnapshot
-			? {
-					board: cloneBoard(state.undoSnapshot.board),
-					score: state.undoSnapshot.score,
-					moveCount: state.undoSnapshot.moveCount,
-					status: state.undoSnapshot.status,
-					rng: cloneRng(state.undoSnapshot.rng),
-					seed: state.undoSnapshot.seed,
-					largestValue: state.undoSnapshot.largestValue,
-					largestChain: state.undoSnapshot.largestChain,
-				}
+			? cloneSnapshot(state.undoSnapshot)
 			: null,
 	}
 }
 
 /**
- * Create a new run from seed.
- * Identical seeds produce identical initial boards and RNG streams.
+ * Create a new run from seed + optional ruleset preset.
+ * Identical (seed, ruleset) produce identical boards and RNG streams.
  */
-export function createInitialGame (seed: number): GameState {
+export function createInitialGame (
+	seed: number,
+	rulesetId: RulePresetId = DEFAULT_RULE_PRESET,
+): GameState {
+	const rules = getRulesForPreset(rulesetId)
 	const rng = createRng(seed)
-	const board = fillInitialBoard(rng)
+	const board = fillInitialBoard(rng, rules)
 	const largestValue = findLargestValue(board)
 	const status = hasLegalMoves(board) ? 'playing' : 'game_over'
 	return {
@@ -96,13 +107,18 @@ export function createInitialGame (seed: number): GameState {
 		seed,
 		largestValue,
 		largestChain: 0,
+		rulesetId,
+		rules,
 		undoSnapshot: null,
 	}
 }
 
 /** Alias for createInitialGame — starts a fresh run. */
-export function restart (seed: number): GameState {
-	return createInitialGame(seed)
+export function restart (
+	seed: number,
+	rulesetId: RulePresetId = DEFAULT_RULE_PRESET,
+): GameState {
+	return createInitialGame(seed, rulesetId)
 }
 
 export function getLegalMoves (state: GameState): Move[] {
@@ -121,7 +137,7 @@ export function isGameOver (state: GameState): boolean {
 }
 
 /**
- * Restore the pre-move snapshot exactly (board, score, RNG, stats).
+ * Restore the pre-move snapshot exactly (board, score, RNG, rules, stats).
  * Returns the input state unchanged when undo is unavailable.
  */
 export function undo (state: GameState): GameState {
@@ -156,6 +172,7 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 		move.from,
 		move.to,
 		value,
+		state.rules.scoreBase,
 	)
 
 	const events: GameEvent[] = [...mergeResult.events]
@@ -177,22 +194,10 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 
 	const largestChain = Math.max(state.largestChain, mergeResult.maxChainLevel)
 
-	// Spawn one cell into a random empty slot when possible.
-	let board = mergeResult.board
 	const rng = cloneRng(state.rng)
-	const empties = listEmptyPositions(board)
-	if (empties.length > 0) {
-		const index = nextIndex(rng, empties.length)
-		const spawnAt = empties[index]
-		if (spawnAt) {
-			board = setCell(board, spawnAt, SPAWN_VALUE)
-			events.push({
-				type: 'SPAWN',
-				position: { ...spawnAt },
-				value: SPAWN_VALUE,
-			})
-		}
-	}
+	const spawnResult = maybeSpawn(mergeResult.board, rng, state.rules)
+	events.push(...spawnResult.events)
+	const board = spawnResult.board
 
 	let status: GameState['status'] = 'playing'
 	if (!hasLegalMoves(board)) {
@@ -205,10 +210,12 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 		score,
 		moveCount: state.moveCount + 1,
 		status,
-		rng,
+		rng: spawnResult.rng,
 		seed: state.seed,
 		largestValue,
 		largestChain,
+		rulesetId: state.rulesetId,
+		rules: cloneRules(state.rules),
 		undoSnapshot,
 	}
 
@@ -226,7 +233,6 @@ export function deserializeGame (json: string): GameState {
 	if (!parsed || typeof parsed !== 'object') {
 		throw new Error('deserializeGame: expected object')
 	}
-	// Structural trust for Phase 1 tests; deeper zod validation can wait.
 	const state = parsed as GameState
 	return cloneGameState(state)
 }
@@ -243,7 +249,9 @@ export function gameStatesEqual (a: GameState, b: GameState): boolean {
 		a.seed !== b.seed ||
 		a.largestValue !== b.largestValue ||
 		a.largestChain !== b.largestChain ||
-		a.rng.s !== b.rng.s
+		a.rng.s !== b.rng.s ||
+		a.rulesetId !== b.rulesetId ||
+		JSON.stringify(a.rules) !== JSON.stringify(b.rules)
 	) {
 		return false
 	}
