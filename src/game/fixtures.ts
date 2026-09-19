@@ -174,6 +174,78 @@ export function fixtureMergeTo16 (): GameState {
 }
 
 /**
+ * Four 128s → terminal clear (+512 score, destination EMPTY).
+ * Move remote 128 from (0,0) into empty (4,3) adjacent to the trio.
+ */
+export function fixtureTerminal128 (): GameState {
+	return createGameFromBoard({
+		seed: 2020,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 128 },
+			{ row: 3, col: 2, value: 128 },
+			{ row: 3, col: 3, value: 128 },
+			{ row: 4, col: 2, value: 128 },
+			{ row: 7, col: 5, value: 1 },
+		]),
+	})
+}
+
+/**
+ * Four 256s → terminal clear (+1024 score, destination EMPTY).
+ * Move remote 256 from (0,0) into empty (4,3) adjacent to the trio.
+ */
+export function fixtureTerminal256 (): GameState {
+	return createGameFromBoard({
+		seed: 2021,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 256 },
+			{ row: 3, col: 2, value: 256 },
+			{ row: 3, col: 3, value: 256 },
+			{ row: 4, col: 2, value: 256 },
+			{ row: 7, col: 5, value: 1 },
+		]),
+	})
+}
+
+/**
+ * Four clustered 128s + remote mover → group of 5 terminal clear (+640).
+ * Move (0,0) into (4,3) to join the quartet.
+ */
+export function fixtureTerminalLargeGroup (): GameState {
+	return createGameFromBoard({
+		seed: 2022,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 128 },
+			{ row: 2, col: 2, value: 128 },
+			{ row: 3, col: 2, value: 128 },
+			{ row: 3, col: 3, value: 128 },
+			{ row: 4, col: 2, value: 128 },
+			{ row: 7, col: 5, value: 1 },
+		]),
+	})
+}
+
+/**
+ * Cascade into terminal: four 32s → persistent 128, then with three 128s → clear.
+ * Move remote 32 from (0,0) into (4,2) to complete the first merge.
+ */
+export function fixtureCascadeTerminal (): GameState {
+	return createGameFromBoard({
+		seed: 2023,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 32 },
+			{ row: 3, col: 2, value: 32 },
+			{ row: 3, col: 3, value: 32 },
+			{ row: 4, col: 3, value: 32 },
+			{ row: 4, col: 1, value: 128 },
+			{ row: 5, col: 2, value: 128 },
+			{ row: 5, col: 1, value: 128 },
+			{ row: 7, col: 5, value: 2 },
+		]),
+	})
+}
+
+/**
  * Cascade2: move remote 1 into a trio of 1s adjacent to three 4s.
  * First merge → 4, which connects with existing 4s → second merge → 16.
  */
@@ -517,7 +589,11 @@ export type FixtureId =
 	| 'mergeTo4'
 	| 'mergeTo8'
 	| 'mergeTo16'
+	| 'terminal128'
+	| 'terminal256'
+	| 'terminalLargeGroup'
 	| 'cascade2'
+	| 'cascadeTerminal'
 	| 'cascade3'
 	| 'highValues'
 	| 'nearGameOver'
@@ -546,7 +622,11 @@ export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	mergeTo4: fixtureMergeTo4,
 	mergeTo8: fixtureMergeTo8,
 	mergeTo16: fixtureMergeTo16,
+	terminal128: fixtureTerminal128,
+	terminal256: fixtureTerminal256,
+	terminalLargeGroup: fixtureTerminalLargeGroup,
 	cascade2: fixtureCascade2,
+	cascadeTerminal: fixtureCascadeTerminal,
 	cascade3: fixtureCascade3,
 	highValues: fixtureHighValues,
 	nearGameOver: fixtureNearGameOver,
@@ -589,7 +669,11 @@ export const FIXTURE_IDS: FixtureId[] = [
 	'mergeTo4',
 	'mergeTo8',
 	'mergeTo16',
+	'terminal128',
+	'terminal256',
+	'terminalLargeGroup',
 	'cascade2',
+	'cascadeTerminal',
 	'cascade3',
 	'highValues',
 	'nearGameOver',

@@ -74,6 +74,16 @@ export async function hapticCascade3 (): Promise<void> {
 	)
 }
 
+/** Terminal merge clear — celebratory success + heavy impact. */
+export async function hapticTerminalClear (): Promise<void> {
+	await run(() =>
+		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
+	)
+	await run(() =>
+		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
+	)
+}
+
 /** Level-up success feedback. */
 export async function hapticLevelUp (): Promise<void> {
 	await run(() =>

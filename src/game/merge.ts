@@ -5,6 +5,7 @@
 import { getCell, setCell } from './board'
 import { comparePositions } from './hex'
 import { findMergeableGroups, type CellGroup } from './groups'
+import { isTerminalMerge } from './rules'
 import type { Board, GameEvent, Position } from './types'
 
 export interface CascadeResult {
@@ -42,6 +43,9 @@ function pickResultAt (
  * Resolve all mergeable groups in deterministic order until none remain.
  * Prefer placing the first merge result on `preferredAnchor` when it belongs
  * to that group (typically the move destination).
+ *
+ * Terminal rule (sourceValue >= 128): score the group, clear all cells,
+ * do not place a result — cascade from that empty anchor ends.
  */
 export function resolveMergesAndCascades (
 	board: Board,
@@ -88,10 +92,8 @@ export function resolveMergesAndCascades (
 		merges += 1
 
 		const resultAt = pickResultAt(group, preferred)
-		const resultValue = group.value * resultFactor
 		const gain = group.value * group.cells.length
 		scoreGain += gain
-		largestValue = Math.max(largestValue, resultValue)
 
 		const cleared: Position[] = []
 		for (const cell of group.cells) {
@@ -99,21 +101,38 @@ export function resolveMergesAndCascades (
 			cleared.push({ ...cell })
 			cellsCleared += 1
 		}
-		nextBoard = setCell(nextBoard, resultAt, resultValue)
-		// Result cell is occupied again — not cleared net-wise for spawn bookkeeping
-		// but we counted clears of the whole group including resultAt then re-filled.
-		cellsCleared -= 1
 
-		events.push({
-			type: 'MERGE',
-			value: group.value,
-			resultValue,
-			groupSize: group.cells.length,
-			cleared,
-			resultAt: { ...resultAt },
-			cascadeLevel,
-			scoreGain: gain,
-		})
+		if (isTerminalMerge(group.value)) {
+			// Terminal: score only — no result cell. Track source as largest seen.
+			largestValue = Math.max(largestValue, group.value)
+			events.push({
+				type: 'TERMINAL_CLEAR',
+				position: { ...resultAt },
+				sourceValue: group.value,
+				groupSize: group.cells.length,
+				scoreGain: gain,
+				cascadeLevel,
+				cleared,
+			})
+		} else {
+			// Normal merge: place persistent result on the anchor.
+			const resultValue = group.value * resultFactor
+			largestValue = Math.max(largestValue, resultValue)
+			nextBoard = setCell(nextBoard, resultAt, resultValue)
+			// Result cell is occupied again — net cellsCleared excludes the refill.
+			cellsCleared -= 1
+
+			events.push({
+				type: 'MERGE',
+				value: group.value,
+				resultValue,
+				groupSize: group.cells.length,
+				cleared,
+				resultAt: { ...resultAt },
+				cascadeLevel,
+				scoreGain: gain,
+			})
+		}
 
 		// Only the first merge prefers the move anchor.
 		preferred = null

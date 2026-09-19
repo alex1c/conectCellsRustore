@@ -45,6 +45,19 @@ export type GameEvent =
 			scoreGain: number
 	  }
 	| {
+			/**
+			 * Engine-authoritative terminal clear (sourceValue >= 128).
+			 * Group scored then removed — no result cell is placed.
+			 */
+			type: 'TERMINAL_CLEAR'
+			position: Position
+			sourceValue: number
+			groupSize: number
+			scoreGain: number
+			cascadeLevel: number
+			cleared: Position[]
+	  }
+	| {
 			type: 'SCORE_GAIN'
 			amount: number
 			total: number

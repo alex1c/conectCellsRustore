@@ -66,6 +66,7 @@ import {
 	hapticMergeLarge,
 	hapticMove,
 	hapticSelection,
+	hapticTerminalClear,
 	setHapticEnabled,
 } from '../feel/haptics'
 import { initSounds, playMergeSound, playSound, setSoundEnabled } from '../feel/sound'
@@ -76,8 +77,10 @@ import {
 	TIMING_MERGE_POP_LARGE_MS,
 	TIMING_MERGE_POP_MS,
 	TIMING_SCORE_FLASH_MS,
+	TIMING_SCORE_POPUP_MS,
 	TIMING_SPAWN_MS,
 	TIMING_SPAWN_STAGGER_MS,
+	TIMING_TERMINAL_CLEAR_MS,
 	pathStepMs,
 	pathTotalMs,
 } from '../feel/timings'
@@ -394,6 +397,7 @@ export function useGameController (): GameController {
 			token: number,
 			turn: TurnResolution | undefined,
 		) => {
+			const lockStartedAt = Date.now()
 			let board = cloneBoard(startBoard)
 			let score = startScore
 			setDisplayBoard(board)
@@ -489,30 +493,81 @@ export function useGameController (): GameController {
 						position: event.resultAt,
 						key: `${posKey(event.resultAt)}-${event.cascadeLevel}-${event.scoreGain}`,
 					})
+					// Score popup is decorative — clear later without holding the lock.
+					const popupToken = token
+					void delay(TIMING_SCORE_POPUP_MS).then(() => {
+						if (animTokenRef.current === popupToken) {
+							setScorePopup(null)
+						}
+					})
 
 					const popMs =
 						event.groupSize >= 5
 							? TIMING_MERGE_POP_LARGE_MS
 							: TIMING_MERGE_POP_MS
 					await delay(popMs)
+					if (event.cascadeLevel >= 2) {
+						await delay(TIMING_CASCADE_PAUSE_MS)
+					}
+				} else if (event.type === 'TERMINAL_CLEAR') {
+					// Converge group → score → empty. No fictional result cell is placed.
+					const clearKeys = event.cleared.map(posKey)
+					setShrinkKeys(clearKeys)
+					await delay(TIMING_MERGE_CONVERGE_MS)
+					if (animTokenRef.current !== token) {
+						return
+					}
+
+					board = cloneBoard(board)
+					for (const cleared of event.cleared) {
+						const row = board[cleared.row]
+						if (row) {
+							row[cleared.col] = null
+						}
+					}
+					setShrinkKeys([])
+					setDisplayBoard(board)
+					setPulseStrong(event.groupSize >= 5 || event.cascadeLevel >= 2)
+					setPulseKey(posKey(event.position))
+
+					playSound('merge3')
+					void hapticTerminalClear()
+
+					setScorePopup({
+						amount: event.scoreGain,
+						position: event.position,
+						key: `term-${posKey(event.position)}-${event.cascadeLevel}-${event.scoreGain}`,
+					})
+					const popupToken = token
+					void delay(TIMING_SCORE_POPUP_MS).then(() => {
+						if (animTokenRef.current === popupToken) {
+							setScorePopup(null)
+						}
+					})
+
+					await delay(TIMING_TERMINAL_CLEAR_MS)
 					if (animTokenRef.current === token) {
-						setScorePopup(null)
+						setPulseKey(null)
 					}
 					if (event.cascadeLevel >= 2) {
 						await delay(TIMING_CASCADE_PAUSE_MS)
 					}
 				} else if (event.type === 'SCORE_GAIN') {
+					// Decorative flash — update score but do not block unlock.
 					score = event.total
 					setDisplayScore(score)
 					setGainFlash(event.amount)
-					await delay(TIMING_SCORE_FLASH_MS)
-					if (animTokenRef.current === token) {
-						setGainFlash(null)
-					}
+					const flashToken = token
+					void delay(TIMING_SCORE_FLASH_MS).then(() => {
+						if (animTokenRef.current === flashToken) {
+							setGainFlash(null)
+						}
+					})
 				} else if (event.type === 'SPAWN') {
 					playSound('spawn')
 					board = cloneBoard(board)
 					const keys: string[] = []
+					// Near-simultaneous spawn beat — tiny stagger, one shared scale-in.
 					for (let i = 0; i < event.cells.length; i += 1) {
 						if (animTokenRef.current !== token) {
 							return
@@ -523,22 +578,24 @@ export function useGameController (): GameController {
 							row[cell.position.col] = cell.value
 						}
 						keys.push(posKey(cell.position))
-						setDisplayBoard(cloneBoard(board))
-						setSpawnKeys([...keys])
-						if (i < event.cells.length - 1) {
+						if (i < event.cells.length - 1 && TIMING_SPAWN_STAGGER_MS > 0) {
+							setDisplayBoard(cloneBoard(board))
+							setSpawnKeys([...keys])
 							await delay(TIMING_SPAWN_STAGGER_MS)
 						}
 					}
+					setDisplayBoard(cloneBoard(board))
+					setSpawnKeys(keys)
 					await delay(TIMING_SPAWN_MS)
 					if (animTokenRef.current === token) {
 						setSpawnKeys([])
 					}
 				} else if (event.type === 'LEVEL_UP') {
+					// Toast animates on its own — do not hold input lock for ~1.3s.
 					playSound('levelup')
 					void hapticLevelUp()
 					setLevelUpLevel(event.newLevel)
 					setLevelUpVisible(true)
-					await delay(200)
 				} else if (event.type === 'GAME_OVER') {
 					playSound('gameover')
 					void hapticGameOver()
@@ -550,6 +607,15 @@ export function useGameController (): GameController {
 				return
 			}
 			syncDisplay(finalState)
+			const inputLockMs = Date.now() - lockStartedAt
+			if (__DEV__) {
+				console.log('[ConnectCells] turn lock', {
+					inputLockMs,
+					eventTypes: events.map((e) => e.type),
+					mergeCount: turn?.mergeCount ?? 0,
+					cascadeDepth: turn?.cascadeDepth ?? 0,
+				})
+			}
 			setInputLocked(false)
 			if (turn) {
 				recordTurnTelemetry(finalState, turn)

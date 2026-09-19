@@ -9,9 +9,9 @@ import {
 	TIMING_MERGE_CONVERGE_MS,
 	TIMING_MERGE_POP_LARGE_MS,
 	TIMING_MERGE_POP_MS,
-	TIMING_SCORE_FLASH_MS,
 	TIMING_SPAWN_MS,
 	TIMING_SPAWN_STAGGER_MS,
+	TIMING_TERMINAL_CLEAR_MS,
 	pathTotalMs,
 } from './timings'
 
@@ -20,6 +20,7 @@ export const PLAYBACK_PHASE_ORDER = [
 	'MOVE_PATH',
 	'MERGE',
 	'CASCADE',
+	'TERMINAL',
 	'SCORE',
 	'SPAWN',
 	'LEVEL_UP',
@@ -35,6 +36,8 @@ export function phaseForEvent (event: GameEvent): PlaybackPhase {
 			return 'MOVE_PATH'
 		case 'MERGE':
 			return event.cascadeLevel >= 2 ? 'CASCADE' : 'MERGE'
+		case 'TERMINAL_CLEAR':
+			return 'TERMINAL'
 		case 'SCORE_GAIN':
 			return 'SCORE'
 		case 'SPAWN':
@@ -49,8 +52,8 @@ export function phaseForEvent (event: GameEvent): PlaybackPhase {
 }
 
 /**
- * Estimate wall-clock presentation ms for one event (excluding external toast).
- * Used by tests — actual UI may await slightly differently for UX polish.
+ * Estimate critical (input-locking) wall-clock ms for one event.
+ * Decorative score flash / level-up toast do not count toward lock.
  */
 export function estimateEventDurationMs (event: GameEvent): number {
 	switch (event.type) {
@@ -65,14 +68,18 @@ export function estimateEventDurationMs (event: GameEvent): number {
 				event.cascadeLevel >= 2 ? TIMING_CASCADE_PAUSE_MS : 0
 			return TIMING_MERGE_CONVERGE_MS + pop + cascadePad
 		}
+		case 'TERMINAL_CLEAR':
+			return TIMING_TERMINAL_CLEAR_MS
 		case 'SCORE_GAIN':
-			return TIMING_SCORE_FLASH_MS
+			// Non-blocking decorative flash — does not extend input lock.
+			return 0
 		case 'SPAWN': {
 			const n = Math.max(1, event.cells.length)
 			return TIMING_SPAWN_MS + (n - 1) * TIMING_SPAWN_STAGGER_MS
 		}
 		case 'LEVEL_UP':
-			return 200
+			// Toast animates independently; unlock is not gated on it.
+			return 0
 		case 'GAME_OVER':
 			return 80
 		default:
@@ -86,7 +93,7 @@ export function isValidPlaybackOrder (events: GameEvent[]): boolean {
 	for (const event of events) {
 		const phase = phaseForEvent(event)
 		const index = PLAYBACK_PHASE_ORDER.indexOf(phase)
-		// MERGE and CASCADE may interleave with SCORE_GAIN after each merge.
+		// SCORE may appear after merges; TERMINAL sits between merge and score.
 		if (phase === 'SCORE') {
 			continue
 		}

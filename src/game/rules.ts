@@ -13,8 +13,22 @@ export const BOARD_ROWS = 8
 /** Merge requires at least this many connected equal cells. */
 export const MERGE_THRESHOLD = 4
 
-/** Merged group becomes value * MERGE_RESULT_FACTOR. */
+/** Merged group becomes value * MERGE_RESULT_FACTOR (when not terminal). */
 export const MERGE_RESULT_FACTOR = 4
+
+/**
+ * Source values at or above this threshold use terminal-clear semantics:
+ * score = source × groupSize, then the whole group vanishes (no result cell).
+ *
+ * Confirmed: 4×128 → +512 EMPTY; 4×256 → +1024 EMPTY.
+ * Below threshold: normal persistent result (e.g. 4×64 → 256 stays).
+ */
+export const TERMINAL_SOURCE_MIN = 128
+
+/** True when merging this source value clears the group after scoring. */
+export function isTerminalMerge (sourceValue: number): boolean {
+	return sourceValue >= TERMINAL_SOURCE_MIN
+}
 
 /** Animation step delay (UI). */
 export const ANIM_STEP_MS = 140

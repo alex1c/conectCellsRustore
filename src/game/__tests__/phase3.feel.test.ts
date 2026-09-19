@@ -73,6 +73,17 @@ describe('Phase 3 event playback helpers', () => {
 				scoreGain: 4,
 			}),
 		).toBe('CASCADE')
+		expect(
+			phaseForEvent({
+				type: 'TERMINAL_CLEAR',
+				position: { row: 1, col: 1 },
+				sourceValue: 128,
+				groupSize: 4,
+				scoreGain: 512,
+				cascadeLevel: 1,
+				cleared: [],
+			}),
+		).toBe('TERMINAL')
 	})
 
 	it('accepts a typical turn event order', () => {
@@ -109,17 +120,18 @@ describe('Phase 3 event playback helpers', () => {
 })
 
 describe('animation hotfix path budgets', () => {
-	it('uses short/medium/long totals with hard cap', () => {
+	it('uses short/medium/long totals with hard cap ~200ms', () => {
 		// path length = hops + 1 (includes origin)
-		expect(pathTotalMs(2)).toBeGreaterThanOrEqual(100) // 1 hop
-		expect(pathTotalMs(2)).toBeLessThanOrEqual(140)
-		expect(pathTotalMs(4)).toBeGreaterThanOrEqual(100) // 3 hops
-		expect(pathTotalMs(4)).toBeLessThanOrEqual(150)
-		expect(pathTotalMs(7)).toBeGreaterThanOrEqual(160) // 6 hops
-		expect(pathTotalMs(7)).toBeLessThanOrEqual(220)
-		expect(pathTotalMs(11)).toBeGreaterThanOrEqual(220) // 10 hops
-		expect(pathTotalMs(11)).toBeLessThanOrEqual(TIMING_PATH_TOTAL_CAP_MS)
+		expect(pathTotalMs(2)).toBeGreaterThanOrEqual(70) // 1 hop
+		expect(pathTotalMs(2)).toBeLessThanOrEqual(90)
+		expect(pathTotalMs(4)).toBeGreaterThanOrEqual(90) // 3 hops
+		expect(pathTotalMs(4)).toBeLessThanOrEqual(110)
+		expect(pathTotalMs(7)).toBeGreaterThanOrEqual(120) // 6 hops
+		expect(pathTotalMs(7)).toBeLessThanOrEqual(150)
+		expect(pathTotalMs(11)).toBeGreaterThanOrEqual(160) // 10 hops
+		expect(pathTotalMs(11)).toBeLessThanOrEqual(190)
 		expect(pathTotalMs(30)).toBe(TIMING_PATH_TOTAL_CAP_MS)
+		expect(TIMING_PATH_TOTAL_CAP_MS).toBe(200)
 	})
 
 	it('grows with path length but stays capped', () => {

@@ -15,6 +15,7 @@ export {
 	hapticMergeLarge,
 	hapticMove,
 	hapticSelection,
+	hapticTerminalClear,
 	isHapticEnabled,
 	setHapticEnabled,
 } from './feel/haptics'
