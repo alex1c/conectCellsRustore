@@ -21,6 +21,10 @@ import {
 } from './rules'
 import { spawnCells } from './spawn'
 import { resolveSpawnPlan } from './spawnPlan'
+import {
+	getLevelForScore,
+	getNextLevelScore,
+} from './levels'
 import type {
 	ApplyMoveResult,
 	GameEvent,
@@ -210,6 +214,8 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 	}
 
 	const rng = cloneRng(state.rng)
+	// Spawn pressure uses the level derived from score *before* this move.
+	const levelBefore = getLevelForScore(state.score)
 	const plan = resolveSpawnPlan(
 		{
 			mergeOccurred: cascade.hadMerge,
@@ -221,11 +227,23 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 		},
 		state.rules,
 		rng,
+		levelBefore,
 	)
 	const spawn = spawnCells(board, rng, state.rules, plan.desiredCount)
 	board = spawn.board
 	events.push(...spawn.events)
 	const cellsSpawned = state.cellsSpawned + spawn.spawned
+
+	const levelAfter = getLevelForScore(score)
+	if (levelAfter > levelBefore) {
+		events.push({
+			type: 'LEVEL_UP',
+			previousLevel: levelBefore,
+			newLevel: levelAfter,
+			score,
+			nextThreshold: getNextLevelScore(levelAfter),
+		})
+	}
 
 	let status: GameState['status'] = 'playing'
 	if (!hasLegalMoves(board, cols, rows)) {
@@ -242,6 +260,10 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 		groupSizes: [...cascade.groupSizes],
 		spawnCount: spawn.spawned,
 		spawnedValues: [...spawn.spawnedValues],
+		levelBefore,
+		levelAfter,
+		baseSpawnCount: plan.baseCount,
+		bonusSpawnCount: plan.bonusCount,
 	}
 
 	const nextState: GameState = {

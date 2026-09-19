@@ -1,6 +1,8 @@
-# Connect Cells — Game Rules (Phase 2.7)
+# Connect Cells — Game Rules (Phase 2.8)
 
 ## History
+
+Phase 2.8 adds endless score-based levels with optional bonus spawn pressure on top of the approved observedPressure base.
 
 Phase 1–2.5 prototype used an incorrect square adjacent-merge model and was
 superseded by the hex path-merge specification (Phase 2.6).
@@ -67,16 +69,16 @@ player move
 
 ## Spawn presets
 
-Production / default preset remains **`phase26`** until human review.
+Production / default preset is **`observedPressure`** (approved Phase 2.7 playtest; Phase 2.8 levels build on it).
 
 DEV can switch between:
 
 | Preset | Role |
 |--------|------|
+| `observedPressure` | Production default / approved pressure model |
 | `phase26` | Phase 2.6 comparison baseline |
-| `observedPressure` | Candidate A for pressure playtest |
 
-### Implemented candidate — `observedPressure`
+### Production default — `observedPressure`
 
 Working hypothesis (not claimed as the original formula):
 
@@ -167,6 +169,57 @@ Merge availability alone does **not** define Game Over.
 - One Undo snapshot before each successful move (board, score, RNG, rules, stats).
 - Restart asks for confirmation; Best score is preserved.
 - Preset id is stored on `GameState.rules` and persists with schema **v4**.
+
+## Level progression (Phase 2.8)
+
+Endless runs use a score-derived **level**. Level does **not** change board size;
+it only adds optional spawn pressure on top of the base spawn policy.
+
+### Thresholds (TUNABLE)
+
+| Level | Score to enter |
+|-------|----------------|
+| 1 | 0 |
+| 2 | 250 |
+| 3 | 600 |
+| 4 | 1200 |
+| 5 | 2200 |
+
+After Level 5, entry thresholds continue with rising deltas:
+
+`delta(L) = 1000 + 200 * (L - 5)` for `L >= 6`
+
+(so Level 6 adds 1200, Level 7 adds 1400, Level 8 adds 1600, …).
+
+Helpers: `getLevelForScore`, `getScoreThresholdForLevel`, `getNextLevelScore`,
+`getLevelProgress` in `src/game/levels.ts`.
+
+### Bonus spawn chance (TUNABLE)
+
+- Level 1: **0%** (bit-identical to approved base gameplay; chance 0 skips RNG).
+- Each further level: **+15%** chance of **one** bonus cell.
+- Hard cap: **75%**.
+- Formula: `min(0.75, 0.15 * (level - 1))`.
+
+Bonus is applied only when the **base** spawn plan already wants `baseCount > 0`.
+Strong merges that suppress spawn (`baseCount = 0`) stay clean at every level.
+
+### Timing
+
+Spawn pressure for a turn uses the level derived from score **before** the move
+(`levelBeforeMove` / `TurnResolution.levelBefore`). Crossing a threshold emits a
+single `LEVEL_UP` event (`previousLevel` → `newLevel`); the new chance applies
+on the **next** turn.
+
+`resolveSpawnPlan(summary, rules, rng, levelBeforeMove)` returns
+`{ baseCount, bonusCount, desiredCount }`.
+
+### UI / persistence
+
+- Score header shows level + thin progress toward the next threshold.
+- Brief non-blocking level-up toast.
+- Game Over shows current level and lifetime **best level**.
+- Best level is stored in AsyncStorage (`connectcells.bestLevel.v1`).
 
 ## Determinism
 

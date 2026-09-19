@@ -77,10 +77,21 @@ export { findConnectedGroups, findMergeableGroups } from './groups'
 export { peekWouldMerge } from './merge'
 export {
 	resolveSpawnPlan,
+	resolveBaseSpawnPlan,
 	type SpawnPlan,
 	type TurnMergeSummary,
 } from './spawnPlan'
 export { spawnCells } from './spawn'
+export {
+	LEVEL_BONUS_SPAWN_CAP,
+	LEVEL_BONUS_SPAWN_STEP,
+	LEVEL_SCORE_THRESHOLDS,
+	getBonusSpawnChance,
+	getLevelForScore,
+	getLevelProgress,
+	getNextLevelScore,
+	getScoreThresholdForLevel,
+} from './levels'
 export { createRng, nextFloat, nextInt } from './random'
 export {
 	cloneBoard,

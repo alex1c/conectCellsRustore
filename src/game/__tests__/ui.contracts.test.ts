@@ -29,7 +29,7 @@ describe('hex UI contracts (runtime white-screen regressions)', () => {
 			'phase26',
 			'observedPressure',
 		])
-		expect(GameSurface.DEFAULT_RULE_PRESET).toBe('phase26')
+		expect(GameSurface.DEFAULT_RULE_PRESET).toBe('observedPressure')
 		expect(
 			(GameSurface as Record<string, unknown>).getRulePreset,
 		).toBeUndefined()

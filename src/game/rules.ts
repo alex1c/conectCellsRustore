@@ -40,8 +40,8 @@ export const RULE_PRESET_IDS: readonly RulePresetId[] = [
 	'observedPressure',
 ]
 
-/** Production / comparison baseline until human review picks a winner. */
-export const DEFAULT_RULE_PRESET: RulePresetId = 'phase26'
+/** Production default = human-approved observedPressure (Phase 2.7 playtest). */
+export const DEFAULT_RULE_PRESET: RulePresetId = 'observedPressure'
 
 /**
  * Phase 2.6 weighted spawn batch size after a non-merge turn.

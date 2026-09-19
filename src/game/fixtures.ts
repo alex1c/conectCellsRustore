@@ -295,6 +295,77 @@ export function fixtureNoMergeSpawn (): GameState {
 	})
 }
 
+/** Near level-up / high-pressure boards for DEV progression checks. */
+export function fixtureNearLevel2 (): GameState {
+	return createGameFromBoard({
+		seed: 3101,
+		score: 240,
+		moveCount: 12,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 1 },
+			{ row: 2, col: 2, value: 2 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 4, col: 3, value: 2 },
+			{ row: 5, col: 2, value: 1 },
+			{ row: 6, col: 4, value: 4 },
+		]),
+	})
+}
+
+export function fixtureNearLevel3 (): GameState {
+	return createGameFromBoard({
+		seed: 3102,
+		score: 580,
+		moveCount: 20,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 2 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 5, col: 4, value: 4 },
+			{ row: 6, col: 1, value: 2 },
+		]),
+	})
+}
+
+export function fixtureLevel5Pressure (): GameState {
+	return createGameFromBoard({
+		seed: 3103,
+		score: 2200,
+		moveCount: 40,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 3, value: 2 },
+			{ row: 4, col: 2, value: 4 },
+			{ row: 5, col: 0, value: 1 },
+			{ row: 6, col: 4, value: 2 },
+			{ row: 7, col: 2, value: 1 },
+		]),
+	})
+}
+
+export function fixtureHighLevelCap (): GameState {
+	return createGameFromBoard({
+		seed: 3104,
+		score: 8000,
+		moveCount: 80,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 4 },
+			{ row: 2, col: 2, value: 2 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 3, value: 4 },
+			{ row: 4, col: 2, value: 2 },
+			{ row: 5, col: 4, value: 1 },
+			{ row: 6, col: 1, value: 2 },
+			{ row: 7, col: 5, value: 4 },
+		]),
+	})
+}
+
 export type FixtureId =
 	| 'balancedBoard'
 	| 'simpleMove'
@@ -312,6 +383,10 @@ export type FixtureId =
 	| 'nearGameOver'
 	| 'gameOver'
 	| 'noMergeSpawn'
+	| 'nearLevel2'
+	| 'nearLevel3'
+	| 'level5Pressure'
+	| 'highLevelCap'
 
 export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	balancedBoard: fixtureBalancedBoard,
@@ -330,6 +405,10 @@ export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	nearGameOver: fixtureNearGameOver,
 	gameOver: fixtureGameOver,
 	noMergeSpawn: fixtureNoMergeSpawn,
+	nearLevel2: fixtureNearLevel2,
+	nearLevel3: fixtureNearLevel3,
+	level5Pressure: fixtureLevel5Pressure,
+	highLevelCap: fixtureHighLevelCap,
 }
 
 export function loadFixture (id: FixtureId): GameState {
@@ -362,4 +441,8 @@ export const FIXTURE_IDS: FixtureId[] = [
 	'nearGameOver',
 	'gameOver',
 	'noMergeSpawn',
+	'nearLevel2',
+	'nearLevel3',
+	'level5Pressure',
+	'highLevelCap',
 ]

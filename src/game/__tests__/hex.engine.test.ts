@@ -14,6 +14,7 @@ import {
 	gameStatesEqual,
 	getCell,
 	getReachableFrom,
+	getRulesForPreset,
 	hasLegalMoves,
 	isGameOver,
 	isValidGameState,
@@ -162,8 +163,11 @@ describe('cascade and spawn rules', () => {
 		expect(merges.length).toBeGreaterThanOrEqual(2)
 	})
 
-	it('spawns only when the turn had no merge', () => {
-		const spawnState = loadFixture('noMergeSpawn')
+	it('spawns only when the turn had no merge (phase26)', () => {
+		const spawnState = {
+			...loadFixture('noMergeSpawn'),
+			rules: getRulesForPreset('phase26'),
+		}
 		const origin = { row: 3, col: 2 }
 		const reachable = getReachableFrom(
 			spawnState.board,
@@ -186,8 +190,11 @@ describe('cascade and spawn rules', () => {
 		}
 	})
 
-	it('does not spawn on a merge turn', () => {
-		const state = loadFixture('merge4')
+	it('does not spawn on a merge turn (phase26)', () => {
+		const state = {
+			...loadFixture('merge4'),
+			rules: getRulesForPreset('phase26'),
+		}
 		const origin = { row: 0, col: 0 }
 		const to = getReachableFrom(
 			state.board,

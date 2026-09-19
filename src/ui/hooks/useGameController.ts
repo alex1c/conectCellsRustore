@@ -16,6 +16,8 @@ import {
 	createFreshSeed,
 	createInitialGame,
 	getCell,
+	getLevelForScore,
+	getLevelProgress,
 	getReachableFrom,
 	getRulesForPreset,
 	isGameOver,
@@ -32,8 +34,10 @@ import {
 	type TurnResolution,
 } from '../../game'
 import {
+	loadBestLevel,
 	loadBestScore,
 	loadSavedGame,
+	saveBestLevel,
 	saveBestScore,
 	saveGameState,
 } from '../../storage/asyncStore'
@@ -73,6 +77,9 @@ export interface GameController {
 	displayBoard: Board
 	displayScore: number
 	bestScore: number
+	bestLevel: number
+	level: number
+	levelProgress: number
 	gainFlash: number | null
 	selected: Position | null
 	pulseKey: string | null
@@ -82,6 +89,8 @@ export interface GameController {
 	showRestartDialog: boolean
 	canUndoMove: boolean
 	pathBlockedFlash: boolean
+	levelUpVisible: boolean
+	levelUpLevel: number
 	activePreset: RulePresetId
 	lastMetrics: RunMetrics | null
 	lastTurn: DevTurnTelemetry | null
@@ -94,6 +103,7 @@ export interface GameController {
 	handleNewSeed: () => void
 	handleSelectPreset: (id: RulePresetId) => void
 	handleNewGameFromOver: () => void
+	dismissLevelUp: () => void
 }
 
 export function useGameController (): GameController {
@@ -109,6 +119,7 @@ export function useGameController (): GameController {
 	)
 	const [displayScore, setDisplayScore] = useState(0)
 	const [bestScore, setBestScore] = useState(0)
+	const [bestLevel, setBestLevel] = useState(1)
 	const [gainFlash, setGainFlash] = useState<number | null>(null)
 	const [selected, setSelected] = useState<Position | null>(null)
 	const [pulseKey, setPulseKey] = useState<string | null>(null)
@@ -116,6 +127,8 @@ export function useGameController (): GameController {
 	const [inputLocked, setInputLocked] = useState(false)
 	const [showRestartDialog, setShowRestartDialog] = useState(false)
 	const [pathBlockedFlash, setPathBlockedFlash] = useState(false)
+	const [levelUpVisible, setLevelUpVisible] = useState(false)
+	const [levelUpLevel, setLevelUpLevel] = useState(1)
 	const [lastMetrics, setLastMetrics] = useState<RunMetrics | null>(null)
 	const [lastTurn, setLastTurn] = useState<DevTurnTelemetry | null>(null)
 	const [startedAt, setStartedAt] = useState(() => Date.now())
@@ -143,6 +156,9 @@ export function useGameController (): GameController {
 			await saveGameState(state, started)
 			const nextBest = await saveBestScore(state.score)
 			setBestScore(nextBest)
+			const level = getLevelForScore(state.score)
+			const nextBestLevel = await saveBestLevel(level)
+			setBestLevel(nextBestLevel)
 		} catch {
 			// Persistence must not crash gameplay.
 		}
@@ -165,6 +181,7 @@ export function useGameController (): GameController {
 			setShowRestartDialog(false)
 			setPathBlockedFlash(false)
 			setLastTurn(null)
+			setLevelUpVisible(false)
 			void persist(next, now)
 		},
 		[persist, syncDisplay],
@@ -173,14 +190,16 @@ export function useGameController (): GameController {
 	useEffect(() => {
 		let cancelled = false
 		;(async () => {
-			const [saved, best] = await Promise.all([
+			const [saved, best, bestLvl] = await Promise.all([
 				loadSavedGame(),
 				loadBestScore(),
+				loadBestLevel(),
 			])
 			if (cancelled) {
 				return
 			}
 			setBestScore(best)
+			setBestLevel(bestLvl)
 			if (saved) {
 				setStartedAt(saved.startedAt ?? Date.now())
 				setGame(saved.game)
@@ -323,6 +342,10 @@ export function useGameController (): GameController {
 					if (animTokenRef.current === token) {
 						setSpawnKeys([])
 					}
+				} else if (event.type === 'LEVEL_UP') {
+					setLevelUpLevel(event.newLevel)
+					setLevelUpVisible(true)
+					await delay(200)
 				}
 			}
 
@@ -452,6 +475,7 @@ export function useGameController (): GameController {
 		setGainFlash(null)
 		setInputLocked(false)
 		setLastTurn(null)
+		setLevelUpVisible(false)
 		void persist(restored, startedAt)
 	}, [inputLocked, persist, startedAt, syncDisplay])
 
@@ -461,11 +485,16 @@ export function useGameController (): GameController {
 		)
 	}, [beginNewGame])
 
+	const levelInfo = getLevelProgress(displayScore)
+
 	return {
 		ready,
 		displayBoard,
 		displayScore,
 		bestScore,
+		bestLevel,
+		level: levelInfo.level,
+		levelProgress: levelInfo.progress,
 		gainFlash,
 		selected,
 		pulseKey,
@@ -475,6 +504,8 @@ export function useGameController (): GameController {
 		showRestartDialog,
 		canUndoMove: canUndo(game) && !inputLocked,
 		pathBlockedFlash,
+		levelUpVisible,
+		levelUpLevel,
 		activePreset,
 		lastMetrics,
 		lastTurn,
@@ -505,5 +536,6 @@ export function useGameController (): GameController {
 			}
 		},
 		handleNewGameFromOver: confirmRestart,
+		dismissLevelUp: () => setLevelUpVisible(false),
 	}
 }

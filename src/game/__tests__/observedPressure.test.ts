@@ -502,9 +502,12 @@ describe('persistence schema v4', () => {
 		).toBeNull()
 	})
 
-	it('keeps phase26 as default preset', () => {
+	it('keeps observedPressure as default preset (Level 1 baseline)', () => {
 		const game = createInitialGame(1)
-		expect(game.rules.presetId).toBe('phase26')
+		expect(game.rules.presetId).toBe('observedPressure')
+		expect(getRulesForPreset('observedPressure').spawnPolicy).toBe(
+			'observedPressure',
+		)
 		expect(getRulesForPreset('phase26').spawnPolicy).toBe('phase26')
 	})
 })

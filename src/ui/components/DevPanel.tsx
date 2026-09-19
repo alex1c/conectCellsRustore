@@ -107,6 +107,10 @@ export function DevPanel (props: DevPanelProps) {
 				<Text style={styles.telemetry}>
 					Turn: {lastTurn.turnNumber}
 					{'\n'}
+					Level: {lastTurn.turn.levelBefore}
+					{' → '}
+					{lastTurn.turn.levelAfter}
+					{'\n'}
 					Merge: {lastTurn.turn.mergeOccurred ? 'yes' : 'no'}
 					{'\n'}
 					Groups: {formatGroups(lastTurn.turn.groupSizes)}
@@ -114,6 +118,11 @@ export function DevPanel (props: DevPanelProps) {
 					Cascade: {Math.max(0, lastTurn.turn.cascadeDepth - 1)}
 					{'\n'}
 					Spawn: {lastTurn.turn.spawnCount}
+					{' (base '}
+					{lastTurn.turn.baseSpawnCount}
+					{' + bonus '}
+					{lastTurn.turn.bonusSpawnCount}
+					{')'}
 					{'\n'}
 					Spawn values:{' '}
 					{lastTurn.turn.spawnedValues.length > 0

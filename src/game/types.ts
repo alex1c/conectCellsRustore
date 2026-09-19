@@ -54,6 +54,13 @@ export type GameEvent =
 			cells: { position: Position; value: number }[]
 	  }
 	| {
+			type: 'LEVEL_UP'
+			previousLevel: number
+			newLevel: number
+			score: number
+			nextThreshold: number
+	  }
+	| {
 			type: 'GAME_OVER'
 	  }
 
@@ -105,6 +112,12 @@ export interface TurnResolution {
 	groupSizes: number[]
 	spawnCount: number
 	spawnedValues: number[]
+	/** Level used for this turn's spawn pressure (pre-move). */
+	levelBefore: number
+	/** Derived level after score update. */
+	levelAfter: number
+	baseSpawnCount: number
+	bonusSpawnCount: number
 }
 
 export interface ApplyMoveResult {

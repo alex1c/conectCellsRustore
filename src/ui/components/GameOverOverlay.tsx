@@ -1,5 +1,5 @@
 /**
- * Game Over overlay with new-game and optional undo actions.
+ * Game Over overlay with score, level, and lifetime bests.
  */
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -8,20 +8,34 @@ export interface GameOverOverlayProps {
 	visible: boolean
 	score: number
 	best: number
+	level: number
+	bestLevel: number
 	canUndo: boolean
 	onNewGame: () => void
 	onUndo: () => void
 }
 
 export function GameOverOverlay (props: GameOverOverlayProps) {
-	const { visible, score, best, canUndo, onNewGame, onUndo } = props
+	const {
+		visible,
+		score,
+		best,
+		level,
+		bestLevel,
+		canUndo,
+		onNewGame,
+		onUndo,
+	} = props
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<View style={styles.backdrop}>
 				<View style={styles.card}>
 					<Text style={styles.title}>Игра окончена</Text>
 					<Text style={styles.line}>Счёт: {score}</Text>
-					<Text style={styles.line}>Лучший: {best}</Text>
+					<Text style={styles.line}>Уровень: {level}</Text>
+					<Text style={styles.gap} />
+					<Text style={styles.line}>Рекорд: {best}</Text>
+					<Text style={styles.line}>Лучший уровень: {bestLevel}</Text>
 					<Pressable style={styles.primary} onPress={onNewGame}>
 						<Text style={styles.primaryText}>Новая игра</Text>
 					</Pressable>
@@ -65,6 +79,9 @@ const styles = StyleSheet.create({
 		color: '#334155',
 		textAlign: 'center',
 		marginBottom: 4,
+	},
+	gap: {
+		height: 8,
 	},
 	primary: {
 		marginTop: 20,

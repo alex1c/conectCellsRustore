@@ -1,9 +1,11 @@
 /**
- * Engine-level spawn count planning from turn merge summary + rules.
+ * Engine-level spawn count planning from turn merge summary + rules + level.
  * UI must never decide spawn counts.
  */
 
+import { getBonusSpawnChance } from './levels'
 import type { HexRules } from './rules'
+import { nextFloat } from './random'
 import { pickWeightedCount } from './weighted'
 import type { RngState } from './types'
 
@@ -21,18 +23,21 @@ export interface TurnMergeSummary {
 }
 
 export interface SpawnPlan {
+	/** Cells from the Level-1 / base spawn policy. */
+	baseCount: number
+	/** 0 or 1 — level bonus cell (only when baseCount > 0). */
+	bonusCount: number
 	desiredCount: number
 }
 
 /**
- * Decide how many cells to attempt spawning after merge/cascade settle.
- * Does not place cells — spawnCells applies free-cell clamping.
+ * Base spawn plan (Level 1 algorithm). Independent of progression level.
  */
-export function resolveSpawnPlan (
+export function resolveBaseSpawnPlan (
 	summary: TurnMergeSummary,
 	rules: HexRules,
 	rng: RngState,
-): SpawnPlan {
+): { desiredCount: number } {
 	if (rules.spawnPolicy === 'observedPressure') {
 		if (!summary.mergeOccurred) {
 			return { desiredCount: rules.observedNoMergeSpawn }
@@ -40,16 +45,44 @@ export function resolveSpawnPlan (
 		if (summary.maxMergedGroupSize >= 5) {
 			return { desiredCount: rules.observedLargeMergeSpawn }
 		}
-		// Merge occurred and max group size is exactly in the "reward" band
-		// (threshold..4). With threshold 4 this is merge-exactly-4 → +1.
 		return { desiredCount: rules.observedMerge4Spawn }
 	}
 
-	// phase26: spawn only when the turn produced no merges.
 	if (summary.mergeOccurred) {
 		return { desiredCount: 0 }
 	}
 	return {
 		desiredCount: pickWeightedCount(rng, rules.spawnCountWeights),
+	}
+}
+
+/**
+ * Decide how many cells to attempt spawning after merge/cascade settle.
+ * Level pressure may add one bonus cell when baseCount > 0.
+ * Level is the level *before* the move (threshold timing).
+ */
+export function resolveSpawnPlan (
+	summary: TurnMergeSummary,
+	rules: HexRules,
+	rng: RngState,
+	levelBeforeMove: number,
+): SpawnPlan {
+	const base = resolveBaseSpawnPlan(summary, rules, rng)
+	const baseCount = base.desiredCount
+	let bonusCount = 0
+
+	// Strong merges that fully suppress spawn stay clean at every level.
+	if (baseCount > 0) {
+		const chance = getBonusSpawnChance(levelBeforeMove)
+		// Chance 0 must not consume RNG — keeps Level 1 bit-identical.
+		if (chance > 0 && nextFloat(rng) < chance) {
+			bonusCount = 1
+		}
+	}
+
+	return {
+		baseCount,
+		bonusCount,
+		desiredCount: baseCount + bonusCount,
 	}
 }

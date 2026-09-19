@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar'
 import { HexBoardView } from './components/HexBoardView'
 import { DevPanel } from './components/DevPanel'
 import { GameOverOverlay } from './components/GameOverOverlay'
+import { LevelUpToast } from './components/LevelUpToast'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
@@ -62,6 +63,8 @@ export function GameScreen () {
 				<ScoreHeader
 					score={game.displayScore}
 					best={game.bestScore}
+					level={game.level}
+					levelProgress={game.levelProgress}
 					gainFlash={game.gainFlash}
 				/>
 
@@ -127,9 +130,16 @@ export function GameScreen () {
 				visible={game.showGameOver}
 				score={game.displayScore}
 				best={game.bestScore}
+				level={game.level}
+				bestLevel={game.bestLevel}
 				canUndo={game.canUndoMove}
 				onNewGame={game.handleNewGameFromOver}
 				onUndo={game.handleUndo}
+			/>
+			<LevelUpToast
+				visible={game.levelUpVisible}
+				level={game.levelUpLevel}
+				onHidden={game.dismissLevelUp}
 			/>
 			<RestartDialog
 				visible={game.showRestartDialog}
