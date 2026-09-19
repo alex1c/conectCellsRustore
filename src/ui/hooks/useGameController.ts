@@ -75,10 +75,11 @@ import {
 	TIMING_MERGE_CONVERGE_MS,
 	TIMING_MERGE_POP_LARGE_MS,
 	TIMING_MERGE_POP_MS,
-	TIMING_SCORE_POPUP_MS,
+	TIMING_SCORE_FLASH_MS,
 	TIMING_SPAWN_MS,
 	TIMING_SPAWN_STAGGER_MS,
 	pathStepMs,
+	pathTotalMs,
 } from '../feel/timings'
 
 function posKey (position: Position): string {
@@ -410,7 +411,16 @@ export function useGameController (): GameController {
 						event.path.length > 0
 							? event.path
 							: [event.from, event.to]
+					const totalMoveMs = pathTotalMs(path.length)
 					const stepMs = pathStepMs(path.length)
+					if (__DEV__) {
+						console.log('[ConnectCells] path playback', {
+							pathLength: path.length,
+							hops: Math.max(1, path.length - 1),
+							stepMs,
+							totalMoveMs,
+						})
+					}
 
 					// Vacate origin so we never show a duplicate cell.
 					board = cloneBoard(board)
@@ -436,8 +446,7 @@ export function useGameController (): GameController {
 					}
 					setTraveler(null)
 					setDisplayBoard(board)
-					setPulseKey(posKey(event.to))
-					await delay(40)
+					// No artificial post-move pause — merge/spawn follow immediately.
 				} else if (event.type === 'MERGE') {
 					const clearKeys = event.cleared.map(posKey)
 					setShrinkKeys(clearKeys)
@@ -496,7 +505,7 @@ export function useGameController (): GameController {
 					score = event.total
 					setDisplayScore(score)
 					setGainFlash(event.amount)
-					await delay(Math.min(180, TIMING_SCORE_POPUP_MS / 2))
+					await delay(TIMING_SCORE_FLASH_MS)
 					if (animTokenRef.current === token) {
 						setGainFlash(null)
 					}

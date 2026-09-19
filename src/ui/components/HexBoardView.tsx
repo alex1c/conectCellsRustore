@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { BOARD_COLS, BOARD_ROWS, type Board, type Position } from '../../game'
-import { hexValueFontSize } from '../theme/cellVisuals'
+import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
 import { HexCellView } from './HexCellView'
 
 export interface BoardTraveler {
@@ -141,31 +141,47 @@ export function HexBoardView (props: HexBoardViewProps) {
 				}),
 			)}
 
-			{traveler ? (
-				<View
-					pointerEvents="none"
-					style={[
-						styles.cellWrap,
-						styles.traveler,
-						{
-							...cellOrigin(traveler.position),
-							width: cellSize,
-							height: cellSize * 1.1,
-							zIndex: 5,
-						},
-					]}
-				>
-					<HexCellView
-						value={traveler.value}
-						size={cellSize}
-						selected={false}
-						pulse={false}
-						spawn={false}
-						disabled
-						onPress={() => undefined}
-					/>
-				</View>
-			) : null}
+			{traveler ? (() => {
+				const visual = getHexCellVisual(traveler.value)
+				return (
+					<View
+						pointerEvents="none"
+						style={[
+							styles.cellWrap,
+							styles.traveler,
+							{
+								...cellOrigin(traveler.position),
+								width: cellSize,
+								height: cellSize * 1.1,
+								zIndex: 5,
+							},
+						]}
+					>
+						{/* Transient path overlay — not HexCellView (no sticky Animated.Value). */}
+						<View
+							style={[
+								styles.travelerFace,
+								{
+									width: cellSize,
+									height: cellSize * 1.1,
+									backgroundColor: visual.fill,
+									borderColor: visual.stroke,
+								},
+							]}
+						>
+							<Text
+								style={{
+									color: visual.text,
+									fontSize: hexValueFontSize(traveler.value, cellSize),
+									fontWeight: '800',
+								}}
+							>
+								{String(traveler.value)}
+							</Text>
+						</View>
+					</View>
+				)
+			})() : null}
 
 			{scorePopup ? (
 				<View
@@ -209,6 +225,12 @@ const styles = StyleSheet.create({
 	},
 	traveler: {
 		elevation: 4,
+	},
+	travelerFace: {
+		borderRadius: 14,
+		borderWidth: 1.5,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	scorePopup: {
 		position: 'absolute',

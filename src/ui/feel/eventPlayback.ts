@@ -9,10 +9,10 @@ import {
 	TIMING_MERGE_CONVERGE_MS,
 	TIMING_MERGE_POP_LARGE_MS,
 	TIMING_MERGE_POP_MS,
-	TIMING_SCORE_POPUP_MS,
+	TIMING_SCORE_FLASH_MS,
 	TIMING_SPAWN_MS,
 	TIMING_SPAWN_STAGGER_MS,
-	pathStepMs,
+	pathTotalMs,
 } from './timings'
 
 /** Expected presentation order for a successful turn. */
@@ -54,10 +54,8 @@ export function phaseForEvent (event: GameEvent): PlaybackPhase {
  */
 export function estimateEventDurationMs (event: GameEvent): number {
 	switch (event.type) {
-		case 'MOVE': {
-			const hops = Math.max(1, event.path.length - 1)
-			return hops * pathStepMs(event.path.length)
-		}
+		case 'MOVE':
+			return pathTotalMs(event.path.length)
 		case 'MERGE': {
 			const pop =
 				event.groupSize >= 5
@@ -68,7 +66,7 @@ export function estimateEventDurationMs (event: GameEvent): number {
 			return TIMING_MERGE_CONVERGE_MS + pop + cascadePad
 		}
 		case 'SCORE_GAIN':
-			return Math.min(220, TIMING_SCORE_POPUP_MS / 2)
+			return TIMING_SCORE_FLASH_MS
 		case 'SPAWN': {
 			const n = Math.max(1, event.cells.length)
 			return TIMING_SPAWN_MS + (n - 1) * TIMING_SPAWN_STAGGER_MS

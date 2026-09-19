@@ -1,5 +1,5 @@
 /**
- * Phase 3 polish / settings / playback regression tests (no RN renderer).
+ * Phase 3 polish + animation hotfix regression tests (no RN renderer).
  */
 
 import {
@@ -14,7 +14,12 @@ import {
 	isValidPlaybackOrder,
 	phaseForEvent,
 } from '../../ui/feel/eventPlayback'
-import { pathStepMs } from '../../ui/feel/timings'
+import {
+	TIMING_PATH_TOTAL_CAP_MS,
+	pathStepMs,
+	pathTotalMs,
+} from '../../ui/feel/timings'
+import { canonicalCellTransform } from '../../ui/components/HexCellView'
 import {
 	getHexCellVisual,
 	hexValueFontSize,
@@ -101,15 +106,57 @@ describe('Phase 3 event playback helpers', () => {
 		expect(isValidPlaybackOrder(events)).toBe(true)
 		expect(estimateEventDurationMs(events[0]!)).toBeGreaterThan(0)
 	})
+})
 
-	it('accelerates long path step timing', () => {
-		expect(pathStepMs(3)).toBeGreaterThanOrEqual(pathStepMs(12))
+describe('animation hotfix path budgets', () => {
+	it('uses short/medium/long totals with hard cap', () => {
+		// path length = hops + 1 (includes origin)
+		expect(pathTotalMs(2)).toBeGreaterThanOrEqual(100) // 1 hop
+		expect(pathTotalMs(2)).toBeLessThanOrEqual(140)
+		expect(pathTotalMs(4)).toBeGreaterThanOrEqual(100) // 3 hops
+		expect(pathTotalMs(4)).toBeLessThanOrEqual(150)
+		expect(pathTotalMs(7)).toBeGreaterThanOrEqual(160) // 6 hops
+		expect(pathTotalMs(7)).toBeLessThanOrEqual(220)
+		expect(pathTotalMs(11)).toBeGreaterThanOrEqual(220) // 10 hops
+		expect(pathTotalMs(11)).toBeLessThanOrEqual(TIMING_PATH_TOTAL_CAP_MS)
+		expect(pathTotalMs(30)).toBe(TIMING_PATH_TOTAL_CAP_MS)
+	})
+
+	it('grows with path length but stays capped', () => {
+		const a = pathTotalMs(2)
+		const b = pathTotalMs(5)
+		const c = pathTotalMs(9)
+		const d = pathTotalMs(20)
+		expect(b).toBeGreaterThanOrEqual(a)
+		expect(c).toBeGreaterThanOrEqual(b)
+		expect(d).toBe(TIMING_PATH_TOTAL_CAP_MS)
+		expect(pathStepMs(20) * 19).toBeLessThanOrEqual(
+			TIMING_PATH_TOTAL_CAP_MS + 20,
+		)
+	})
+
+	it('exposes canonical transform helper at rest', () => {
+		expect(canonicalCellTransform(false)).toEqual({
+			scale: 1,
+			opacity: 1,
+			wobble: 0,
+		})
+		expect(canonicalCellTransform(true).scale).toBeCloseTo(1.07)
+		expect(canonicalCellTransform(true).opacity).toBe(1)
+	})
+
+	it('loads animationStress fixture for DEV path drills', () => {
+		const state = loadFixture('animationStress')
+		expect(state.board).toHaveLength(8)
+		expect(state.board[0]).toHaveLength(6)
 	})
 })
 
 describe('Phase 3 visuals + screenshot fixtures', () => {
 	it('maps high values to readable styles and font sizes', () => {
-		for (const value of [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384]) {
+		for (const value of [
+			1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384,
+		]) {
 			const visual = getHexCellVisual(value)
 			expect(visual.fill.length).toBeGreaterThan(0)
 			expect(hexValueFontSize(value, 48)).toBeLessThanOrEqual(48 * 0.4)
@@ -145,7 +192,6 @@ describe('Phase 3 visuals + screenshot fixtures', () => {
 			from: { row: 0, col: 0 },
 			to: { row: 0, col: 1 },
 		}
-		// Illegal/blocked moves must not mutate RNG when rejected.
 		const before = a.rng.s
 		const result = applyMove(a, move)
 		if (!result.ok) {

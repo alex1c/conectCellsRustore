@@ -22,16 +22,22 @@ Centralized in `src/ui/feel/timings.ts` (TUNABLE after real-device review):
 
 | Constant | Role |
 |----------|------|
+| `pathTotalMs` / `pathStepMs` | BFS path budget (short/medium/long, **hard cap 300ms**) |
 | `TIMING_SELECTION_MS` | selection wobble piece |
-| `TIMING_PATH_STEP_MS` / `MIN` | path hop duration (+ accel for long paths) |
 | `TIMING_MERGE_CONVERGE_MS` | shrink absorbed cells |
 | `TIMING_MERGE_POP_MS` / `LARGE` | anchor pop |
 | `TIMING_CASCADE_PAUSE_MS` | gap between cascade merges |
-| `TIMING_SCORE_POPUP_MS` | float `+N` near anchor |
+| `TIMING_SCORE_POPUP_MS` / `FLASH` | float `+N` / header flash wait |
 | `TIMING_SPAWN_MS` / `STAGGER` | spawn appear |
 | `TIMING_LEVEL_UP_MS` | level-up toast |
 | `TIMING_BLOCKED_FLASH_MS` | «Путь закрыт» |
 | `TIMING_CHAIN_TOAST_MS` | «Цепочка ×N» |
+
+### Hotfix (cell scale)
+
+`HexCellView` keeps per-position `Animated.Value`s. Merge shrink and spawn must
+**snap back to canonical scale=1 / opacity=1** when the transient flag ends or
+the animation is interrupted. Path traveler is a separate non-animated overlay.
 
 ## Haptic mapping
 

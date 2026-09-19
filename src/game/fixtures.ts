@@ -485,6 +485,27 @@ export function fixtureScreenshotLevel (): GameState {
 	})
 }
 
+/** Sparse board with long open corridors for animation stress / path timing. */
+export function fixtureAnimationStress (): GameState {
+	return createGameFromBoard({
+		seed: 5101,
+		score: 180,
+		moveCount: 10,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 1 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 3, col: 2, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 3, col: 4, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 7, col: 0, value: 4 },
+			{ row: 7, col: 5, value: 2 },
+			{ row: 5, col: 5, value: 8 },
+			{ row: 1, col: 3, value: 32 },
+		]),
+	})
+}
+
 export type FixtureId =
 	| 'balancedBoard'
 	| 'simpleMove'
@@ -512,6 +533,7 @@ export type FixtureId =
 	| 'screenshotCascade'
 	| 'screenshotHigh'
 	| 'screenshotLevel'
+	| 'animationStress'
 
 export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	balancedBoard: fixtureBalancedBoard,
@@ -540,6 +562,7 @@ export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	screenshotCascade: fixtureScreenshotCascade,
 	screenshotHigh: fixtureScreenshotHigh,
 	screenshotLevel: fixtureScreenshotLevel,
+	animationStress: fixtureAnimationStress,
 }
 
 export function loadFixture (id: FixtureId): GameState {
@@ -582,4 +605,5 @@ export const FIXTURE_IDS: FixtureId[] = [
 	'screenshotCascade',
 	'screenshotHigh',
 	'screenshotLevel',
+	'animationStress',
 ]
