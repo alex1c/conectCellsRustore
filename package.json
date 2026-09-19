@@ -19,6 +19,7 @@
     "start:dev-client": "expo start --dev-client --port 8082"
   },
   "dependencies": {
+    "@appmetrica/react-native-analytics": "^4.2.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.20",
     "expo-asset": "~57.0.18",
@@ -27,7 +28,9 @@
     "expo-haptics": "~57.0.2",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-native": "0.86.3"
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "yandex-mobile-ads": "^8.4.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -48,7 +51,7 @@
       "<rootDir>/release-artifacts/"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|@appmetrica(/.*)?|yandex-mobile-ads|react-native-safe-area-context)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
     ]
   }
 }

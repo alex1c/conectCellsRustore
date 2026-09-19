@@ -1,5 +1,5 @@
 /**
- * Game Over overlay with score, level, and lifetime bests.
+ * Game Over overlay — New Game + optional rewarded Undo rescue.
  */
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -11,8 +11,10 @@ export interface GameOverOverlayProps {
 	level: number
 	bestLevel: number
 	canUndo: boolean
+	undoBusy?: boolean
 	onNewGame: () => void
-	onUndo: () => void
+	onRewardedUndo: () => void
+	onBackHome?: () => void
 }
 
 export function GameOverOverlay (props: GameOverOverlayProps) {
@@ -23,8 +25,10 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 		level,
 		bestLevel,
 		canUndo,
+		undoBusy = false,
 		onNewGame,
-		onUndo,
+		onRewardedUndo,
+		onBackHome,
 	} = props
 	return (
 		<Modal visible={visible} transparent animationType="fade">
@@ -40,10 +44,21 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 						<Text style={styles.primaryText}>Новая игра</Text>
 					</Pressable>
 					{canUndo ? (
-						<Pressable style={styles.secondary} onPress={onUndo}>
+						<Pressable
+							style={[styles.secondary, undoBusy && styles.disabled]}
+							onPress={onRewardedUndo}
+							disabled={undoBusy}
+						>
 							<Text style={styles.secondaryText}>
-								Отменить последний ход
+								{undoBusy
+									? 'Загрузка рекламы…'
+									: '↶ Отменить последний ход 🎬'}
 							</Text>
+						</Pressable>
+					) : null}
+					{onBackHome ? (
+						<Pressable style={styles.home} onPress={onBackHome}>
+							<Text style={styles.homeText}>На главную</Text>
 						</Pressable>
 					) : null}
 				</View>
@@ -106,5 +121,19 @@ const styles = StyleSheet.create({
 		color: '#0f172a',
 		fontWeight: '600',
 		fontSize: 15,
+		textAlign: 'center',
+	},
+	home: {
+		marginTop: 10,
+		paddingVertical: 12,
+		alignItems: 'center',
+	},
+	homeText: {
+		color: '#64748b',
+		fontWeight: '600',
+		fontSize: 15,
+	},
+	disabled: {
+		opacity: 0.6,
 	},
 })

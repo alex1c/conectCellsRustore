@@ -68,6 +68,7 @@ export {
 } from './fixtures'
 
 export { isValidGameState, tryParseGameState } from './validate'
+export { isActiveParty } from './session'
 export {
 	getReachableFrom,
 	hasLegalMoves,

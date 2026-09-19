@@ -1,0 +1,115 @@
+/**
+ * Sticky banner slot for Home / Settings / How to Play.
+ * Collapses to zero height when ads are unavailable so layout stays intact.
+ * Never crashes the host screen on SDK errors.
+ */
+
+/* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
+
+import { Component, useEffect, useState, type ReactNode } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
+
+import { initAds, isAdsSdkReady } from './adsService'
+import { resolveAdUnitId, type AdPlacementKey } from './placements'
+
+export interface BannerSlotProps {
+	placement: Extract<
+		AdPlacementKey,
+		'homeBanner' | 'settingsBanner' | 'howToPlayBanner'
+	>
+}
+
+class BannerErrorBoundary extends Component<
+	{ children: ReactNode; onError: () => void },
+	{ failed: boolean }
+> {
+	state = { failed: false }
+
+	static getDerivedStateFromError () {
+		return { failed: true }
+	}
+
+	componentDidCatch () {
+		this.props.onError()
+	}
+
+	render () {
+		if (this.state.failed) {
+			return <View style={styles.empty} />
+		}
+		return this.props.children
+	}
+}
+
+export function BannerSlot (props: BannerSlotProps) {
+	const { placement } = props
+	const [adSize, setAdSize] = useState<unknown>(null)
+	const [adRequest, setAdRequest] = useState<unknown>(null)
+	const [failed, setFailed] = useState(false)
+	const [BannerView, setBannerView] = useState<any>(null)
+
+	useEffect(() => {
+		let cancelled = false
+		;(async () => {
+			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+				return
+			}
+			const ready = await initAds()
+			if (!ready || cancelled) {
+				setFailed(true)
+				return
+			}
+			try {
+				const ads = require('yandex-mobile-ads')
+				const size = await ads.BannerAdSize.stickySize(
+					Dimensions.get('window').width,
+				)
+				// Minimal AdRequest — targeting fields are optional for production fills.
+				const request = new ads.AdRequest({})
+				if (cancelled) {
+					return
+				}
+				setBannerView(() => ads.BannerView)
+				setAdSize(size)
+				setAdRequest(request)
+			} catch {
+				if (!cancelled) {
+					setFailed(true)
+				}
+			}
+		})()
+		return () => {
+			cancelled = true
+		}
+	}, [placement])
+
+	if (failed || !adSize || !adRequest || !BannerView || !isAdsSdkReady()) {
+		return <View style={styles.empty} accessibilityElementsHidden />
+	}
+
+	return (
+		<BannerErrorBoundary onError={() => setFailed(true)}>
+			<View style={styles.wrap} pointerEvents="box-none">
+				<BannerView
+					size={adSize}
+					adUnitId={resolveAdUnitId(placement)}
+					adRequest={adRequest}
+					onAdFailedToLoad={() => setFailed(true)}
+					onAdClose={() => setFailed(true)}
+				/>
+			</View>
+		</BannerErrorBoundary>
+	)
+}
+
+const styles = StyleSheet.create({
+	wrap: {
+		width: '100%',
+		alignItems: 'center',
+		justifyContent: 'center',
+		minHeight: 0,
+	},
+	empty: {
+		height: 0,
+	},
+})

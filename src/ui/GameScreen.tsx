@@ -1,21 +1,25 @@
 /**
- * Main hex playable screen — Phase 3 game-feel polish.
+ * Main hex playable screen — Phase 4 production shell (no banners).
  */
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
 	ActivityIndicator,
+	Alert,
 	LayoutChangeEvent,
-	Platform,
 	Pressable,
-	StatusBar as RNStatusBar,
 	StyleSheet,
 	Text,
 	View,
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { showRewardedUndo } from '../ads/adsService'
+import { trackEvent } from '../analytics/appMetrica'
+import { APP_DISPLAY_NAME } from '../branding'
 import { ChainToast } from './components/ChainToast'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { DevPanel } from './components/DevPanel'
 import { GameOverOverlay } from './components/GameOverOverlay'
 import { HexBoardView } from './components/HexBoardView'
@@ -23,20 +27,25 @@ import { LevelUpToast } from './components/LevelUpToast'
 import { OnboardingModal } from './components/OnboardingModal'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
-import { SettingsSheet } from './components/SettingsSheet'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
-import { useGameController } from './hooks/useGameController'
+import type { GameController } from './hooks/useGameController'
 
 const H_PAD = 16
-// Existing native dev client may lack react-native-safe-area-context;
-// pad with RN StatusBar height instead of RNCSafeAreaProvider.
-const TOP_INSET =
-	Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) : 0
-const BOTTOM_INSET = Platform.OS === 'android' ? 12 : 8
+const ADS_UNAVAILABLE_MSG = 'Реклама пока недоступна. Попробуйте позже.'
 
-export function GameScreen () {
-	const game = useGameController()
+export interface GameScreenProps {
+	game: GameController
+	onBackHome?: () => void
+	onOpenSettings?: () => void
+	onOpenHowToPlay?: () => void
+}
+
+export function GameScreen (props: GameScreenProps) {
+	const { game, onBackHome, onOpenSettings } = props
+	const insets = useSafeAreaInsets()
 	const [viewportWidth, setViewportWidth] = useState(360)
+	const [undoConfirmVisible, setUndoConfirmVisible] = useState(false)
+	const [undoBusy, setUndoBusy] = useState(false)
 
 	const boardWidth = useMemo(() => {
 		const usable = Math.max(300, viewportWidth - H_PAD * 2)
@@ -47,9 +56,58 @@ export function GameScreen () {
 		setViewportWidth(event.nativeEvent.layout.width)
 	}
 
+	/** Shared rewarded undo path for in-game button and Game Over rescue. */
+	const runRewardedUndo = useCallback(async () => {
+		if (undoBusy || !game.canUndoMove) {
+			return
+		}
+		setUndoBusy(true)
+		setUndoConfirmVisible(false)
+		trackEvent('undo_offer')
+		trackEvent('undo_rewarded_started')
+		try {
+			const result = await showRewardedUndo()
+			if (result.status === 'rewarded') {
+				trackEvent('undo_rewarded_completed')
+				game.applyUndo()
+				game.dismissGameOver()
+			} else if (
+				result.status === 'failed' ||
+				result.status === 'unavailable'
+			) {
+				trackEvent('undo_rewarded_failed', { reason: result.status })
+				Alert.alert('Реклама', result.reason || ADS_UNAVAILABLE_MSG)
+			} else {
+				trackEvent('undo_rewarded_failed', {
+					reason: 'dismissed_without_reward',
+				})
+			}
+		} catch {
+			trackEvent('undo_rewarded_failed', { reason: 'exception' })
+			Alert.alert('Реклама', ADS_UNAVAILABLE_MSG)
+		} finally {
+			setUndoBusy(false)
+		}
+	}, [game, undoBusy])
+
+	const handleUndoPress = useCallback(() => {
+		if (!game.canUndoMove || undoBusy) {
+			return
+		}
+		setUndoConfirmVisible(true)
+	}, [game.canUndoMove, undoBusy])
+
+	const handleSettingsPress = useCallback(() => {
+		if (onOpenSettings) {
+			onOpenSettings()
+			return
+		}
+		game.openSettings()
+	}, [game, onOpenSettings])
+
 	if (!game.ready) {
 		return (
-			<View style={[styles.loading, { paddingTop: TOP_INSET }]}>
+			<View style={[styles.loading, { paddingTop: insets.top }]}>
 				<ActivityIndicator size="large" color="#1d4ed8" />
 				<Text style={styles.loadingText}>Загрузка…</Text>
 			</View>
@@ -58,16 +116,33 @@ export function GameScreen () {
 
 	return (
 		<View
-			style={[styles.safe, { paddingTop: TOP_INSET }]}
+			style={[
+				styles.safe,
+				{
+					paddingTop: insets.top,
+					paddingBottom: Math.max(insets.bottom, 8),
+				},
+			]}
 			onLayout={handleLayout}
 		>
 			<StatusBar style="dark" />
-			<View style={[styles.container, { paddingBottom: BOTTOM_INSET }]}>
+			<View style={styles.container}>
 				<View style={styles.brandRow}>
-					<Text style={styles.brand}>Connect Cells</Text>
+					{onBackHome ? (
+						<Pressable
+							style={styles.homeBtn}
+							onPress={onBackHome}
+							accessibilityLabel="На главную"
+						>
+							<Text style={styles.homeBtnText}>←</Text>
+						</Pressable>
+					) : (
+						<View style={styles.homeBtnSpacer} />
+					)}
+					<Text style={styles.brand}>{APP_DISPLAY_NAME}</Text>
 					<Pressable
 						style={styles.gear}
-						onPress={game.openSettings}
+						onPress={handleSettingsPress}
 						accessibilityLabel="Настройки"
 					>
 						<Text style={styles.gearText}>⚙</Text>
@@ -113,12 +188,12 @@ export function GameScreen () {
 					<Pressable
 						style={[
 							styles.button,
-							!game.canUndoMove && styles.buttonDisabled,
+							(!game.canUndoMove || undoBusy) && styles.buttonDisabled,
 						]}
-						disabled={!game.canUndoMove}
-						onPress={game.handleUndo}
+						disabled={!game.canUndoMove || undoBusy}
+						onPress={handleUndoPress}
 					>
-						<Text style={styles.buttonText}>Undo</Text>
+						<Text style={styles.buttonText}>↶ Отменить ход 🎬</Text>
 					</Pressable>
 					<Pressable
 						style={[
@@ -133,27 +208,33 @@ export function GameScreen () {
 					</Pressable>
 				</View>
 
-				<UiErrorBoundary label="DevPanel">
-					<DevPanel
-						activePreset={game.activePreset}
-						onSelectPreset={game.handleSelectPreset}
-						onLoadFixture={game.handleLoadFixture}
-						onNewSeed={game.handleNewSeed}
-						lastMetrics={game.lastMetrics}
-						lastTurn={game.lastTurn}
-					/>
-				</UiErrorBoundary>
+				{__DEV__ ? (
+					<UiErrorBoundary label="DevPanel">
+						<DevPanel
+							activePreset={game.activePreset}
+							onSelectPreset={game.handleSelectPreset}
+							onLoadFixture={game.handleLoadFixture}
+							onNewSeed={game.handleNewSeed}
+							lastMetrics={game.lastMetrics}
+							lastTurn={game.lastTurn}
+						/>
+					</UiErrorBoundary>
+				) : null}
 			</View>
 
 			<GameOverOverlay
-				visible={game.showGameOver}
+				visible={game.gameOverVisible}
 				score={game.displayScore}
 				best={game.bestScore}
 				level={game.level}
 				bestLevel={game.bestLevel}
 				canUndo={game.canUndoMove}
+				undoBusy={undoBusy}
 				onNewGame={game.handleNewGameFromOver}
-				onUndo={game.handleUndo}
+				onRewardedUndo={() => {
+					void runRewardedUndo()
+				}}
+				onBackHome={onBackHome}
 			/>
 			<LevelUpToast
 				visible={game.levelUpVisible}
@@ -170,14 +251,16 @@ export function GameScreen () {
 				onCancel={game.cancelRestart}
 				onConfirm={game.confirmRestart}
 			/>
-			<SettingsSheet
-				visible={game.showSettings}
-				soundEnabled={game.soundEnabled}
-				hapticEnabled={game.hapticEnabled}
-				onToggleSound={game.setSoundPref}
-				onToggleHaptic={game.setHapticPref}
-				onHowToPlay={game.openHowToPlay}
-				onClose={game.closeSettings}
+			<ConfirmDialog
+				visible={undoConfirmVisible}
+				title="Отменить ход?"
+				body="Чтобы отменить ход, посмотрите короткую рекламу."
+				confirmLabel="Смотреть"
+				busy={undoBusy}
+				onCancel={() => setUndoConfirmVisible(false)}
+				onConfirm={() => {
+					void runRewardedUndo()
+				}}
 			/>
 			<OnboardingModal
 				visible={game.showOnboarding}
@@ -217,10 +300,30 @@ const styles = StyleSheet.create({
 		marginBottom: 2,
 	},
 	brand: {
-		fontSize: 26,
+		flex: 1,
+		fontSize: 24,
 		fontWeight: '800',
 		color: '#0f172a',
 		letterSpacing: -0.4,
+		textAlign: 'center',
+	},
+	homeBtn: {
+		width: 40,
+		height: 40,
+		borderRadius: 12,
+		backgroundColor: '#ffffff',
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderWidth: 1,
+		borderColor: '#dbe3ef',
+	},
+	homeBtnSpacer: {
+		width: 40,
+	},
+	homeBtnText: {
+		fontSize: 18,
+		color: '#334155',
+		fontWeight: '700',
 	},
 	gear: {
 		width: 40,
@@ -263,11 +366,13 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: '#1d4ed8',
 		paddingVertical: 14,
+		paddingHorizontal: 8,
 		borderRadius: 12,
 		alignItems: 'center',
 	},
 	buttonSecondary: {
 		backgroundColor: '#334155',
+		flex: 0.55,
 	},
 	buttonDisabled: {
 		opacity: 0.4,
@@ -275,6 +380,7 @@ const styles = StyleSheet.create({
 	buttonText: {
 		color: '#fff',
 		fontWeight: '700',
-		fontSize: 16,
+		fontSize: 14,
+		textAlign: 'center',
 	},
 })

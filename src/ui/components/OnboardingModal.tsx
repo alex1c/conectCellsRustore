@@ -4,6 +4,8 @@
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
+import { APP_DISPLAY_NAME } from '../../branding'
+
 export interface OnboardingModalProps {
 	visible: boolean
 	step: number
@@ -62,7 +64,8 @@ export function OnboardingModal (props: OnboardingModalProps) {
 			<View style={styles.backdrop}>
 				<View style={styles.card}>
 					<Text style={styles.kicker}>
-						Как играть · {safeStep + 1}/{STEPS.length}
+						{APP_DISPLAY_NAME} · как играть · {safeStep + 1}/
+						{STEPS.length}
 					</Text>
 					<Text style={styles.title}>{current.title}</Text>
 					<View style={styles.diagramBox}>

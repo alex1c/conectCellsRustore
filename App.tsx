@@ -1,10 +1,15 @@
-import { GameScreen } from './src/ui/GameScreen'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+
+import { AppRoot } from './src/ui/AppRoot'
 
 /**
- * App entry — Phase 2.6 hex path-merge gameplay.
- * Avoid react-native-safe-area-context here: the installed native
- * development client may not include RNCSafeAreaProvider.
+ * App entry — Phase 4 Hexonica production shell.
+ * Analytics + ads bootstrap inside AppRoot.
  */
 export default function App () {
-	return <GameScreen />
+	return (
+		<SafeAreaProvider>
+			<AppRoot />
+		</SafeAreaProvider>
+	)
 }

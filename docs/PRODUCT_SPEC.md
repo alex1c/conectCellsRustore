@@ -1,7 +1,7 @@
-# Connect Cells — Product Specification
+# Гексоника — Product Specification
 
-Working title: **Connect Cells**. Final RuStore display name may change later;
-architecture must not depend on the marketing string.
+Store title: **Гексоника — числовая головоломка**.
+Package id: `ru.forestmusic.connectcells` (unchanged).
 
 ## Product principle
 
@@ -27,32 +27,17 @@ or visual identity.
 select cell
 → choose empty destination
 → pathfinding across empty hexes
-→ merge / cascade   OR   spawn pressure
+→ merge / cascade / terminal clear   OR   spawn pressure
 → plan the next move
 ```
 
-1. Player sees the hex field.
-2. Selects an occupied cell (wobble feedback).
-3. Moves it along a free path to an empty hex.
-4. Connected groups of **≥ 4** equal values merge (`value × 4`).
-5. Cascades may continue automatically.
-6. Spawn pressure depends on the active ruleset (`phase26` vs `observedPressure` candidate).
-7. Score updates; the run continues while any piece can still move.
+Terminal rule (confirmed): `sourceValue >= 128` scores then clears (no result cell).
+Below 128: persistent `source × 4` result.
 
-## Design principles
+## V1.0 production shell
 
-- Rules explainable in a few seconds.
-- Outcomes of a chosen move are predictable (no hidden post-hoc randomness).
-- Randomness (initial layout, spawns) is seeded and deterministic.
-- Cascade is the central emotional beat.
-- UI must not obscure the board.
-- Future ads must not break play rhythm (deferred).
-- **Game engine is fully separated from UI**.
+Home (Continue / New Game), Settings, How to Play, About,
+Yandex Ads (Home/Settings/HowToPlay banners, Game Over interstitial,
+Rewarded Undo), AppMetrica events, multi-day persistence.
 
-## V1.0 scope (future)
-
-Endless mode, score/best, Undo, auto-save, Restart, Game Over, short onboarding,
-local stats, themes, sound/haptics, ads, AppMetrica, RuStore assets.
-
-Out of v1.0: accounts, cloud, leaderboards, Daily Challenge, PvP, achievements,
-server/backend.
+Gameplay screen has **no** banners.

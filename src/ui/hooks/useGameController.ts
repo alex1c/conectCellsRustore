@@ -1,11 +1,14 @@
 /**
  * Hex game controller: selection, sequential event playback, feel, persistence.
  * Engine is the only source of truth — UI only presents events.
+ * Phase 4: session flags, analytics hooks, interstitial on game over.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState, type AppStateStatus } from 'react-native'
 
+import { preloadRewardedUndo, showInterstitial } from '../../ads/adsService'
+import { trackEvent } from '../../analytics/appMetrica'
 import {
 	BOARD_COLS,
 	BOARD_ROWS,
@@ -21,6 +24,7 @@ import {
 	getLevelProgress,
 	getReachableFrom,
 	getRulesForPreset,
+	isActiveParty,
 	isGameOver,
 	loadFixture,
 	samePosition,
@@ -110,6 +114,8 @@ function withPresetRules (
 
 export interface GameController {
 	ready: boolean
+	/** True when a persisted party exists (Continue) or after New Game. */
+	hasActiveGame: boolean
 	displayBoard: Board
 	displayScore: number
 	bestScore: number
@@ -128,7 +134,8 @@ export interface GameController {
 	chainVisible: boolean
 	chainLevel: number
 	inputLocked: boolean
-	showGameOver: boolean
+	/** Explicit overlay visibility — set after interstitial attempt on game over. */
+	gameOverVisible: boolean
 	showRestartDialog: boolean
 	canUndoMove: boolean
 	pathBlockedFlash: boolean
@@ -143,7 +150,10 @@ export interface GameController {
 	showOnboarding: boolean
 	onboardingStep: number
 	handleCellPress: (position: Position) => void
+	/** Authoritative undo apply — no ads inside; GameScreen wraps with rewarded. */
 	handleUndo: () => void
+	/** Alias for handleUndo (rewarded flow callers). */
+	applyUndo: () => void
 	requestRestart: () => void
 	cancelRestart: () => void
 	confirmRestart: () => void
@@ -153,6 +163,13 @@ export interface GameController {
 	handleNewGameFromOver: () => void
 	dismissLevelUp: () => void
 	dismissChain: () => void
+	dismissGameOver: () => void
+	/** Persist a fresh party and mark session active; tracks game_start. */
+	startNewGame: () => void
+	/** Tracks game_resume; preloads rewarded; may show overlay if already over. */
+	continueSession: () => void
+	/** Leave play surface bookkeeping (AppRoot owns route). */
+	goHome: () => void
 	openSettings: () => void
 	closeSettings: () => void
 	setSoundPref: (value: boolean) => void
@@ -165,6 +182,7 @@ export interface GameController {
 
 export function useGameController (): GameController {
 	const [ready, setReady] = useState(false)
+	const [hasActiveGame, setHasActiveGame] = useState(false)
 	const [activePreset, setActivePreset] = useState<RulePresetId>(
 		DEFAULT_RULE_PRESET,
 	)
@@ -189,6 +207,7 @@ export function useGameController (): GameController {
 	const [chainVisible, setChainVisible] = useState(false)
 	const [chainLevel, setChainLevel] = useState(1)
 	const [inputLocked, setInputLocked] = useState(false)
+	const [gameOverVisible, setGameOverVisible] = useState(false)
 	const [showRestartDialog, setShowRestartDialog] = useState(false)
 	const [pathBlockedFlash, setPathBlockedFlash] = useState(false)
 	const [levelUpVisible, setLevelUpVisible] = useState(false)
@@ -207,6 +226,8 @@ export function useGameController (): GameController {
 	const animTokenRef = useRef(0)
 	const metricsLoggedRef = useRef(false)
 	const selectedRef = useRef<Position | null>(null)
+	/** True once a save was loaded as active or New Game persisted. */
+	const persistedActiveRef = useRef(false)
 
 	useEffect(() => {
 		gameRef.current = game
@@ -262,6 +283,10 @@ export function useGameController (): GameController {
 			setLastTurn(null)
 			setLevelUpVisible(false)
 			setChainVisible(false)
+			// Manual restart / New Game must never leave the interstitial overlay up.
+			setGameOverVisible(false)
+			persistedActiveRef.current = true
+			setHasActiveGame(true)
 			void persist(next, now)
 		},
 		[persist, syncDisplay],
@@ -290,12 +315,18 @@ export function useGameController (): GameController {
 			setBestScore(best)
 			setBestLevel(bestLvl)
 			setShowOnboarding(!onboardingDone)
-			if (saved) {
+			if (saved && isActiveParty(saved.game)) {
+				// Persisted party — Continue will use this; do not auto-enter game.
+				persistedActiveRef.current = true
+				setHasActiveGame(true)
 				setStartedAt(saved.startedAt ?? Date.now())
 				setGame(saved.game)
 				setActivePreset(saved.game.rules.presetId)
 				syncDisplay(saved.game)
 			} else {
+				// Ephemeral in-memory board — DO NOT persist until New Game / start.
+				persistedActiveRef.current = false
+				setHasActiveGame(false)
 				const fresh = createInitialGame(
 					createFreshSeed(),
 					DEFAULT_RULE_PRESET,
@@ -305,14 +336,13 @@ export function useGameController (): GameController {
 				setGame(fresh)
 				setActivePreset(fresh.rules.presetId)
 				syncDisplay(fresh)
-				void persist(fresh, now)
 			}
 			setReady(true)
 		})()
 		return () => {
 			cancelled = true
 		}
-	}, [persist, syncDisplay])
+	}, [syncDisplay])
 
 	// If the app backgrounds mid-playback, snap UI to authoritative engine state.
 	useEffect(() => {
@@ -452,6 +482,23 @@ export function useGameController (): GameController {
 					setDisplayBoard(board)
 					// No artificial post-move pause — merge/spawn follow immediately.
 				} else if (event.type === 'MERGE') {
+					trackEvent('merge', {
+						groupSize: event.groupSize,
+						resultValue: event.resultValue,
+						cascadeLevel: event.cascadeLevel,
+					})
+					if (event.groupSize >= 5) {
+						trackEvent('large_merge', {
+							groupSize: event.groupSize,
+							resultValue: event.resultValue,
+						})
+					}
+					if (event.cascadeLevel >= 2) {
+						trackEvent('cascade', {
+							cascadeLevel: event.cascadeLevel,
+						})
+					}
+
 					const clearKeys = event.cleared.map(posKey)
 					setShrinkKeys(clearKeys)
 					await delay(TIMING_MERGE_CONVERGE_MS)
@@ -510,6 +557,12 @@ export function useGameController (): GameController {
 						await delay(TIMING_CASCADE_PAUSE_MS)
 					}
 				} else if (event.type === 'TERMINAL_CLEAR') {
+					trackEvent('terminal_clear', {
+						sourceValue: event.sourceValue,
+						groupSize: event.groupSize,
+						cascadeLevel: event.cascadeLevel,
+					})
+
 					// Converge group → score → empty. No fictional result cell is placed.
 					const clearKeys = event.cleared.map(posKey)
 					setShrinkKeys(clearKeys)
@@ -591,6 +644,11 @@ export function useGameController (): GameController {
 						setSpawnKeys([])
 					}
 				} else if (event.type === 'LEVEL_UP') {
+					trackEvent('level_up', {
+						previousLevel: event.previousLevel,
+						newLevel: event.newLevel,
+						score: event.score,
+					})
 					// Toast animates on its own — do not hold input lock for ~1.3s.
 					playSound('levelup')
 					void hapticLevelUp()
@@ -622,6 +680,29 @@ export function useGameController (): GameController {
 			}
 			if (isGameOver(finalState)) {
 				logRunMetrics(finalState, startedAt)
+				const durationSec = Math.max(
+					0,
+					Math.round((Date.now() - startedAt) / 1000),
+				)
+				trackEvent('game_over', {
+					score: finalState.score,
+					level: getLevelForScore(finalState.score),
+					moves: finalState.moveCount,
+					duration: durationSec,
+					largestValue: finalState.largestValue,
+					largestGroup: finalState.largestGroup,
+					largestCascade: finalState.largestCascade,
+				})
+				// Attempt interstitial before revealing overlay; always show overlay after.
+				const interstitial = await showInterstitial('gameOverInterstitial')
+				if (interstitial === 'shown') {
+					trackEvent('interstitial_shown')
+				} else {
+					trackEvent('interstitial_failed', { reason: interstitial })
+				}
+				if (animTokenRef.current === token) {
+					setGameOverVisible(true)
+				}
 			}
 		},
 		[logRunMetrics, recordTurnTelemetry, startedAt, syncDisplay],
@@ -733,14 +814,35 @@ export function useGameController (): GameController {
 		setLastTurn(null)
 		setLevelUpVisible(false)
 		setChainVisible(false)
+		setGameOverVisible(false)
 		void persist(restored, startedAt)
 	}, [inputLocked, persist, startedAt, syncDisplay])
 
 	const confirmRestart = useCallback(() => {
+		// Manual restart must NOT show interstitial.
 		beginNewGame(
 			createInitialGame(createFreshSeed(), presetRef.current),
 		)
 	}, [beginNewGame])
+
+	const startNewGame = useCallback(() => {
+		beginNewGame(
+			createInitialGame(createFreshSeed(), presetRef.current),
+		)
+		trackEvent('game_start')
+	}, [beginNewGame])
+
+	const continueSession = useCallback(() => {
+		trackEvent('game_resume')
+		void preloadRewardedUndo()
+		if (isGameOver(gameRef.current)) {
+			setGameOverVisible(true)
+		}
+	}, [])
+
+	const goHome = useCallback(() => {
+		setGameOverVisible(false)
+	}, [])
 
 	const finishOnboarding = useCallback(async () => {
 		setShowOnboarding(false)
@@ -756,6 +858,7 @@ export function useGameController (): GameController {
 
 	return {
 		ready,
+		hasActiveGame,
 		displayBoard,
 		displayScore,
 		bestScore,
@@ -774,7 +877,7 @@ export function useGameController (): GameController {
 		chainVisible,
 		chainLevel,
 		inputLocked,
-		showGameOver: ready && isGameOver(game) && !inputLocked,
+		gameOverVisible,
 		showRestartDialog,
 		canUndoMove: canUndo(game) && !inputLocked,
 		pathBlockedFlash,
@@ -790,6 +893,7 @@ export function useGameController (): GameController {
 		onboardingStep,
 		handleCellPress,
 		handleUndo,
+		applyUndo: handleUndo,
 		requestRestart: () => {
 			if (!inputLocked) {
 				setShowRestartDialog(true)
@@ -817,6 +921,10 @@ export function useGameController (): GameController {
 		handleNewGameFromOver: confirmRestart,
 		dismissLevelUp: () => setLevelUpVisible(false),
 		dismissChain: () => setChainVisible(false),
+		dismissGameOver: () => setGameOverVisible(false),
+		startNewGame,
+		continueSession,
+		goHome,
 		openSettings: () => setShowSettings(true),
 		closeSettings: () => setShowSettings(false),
 		setSoundPref: (value: boolean) => {

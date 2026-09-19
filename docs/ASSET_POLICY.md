@@ -1,23 +1,20 @@
-# Asset policy
+# Asset policy — Гексоника
 
-## Master artwork
+## Master icon
 
-- Maintain **one** master icon / key artwork.
-- Derive from it:
-  - `icon.png` (Expo)
-  - Android adaptive icon foreground / related mipmaps
-  - RuStore storefront icon
-- Do **not** use different unrelated images for the app icon vs RuStore.
-- Do **not** use copyrighted assets, names, or visuals from the original
-  Connect Cells (or any other third-party game).
+`assets/icon_gpt.png` is the approved master artwork.
 
-## Phase 1 status
+Do **not** overwrite it destructively. Derived assets are generated from it:
 
-Final master artwork is **not** produced in Phase 1.
+| File | Role |
+|------|------|
+| `assets/icon.png` | Expo app icon |
+| `assets/android-icon-foreground.png` | Adaptive foreground |
+| `assets/android-icon-background.png` | Adaptive background |
+| `assets/android-icon-monochrome.png` | Monochrome |
+| `assets/favicon.png` | Web favicon |
+| `assets/splash-icon.png` | Splash |
+| `store-assets/icon-512.png` | Store listing |
+| `store-assets/icon-1024.png` | Store listing |
 
-The repository currently keeps the **stock Expo placeholder** icons under
-`assets/`. Replace them from the master artwork before store submission.
-
-## Screenshots
-
-Follow `docs/SCREENSHOT_PLAN.md`: deterministic fixtures, not random sessions.
+Regenerate derived files with a local script if the master is updated — never edit the master in place for size variants.
