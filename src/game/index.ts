@@ -6,15 +6,23 @@ export {
 	ANIM_STEP_MS,
 	BOARD_COLS,
 	BOARD_ROWS,
+	DEFAULT_RULE_PRESET,
 	INITIAL_CELL_COUNT,
 	MERGE_RESULT_FACTOR,
 	MERGE_THRESHOLD,
+	RULE_PRESET_IDS,
 	SAVE_SCHEMA_VERSION,
 	SPAWN_COUNT_WEIGHTS,
 	SPAWN_VALUE_WEIGHTS,
 	cloneHexRules,
 	getDefaultHexRules,
+	getObservedPressureRules,
+	getPhase26Rules,
+	getRulesForPreset,
+	presetDisplayName,
 	type HexRules,
+	type RulePresetId,
+	type SpawnPolicyId,
 } from './rules'
 
 export type {
@@ -28,6 +36,7 @@ export type {
 	Move,
 	Position,
 	RngState,
+	TurnResolution,
 } from './types'
 
 export {
@@ -66,6 +75,12 @@ export {
 export { findPath, listReachableEmpty } from './pathfinding'
 export { findConnectedGroups, findMergeableGroups } from './groups'
 export { peekWouldMerge } from './merge'
+export {
+	resolveSpawnPlan,
+	type SpawnPlan,
+	type TurnMergeSummary,
+} from './spawnPlan'
+export { spawnCells } from './spawn'
 export { createRng, nextFloat, nextInt } from './random'
 export {
 	cloneBoard,

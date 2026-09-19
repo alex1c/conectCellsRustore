@@ -13,14 +13,21 @@ import { resolveMergesAndCascades } from './merge'
 import { hasLegalMoves, isLegalMove } from './moves'
 import { findPath } from './pathfinding'
 import { cloneRng, createRng } from './random'
-import { cloneHexRules, getDefaultHexRules } from './rules'
+import {
+	cloneHexRules,
+	getDefaultHexRules,
+	getRulesForPreset,
+	type RulePresetId,
+} from './rules'
 import { spawnCells } from './spawn'
+import { resolveSpawnPlan } from './spawnPlan'
 import type {
 	ApplyMoveResult,
 	GameEvent,
 	GameState,
 	GameStateSnapshot,
 	Move,
+	TurnResolution,
 } from './types'
 
 function cloneSnapshot (snapshot: GameStateSnapshot): GameStateSnapshot {
@@ -90,8 +97,13 @@ export function cloneGameState (state: GameState): GameState {
 	}
 }
 
-export function createInitialGame (seed: number): GameState {
-	const rules = getDefaultHexRules()
+export function createInitialGame (
+	seed: number,
+	presetId?: RulePresetId,
+): GameState {
+	const rules = presetId
+		? getRulesForPreset(presetId)
+		: getDefaultHexRules()
 	const rng = createRng(seed)
 	const board = fillInitialBoard(rng, rules)
 	const status = hasLegalMoves(board, rules.boardCols, rules.boardRows)
@@ -116,8 +128,11 @@ export function createInitialGame (seed: number): GameState {
 	}
 }
 
-export function restart (seed: number): GameState {
-	return createInitialGame(seed)
+export function restart (
+	seed: number,
+	presetId?: RulePresetId,
+): GameState {
+	return createInitialGame(seed, presetId)
 }
 
 export function canUndo (state: GameState): boolean {
@@ -195,18 +210,38 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 	}
 
 	const rng = cloneRng(state.rng)
-	let cellsSpawned = state.cellsSpawned
-	if (!cascade.hadMerge) {
-		const spawn = spawnCells(board, rng, state.rules)
-		board = spawn.board
-		events.push(...spawn.events)
-		cellsSpawned += spawn.spawned
-	}
+	const plan = resolveSpawnPlan(
+		{
+			mergeOccurred: cascade.hadMerge,
+			mergeCount: cascade.merges,
+			maxMergedGroupSize: cascade.largestGroup,
+			cascadeDepth: cascade.largestCascade,
+			scoreGain: cascade.scoreGain,
+			groupSizes: cascade.groupSizes,
+		},
+		state.rules,
+		rng,
+	)
+	const spawn = spawnCells(board, rng, state.rules, plan.desiredCount)
+	board = spawn.board
+	events.push(...spawn.events)
+	const cellsSpawned = state.cellsSpawned + spawn.spawned
 
 	let status: GameState['status'] = 'playing'
 	if (!hasLegalMoves(board, cols, rows)) {
 		status = 'game_over'
 		events.push({ type: 'GAME_OVER' })
+	}
+
+	const turn: TurnResolution = {
+		mergeOccurred: cascade.hadMerge,
+		mergeCount: cascade.merges,
+		maxMergedGroupSize: cascade.largestGroup,
+		cascadeDepth: cascade.largestCascade,
+		scoreGain: cascade.scoreGain,
+		groupSizes: [...cascade.groupSizes],
+		spawnCount: spawn.spawned,
+		spawnedValues: [...spawn.spawnedValues],
 	}
 
 	const nextState: GameState = {
@@ -227,7 +262,7 @@ export function applyMove (state: GameState, move: Move): ApplyMoveResult {
 		undoSnapshot,
 	}
 
-	return { ok: true, state: nextState, events }
+	return { ok: true, state: nextState, events, turn }
 }
 
 export function serializeGame (state: GameState): string {

@@ -5,7 +5,13 @@
 import { cloneBoard, findLargestValue } from './board'
 import { hasLegalMoves } from './moves'
 import { createRng } from './random'
-import { cloneHexRules, getDefaultHexRules } from './rules'
+import {
+	cloneHexRules,
+	getDefaultHexRules,
+	getRulesForPreset,
+	type HexRules,
+	type RulePresetId,
+} from './rules'
 import type { Board, GameState } from './types'
 
 export interface CustomGameOptions {
@@ -18,15 +24,22 @@ export interface CustomGameOptions {
 	merges?: number
 	cascades?: number
 	rngState?: number
+	/** Override rules; defaults to Phase 2.6 (or presetId when set). */
+	rules?: HexRules
+	presetId?: RulePresetId
 }
 
 export function createGameFromBoard (options: CustomGameOptions): GameState {
-	const rules = getDefaultHexRules()
+	const base = options.rules
+		? cloneHexRules(options.rules)
+		: options.presetId
+			? getRulesForPreset(options.presetId)
+			: getDefaultHexRules()
 	const board = cloneBoard(options.board)
-	rules.boardRows = board.length
-	rules.boardCols = board[0]?.length ?? rules.boardCols
+	base.boardRows = board.length
+	base.boardCols = board[0]?.length ?? base.boardCols
 	const seed = options.seed ?? 1
-	const status = hasLegalMoves(board, rules.boardCols, rules.boardRows)
+	const status = hasLegalMoves(board, base.boardCols, base.boardRows)
 		? 'playing'
 		: 'game_over'
 	return {
@@ -43,7 +56,7 @@ export function createGameFromBoard (options: CustomGameOptions): GameState {
 		cascades: options.cascades ?? 0,
 		cellsSpawned: 0,
 		cellsCleared: 0,
-		rules: cloneHexRules(rules),
+		rules: cloneHexRules(base),
 		undoSnapshot: null,
 	}
 }

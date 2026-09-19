@@ -6,13 +6,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
 	ANIM_STEP_MS,
+	BOARD_COLS,
+	BOARD_ROWS,
+	DEFAULT_RULE_PRESET,
 	applyMove,
 	canUndo,
 	cloneBoard,
+	countOccupied,
 	createFreshSeed,
 	createInitialGame,
 	getCell,
 	getReachableFrom,
+	getRulesForPreset,
 	isGameOver,
 	loadFixture,
 	samePosition,
@@ -23,6 +28,8 @@ import {
 	type GameState,
 	type Move,
 	type Position,
+	type RulePresetId,
+	type TurnResolution,
 } from '../../game'
 import {
 	loadBestScore,
@@ -36,7 +43,7 @@ import {
 	hapticMerge,
 	hapticSelection,
 } from '../haptics'
-import type { RunMetrics } from '../components/DevPanel'
+import type { DevTurnTelemetry, RunMetrics } from '../components/DevPanel'
 
 function posKey (position: Position): string {
 	return `${position.row},${position.col}`
@@ -44,6 +51,21 @@ function posKey (position: Position): string {
 
 function delay (ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Apply the active DEV preset rules onto a fixture / custom state. */
+function withPresetRules (
+	state: GameState,
+	presetId: RulePresetId,
+): GameState {
+	const rules = getRulesForPreset(presetId)
+	rules.boardRows = state.board.length
+	rules.boardCols = state.board[0]?.length ?? rules.boardCols
+	return {
+		...state,
+		rules,
+		undoSnapshot: null,
+	}
 }
 
 export interface GameController {
@@ -60,7 +82,9 @@ export interface GameController {
 	showRestartDialog: boolean
 	canUndoMove: boolean
 	pathBlockedFlash: boolean
+	activePreset: RulePresetId
 	lastMetrics: RunMetrics | null
+	lastTurn: DevTurnTelemetry | null
 	handleCellPress: (position: Position) => void
 	handleUndo: () => void
 	requestRestart: () => void
@@ -68,13 +92,17 @@ export interface GameController {
 	confirmRestart: () => void
 	handleLoadFixture: (id: FixtureId) => void
 	handleNewSeed: () => void
+	handleSelectPreset: (id: RulePresetId) => void
 	handleNewGameFromOver: () => void
 }
 
 export function useGameController (): GameController {
 	const [ready, setReady] = useState(false)
+	const [activePreset, setActivePreset] = useState<RulePresetId>(
+		DEFAULT_RULE_PRESET,
+	)
 	const [game, setGame] = useState<GameState>(() =>
-		createInitialGame(createFreshSeed()),
+		createInitialGame(createFreshSeed(), DEFAULT_RULE_PRESET),
 	)
 	const [displayBoard, setDisplayBoard] = useState<Board>(() =>
 		cloneBoard(game.board),
@@ -89,15 +117,21 @@ export function useGameController (): GameController {
 	const [showRestartDialog, setShowRestartDialog] = useState(false)
 	const [pathBlockedFlash, setPathBlockedFlash] = useState(false)
 	const [lastMetrics, setLastMetrics] = useState<RunMetrics | null>(null)
+	const [lastTurn, setLastTurn] = useState<DevTurnTelemetry | null>(null)
 	const [startedAt, setStartedAt] = useState(() => Date.now())
 
 	const gameRef = useRef(game)
+	const presetRef = useRef(activePreset)
 	const animTokenRef = useRef(0)
 	const metricsLoggedRef = useRef(false)
 
 	useEffect(() => {
 		gameRef.current = game
 	}, [game])
+
+	useEffect(() => {
+		presetRef.current = activePreset
+	}, [activePreset])
 
 	const syncDisplay = useCallback((state: GameState) => {
 		setDisplayBoard(cloneBoard(state.board))
@@ -121,6 +155,7 @@ export function useGameController (): GameController {
 			const now = Date.now()
 			setStartedAt(now)
 			setGame(next)
+			setActivePreset(next.rules.presetId)
 			syncDisplay(next)
 			setSelected(null)
 			setPulseKey(null)
@@ -129,6 +164,7 @@ export function useGameController (): GameController {
 			setInputLocked(false)
 			setShowRestartDialog(false)
 			setPathBlockedFlash(false)
+			setLastTurn(null)
 			void persist(next, now)
 		},
 		[persist, syncDisplay],
@@ -148,12 +184,17 @@ export function useGameController (): GameController {
 			if (saved) {
 				setStartedAt(saved.startedAt ?? Date.now())
 				setGame(saved.game)
+				setActivePreset(saved.game.rules.presetId)
 				syncDisplay(saved.game)
 			} else {
-				const fresh = createInitialGame(createFreshSeed())
+				const fresh = createInitialGame(
+					createFreshSeed(),
+					DEFAULT_RULE_PRESET,
+				)
 				const now = Date.now()
 				setStartedAt(now)
 				setGame(fresh)
+				setActivePreset(fresh.rules.presetId)
 				syncDisplay(fresh)
 				void persist(fresh, now)
 			}
@@ -176,12 +217,33 @@ export function useGameController (): GameController {
 				largestValue: state.largestValue,
 				largestGroup: state.largestGroup,
 				largestCascade: state.largestCascade,
-				durationSec: Math.max(0, Math.round((Date.now() - started) / 1000)),
+				durationSec: Math.max(
+					0,
+					Math.round((Date.now() - started) / 1000),
+				),
 			}
 			setLastMetrics(metrics)
 			if (__DEV__) {
 				console.log('[ConnectCells] hex run', metrics)
 			}
+		},
+		[],
+	)
+
+	const recordTurnTelemetry = useCallback(
+		(state: GameState, turn: TurnResolution) => {
+			if (!__DEV__) {
+				return
+			}
+			const capacity =
+				state.rules.boardCols * state.rules.boardRows ||
+				BOARD_COLS * BOARD_ROWS
+			setLastTurn({
+				turnNumber: state.moveCount,
+				occupied: countOccupied(state.board),
+				capacity,
+				turn,
+			})
 		},
 		[],
 	)
@@ -193,6 +255,7 @@ export function useGameController (): GameController {
 			events: GameEvent[],
 			finalState: GameState,
 			token: number,
+			turn: TurnResolution | undefined,
 		) => {
 			let board = cloneBoard(startBoard)
 			let score = startScore
@@ -270,11 +333,14 @@ export function useGameController (): GameController {
 			setPulseKey(null)
 			setSpawnKeys([])
 			setInputLocked(false)
+			if (turn) {
+				recordTurnTelemetry(finalState, turn)
+			}
 			if (isGameOver(finalState)) {
 				logRunMetrics(finalState, startedAt)
 			}
 		},
-		[logRunMetrics, startedAt, syncDisplay],
+		[logRunMetrics, recordTurnTelemetry, startedAt, syncDisplay],
 	)
 
 	const commitMove = useCallback(
@@ -302,6 +368,7 @@ export function useGameController (): GameController {
 				result.events,
 				result.state,
 				token,
+				result.turn,
 			)
 		},
 		[persist, playEvents, startedAt],
@@ -384,11 +451,14 @@ export function useGameController (): GameController {
 		setSpawnKeys([])
 		setGainFlash(null)
 		setInputLocked(false)
+		setLastTurn(null)
 		void persist(restored, startedAt)
 	}, [inputLocked, persist, startedAt, syncDisplay])
 
 	const confirmRestart = useCallback(() => {
-		beginNewGame(createInitialGame(createFreshSeed()))
+		beginNewGame(
+			createInitialGame(createFreshSeed(), presetRef.current),
+		)
 	}, [beginNewGame])
 
 	return {
@@ -405,7 +475,9 @@ export function useGameController (): GameController {
 		showRestartDialog,
 		canUndoMove: canUndo(game) && !inputLocked,
 		pathBlockedFlash,
+		activePreset,
 		lastMetrics,
+		lastTurn,
 		handleCellPress,
 		handleUndo,
 		requestRestart: () => {
@@ -417,12 +489,19 @@ export function useGameController (): GameController {
 		confirmRestart,
 		handleLoadFixture: (id: FixtureId) => {
 			if (__DEV__) {
-				beginNewGame(loadFixture(id))
+				beginNewGame(withPresetRules(loadFixture(id), presetRef.current))
 			}
 		},
 		handleNewSeed: () => {
 			if (__DEV__) {
-				beginNewGame(createInitialGame(createFreshSeed()))
+				beginNewGame(
+					createInitialGame(createFreshSeed(), presetRef.current),
+				)
+			}
+		},
+		handleSelectPreset: (id: RulePresetId) => {
+			if (__DEV__) {
+				beginNewGame(createInitialGame(createFreshSeed(), id))
 			}
 		},
 		handleNewGameFromOver: confirmRestart,

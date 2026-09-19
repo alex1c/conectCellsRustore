@@ -36,7 +36,7 @@ select cell
 3. Moves it along a free path to an empty hex.
 4. Connected groups of **≥ 4** equal values merge (`value × 4`).
 5. Cascades may continue automatically.
-6. If no merge occurred, 1–3 new cells (values 1/2) spawn.
+6. Spawn pressure depends on the active ruleset (`phase26` vs `observedPressure` candidate).
 7. Score updates; the run continues while any piece can still move.
 
 ## Design principles

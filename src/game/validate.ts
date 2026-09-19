@@ -1,10 +1,15 @@
 /**
- * Structural validation for hex GameState persistence.
+ * Structural validation for hex GameState persistence (schema v4).
  */
 
 import { cloneGameState } from './gameState'
-import { SAVE_SCHEMA_VERSION } from './rules'
-import type { HexRules } from './rules'
+import {
+	RULE_PRESET_IDS,
+	SAVE_SCHEMA_VERSION,
+	type HexRules,
+	type RulePresetId,
+	type SpawnPolicyId,
+} from './rules'
 import type { Board, Cell, GameState, GameStateSnapshot, RngState } from './types'
 
 function isPlainObject (value: unknown): value is Record<string, unknown> {
@@ -36,11 +41,24 @@ function isWeightList (
 	return true
 }
 
+function isPresetId (value: unknown): value is RulePresetId {
+	return (
+		typeof value === 'string' &&
+		(RULE_PRESET_IDS as readonly string[]).includes(value)
+	)
+}
+
+function isSpawnPolicy (value: unknown): value is SpawnPolicyId {
+	return value === 'phase26' || value === 'observedPressure'
+}
+
 function isRules (value: unknown): value is HexRules {
 	if (!isPlainObject(value)) {
 		return false
 	}
 	return (
+		isPresetId(value.presetId) &&
+		isSpawnPolicy(value.spawnPolicy) &&
 		Number.isInteger(value.boardCols) &&
 		(value.boardCols as number) >= 2 &&
 		Number.isInteger(value.boardRows) &&
@@ -53,7 +71,13 @@ function isRules (value: unknown): value is HexRules {
 		(value.initialCellCount as number) >= 0 &&
 		isWeightList(value.spawnCountWeights, 'count') &&
 		isWeightList(value.spawnValueWeights, 'value') &&
-		isWeightList(value.initialValueWeights, 'value')
+		isWeightList(value.initialValueWeights, 'value') &&
+		Number.isInteger(value.observedNoMergeSpawn) &&
+		(value.observedNoMergeSpawn as number) >= 0 &&
+		Number.isInteger(value.observedMerge4Spawn) &&
+		(value.observedMerge4Spawn as number) >= 0 &&
+		Number.isInteger(value.observedLargeMergeSpawn) &&
+		(value.observedLargeMergeSpawn as number) >= 0
 	)
 }
 

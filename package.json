@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "jest --testPathIgnorePatterns=benchmark",
-    "test:benchmark": "jest src/game/__tests__/hex.benchmark.test.ts --testTimeout=120000",
+    "test:benchmark": "jest src/game/__tests__/hex.benchmark.test.ts --testTimeout=120000 --forceExit",
+    "test:benchmark:full": "tsx scripts/spawn-pressure-benchmark.ts",
     "test:watch": "jest --watch --testPathIgnorePatterns=benchmark",
     "doctor": "npx expo-doctor",
     "start:dev-client": "expo start --dev-client --port 8082"

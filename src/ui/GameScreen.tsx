@@ -113,9 +113,12 @@ export function GameScreen () {
 
 				<UiErrorBoundary label="DevPanel">
 					<DevPanel
+						activePreset={game.activePreset}
+						onSelectPreset={game.handleSelectPreset}
 						onLoadFixture={game.handleLoadFixture}
 						onNewSeed={game.handleNewSeed}
 						lastMetrics={game.lastMetrics}
+						lastTurn={game.lastTurn}
 					/>
 				</UiErrorBoundary>
 			</View>

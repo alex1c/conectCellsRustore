@@ -18,6 +18,8 @@ export interface CascadeResult {
 	largestCascade: number
 	finalLargestValue: number
 	hadMerge: boolean
+	/** Group sizes in merge order for spawn policy / telemetry. */
+	groupSizes: number[]
 }
 
 function pickResultAt (
@@ -60,6 +62,7 @@ export function resolveMergesAndCascades (
 	let largestCascade = 0
 	let largestValue = startingLargestValue
 	let preferred = preferredAnchor
+	const groupSizes: number[] = []
 
 	for (;;) {
 		const groups = findMergeableGroups(nextBoard, cols, rows, threshold)
@@ -81,6 +84,7 @@ export function resolveMergesAndCascades (
 		cascadeLevel += 1
 		largestCascade = Math.max(largestCascade, cascadeLevel)
 		largestGroup = Math.max(largestGroup, group.cells.length)
+		groupSizes.push(group.cells.length)
 		merges += 1
 
 		const resultAt = pickResultAt(group, preferred)
@@ -126,6 +130,7 @@ export function resolveMergesAndCascades (
 		largestCascade,
 		finalLargestValue: largestValue,
 		hadMerge: merges > 0,
+		groupSizes,
 	}
 }
 

@@ -24,11 +24,15 @@ describe('hex UI contracts (runtime white-screen regressions)', () => {
 		}
 	})
 
-	it('does not expose removed square rule preset ids', () => {
-		const surface = GameSurface as Record<string, unknown>
-		expect(surface.RULE_PRESET_IDS).toBeUndefined()
-		expect(surface.DEFAULT_RULE_PRESET).toBeUndefined()
-		expect(surface.getRulePreset).toBeUndefined()
+	it('exposes hex spawn-pressure presets only (no square presets)', () => {
+		expect(GameSurface.RULE_PRESET_IDS).toEqual([
+			'phase26',
+			'observedPressure',
+		])
+		expect(GameSurface.DEFAULT_RULE_PRESET).toBe('phase26')
+		expect(
+			(GameSurface as Record<string, unknown>).getRulePreset,
+		).toBeUndefined()
 	})
 
 	it('maps every current hex cell value to a visual style', () => {

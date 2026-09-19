@@ -263,7 +263,7 @@ describe('undo and persistence', () => {
 		const game = createInitialGame(9)
 		const json = JSON.stringify(buildSavedGamePayload(game, 123))
 		const restored = deserializeSavedGamePayload(json)
-		expect(SAVE_SCHEMA_VERSION).toBe(3)
+		expect(SAVE_SCHEMA_VERSION).toBe(4)
 		expect(restored).not.toBeNull()
 		expect(isValidGameState(restored?.game)).toBe(true)
 		expect(gameStatesEqual(game, restored!.game)).toBe(true)

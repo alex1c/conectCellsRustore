@@ -1,8 +1,6 @@
 /**
- * Lightweight hex autoplay benchmark (separate from the default Jest suite).
- * Compares phase26 vs observedPressure on identical seeds.
- *
- * Run: npm run test:benchmark
+ * Standalone spawn-pressure comparison (phase26 vs observedPressure).
+ * Run: npx tsx scripts/spawn-pressure-benchmark.ts
  */
 
 import {
@@ -18,11 +16,10 @@ import {
 	type GameState,
 	type Move,
 	type RulePresetId,
-} from '../index'
-import { createRng, nextIndex } from '../random'
-import { getCell } from '../board'
+} from '../src/game'
+import { createRng, nextIndex } from '../src/game/random'
 
-type PolicyId = 'randomMove' | 'mergeSeeking' | 'mobilityAware'
+type PolicyId = 'mergeSeeking'
 
 interface RunMetrics {
 	moves: number
@@ -30,13 +27,9 @@ interface RunMetrics {
 	merges: number
 	cascades: number
 	largestValue: number
-	largestGroup: number
-	largestCascade: number
 	cellsSpawned: number
-	cellsCleared: number
 	avgOccupied: number
 	peakOccupied: number
-	turnsWithoutMerge: number
 	mergeMoveRatio: number
 	capped: boolean
 }
@@ -60,63 +53,28 @@ function listSomeMoves (state: GameState, limit = 40): Move[] {
 	return moves
 }
 
-function chooseMove (
-	state: GameState,
-	policy: PolicyId,
-	seed: number,
-): Move | null {
+function chooseMove (state: GameState, seed: number): Move | null {
 	const moves = listSomeMoves(state)
 	if (moves.length === 0) {
 		return null
 	}
 	const rng = createRng((seed ^ (state.moveCount * 9973)) >>> 0)
-
-	if (policy === 'randomMove') {
-		return moves[nextIndex(rng, moves.length)] ?? null
-	}
-
-	if (policy === 'mergeSeeking') {
-		const merging = moves.filter((move) =>
-			peekWouldMerge(
-				state.board,
-				move.from,
-				move.to,
-				BOARD_COLS,
-				BOARD_ROWS,
-				state.rules.mergeThreshold,
-			),
-		)
-		const pool = merging.length > 0 ? merging : moves
-		return pool[nextIndex(rng, pool.length)] ?? null
-	}
-
-	const sampleCount = Math.min(6, moves.length)
-	let best: Move | null = null
-	let bestScore = -Infinity
-	for (let i = 0; i < sampleCount; i += 1) {
-		const move = moves[nextIndex(rng, moves.length)]
-		if (!move) {
-			continue
-		}
-		const result = applyMove(state, move)
-		if (!result.ok) {
-			continue
-		}
-		const empties =
-			BOARD_COLS * BOARD_ROWS - countOccupied(result.state.board)
-		const mergeBonus = result.events.some((e) => e.type === 'MERGE') ? 3 : 0
-		const score = empties * 2 + mergeBonus + result.state.score * 0.01
-		if (score > bestScore) {
-			bestScore = score
-			best = move
-		}
-	}
-	return best ?? moves[0] ?? null
+	const merging = moves.filter((move) =>
+		peekWouldMerge(
+			state.board,
+			move.from,
+			move.to,
+			BOARD_COLS,
+			BOARD_ROWS,
+			state.rules.mergeThreshold,
+		),
+	)
+	const pool = merging.length > 0 ? merging : moves
+	return pool[nextIndex(rng, pool.length)] ?? null
 }
 
 function play (
 	seed: number,
-	policy: PolicyId,
 	presetId: RulePresetId,
 	maxMoves = 120,
 ): RunMetrics {
@@ -124,11 +82,10 @@ function play (
 	let moves = 0
 	let occupiedSum = 0
 	let peakOccupied = countOccupied(state.board)
-	let turnsWithoutMerge = 0
 	let mergeMoves = 0
 
 	while (!isGameOver(state) && moves < maxMoves) {
-		const move = chooseMove(state, policy, seed)
+		const move = chooseMove(state, seed)
 		if (!move) {
 			break
 		}
@@ -136,11 +93,8 @@ function play (
 		if (!result.ok) {
 			break
 		}
-		const hadMerge = result.events.some((e) => e.type === 'MERGE')
-		if (hadMerge) {
+		if (result.turn?.mergeOccurred) {
 			mergeMoves += 1
-		} else {
-			turnsWithoutMerge += 1
 		}
 		state = result.state
 		moves += 1
@@ -155,23 +109,18 @@ function play (
 		merges: state.merges,
 		cascades: state.cascades,
 		largestValue: state.largestValue,
-		largestGroup: state.largestGroup,
-		largestCascade: state.largestCascade,
 		cellsSpawned: state.cellsSpawned,
-		cellsCleared: state.cellsCleared,
 		avgOccupied: moves > 0 ? occupiedSum / moves : countOccupied(state.board),
 		peakOccupied,
-		turnsWithoutMerge,
 		mergeMoveRatio: moves > 0 ? mergeMoves / moves : 0,
 		capped: moves >= maxMoves && !isGameOver(state),
 	}
 }
 
 function avg (values: number[]): number {
-	if (values.length === 0) {
-		return 0
-	}
-	return values.reduce((a, b) => a + b, 0) / values.length
+	return values.length === 0
+		? 0
+		: values.reduce((a, b) => a + b, 0) / values.length
 }
 
 function median (values: number[]): number {
@@ -188,7 +137,9 @@ function summarize (runs: RunMetrics[]) {
 		medianMoves: median(runs.map((r) => r.moves)),
 		avgMoves: Number(avg(runs.map((r) => r.moves)).toFixed(1)),
 		pctCapped: Number(
-			(100 * runs.filter((r) => r.capped).length / runs.length).toFixed(1),
+			((100 * runs.filter((r) => r.capped).length) / runs.length).toFixed(
+				1,
+			),
 		),
 		avgScore: Number(avg(runs.map((r) => r.score)).toFixed(1)),
 		avgMerges: Number(avg(runs.map((r) => r.merges)).toFixed(2)),
@@ -205,25 +156,17 @@ function summarize (runs: RunMetrics[]) {
 	}
 }
 
-describe('hex spawn-pressure benchmark', () => {
-	it('compares phase26 vs observedPressure on identical seeds', () => {
-		// Keep Jest suite light; full 100-seed matrix: npm run test:benchmark:full
-		const seedCount = 20
-		const policy: PolicyId = 'mergeSeeking'
-		const presets: RulePresetId[] = ['phase26', 'observedPressure']
-		const summary: Record<string, unknown> = { policy, seedCount }
+const seedCount = 100
+const policy: PolicyId = 'mergeSeeking'
+const presets: RulePresetId[] = ['phase26', 'observedPressure']
+const summary: Record<string, unknown> = { policy, seedCount }
 
-		for (const preset of presets) {
-			const runs: RunMetrics[] = []
-			for (let i = 0; i < seedCount; i += 1) {
-				runs.push(play(9000 + i, policy, preset))
-			}
-			summary[preset] = summarize(runs)
-		}
+for (const preset of presets) {
+	const runs: RunMetrics[] = []
+	for (let i = 0; i < seedCount; i += 1) {
+		runs.push(play(9000 + i, preset))
+	}
+	summary[preset] = summarize(runs)
+}
 
-		console.log('[spawn-pressure-benchmark]', JSON.stringify(summary, null, 2))
-		expect(summary.phase26).toBeDefined()
-		expect(summary.observedPressure).toBeDefined()
-		void getCell
-	})
-})
+console.log('[spawn-pressure-benchmark]', JSON.stringify(summary, null, 2))

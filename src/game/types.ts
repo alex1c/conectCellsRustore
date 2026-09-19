@@ -92,10 +92,27 @@ export interface GameState {
 	undoSnapshot: GameStateSnapshot | null
 }
 
+/**
+ * Compact turn outcome for gameplay, DEV telemetry, and future analytics.
+ * Populated on successful applyMove only.
+ */
+export interface TurnResolution {
+	mergeOccurred: boolean
+	mergeCount: number
+	maxMergedGroupSize: number
+	cascadeDepth: number
+	scoreGain: number
+	groupSizes: number[]
+	spawnCount: number
+	spawnedValues: number[]
+}
+
 export interface ApplyMoveResult {
 	ok: boolean
 	state: GameState
 	events: GameEvent[]
 	/** Present when ok=false because destination was unreachable. */
 	reason?: 'illegal' | 'blocked' | 'game_over'
+	/** Present when ok=true. */
+	turn?: TurnResolution
 }
