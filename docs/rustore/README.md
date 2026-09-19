@@ -4,23 +4,23 @@ Future submission checklist. Unknown fields stay blank — do not invent values.
 
 | Item | Value / notes |
 |------|----------------|
-| Final app name | _TBD_ |
+| Final app name | **Гексоника** / store: **Гексоника — числовая головоломка** |
 | Package | `ru.forestmusic.connectcells` |
-| versionName | _TBD_ (app.json `version` today: `1.0.0`) |
-| versionCode | _TBD_ |
+| versionName | `1.0.0` (`app.json`) |
+| versionCode | _TBD at release_ |
 | Support email | _TBD_ |
 | Privacy policy URL | _TBD_ |
-| Icon | From single master artwork (`docs/ASSET_POLICY.md`) |
+| Icon | Master `assets/icon_gpt.png` → derived tracked assets (`docs/ASSET_POLICY.md`) |
 | Screenshots | ~6 deterministic shots (`docs/SCREENSHOT_PLAN.md`) |
 | Short description | _TBD_ |
 | Full description | _TBD_ |
 | Tags | _TBD_ |
 | Age rating | _TBD_ |
-| Ads declaration | _TBD_ (ads not integrated in Phase 1) |
-| AppMetrica | _TBD_ (not integrated in Phase 1) |
+| Ads declaration | Yandex Ads units R-M-20075886-1…5 (banners / interstitial / rewarded) |
+| AppMetrica | Production key configured (masked in reports) |
 | Release AAB | Build in a later phase; binaries stay out of git |
 | Signature verification | _TBD_ |
 
-## Phase 1
+## Branding reproducibility
 
-No store upload. Package id and slug are reserved in `app.json` only.
+Android label and icons regenerate from tracked `app.json` + `assets/*` via Expo prebuild / `expo run:android`. Do not rely on manual edits under gitignored `android/`.

@@ -57,9 +57,15 @@ export async function showInterstitial (
 		if (!loader) {
 			return 'failed'
 		}
-		const ad = await loader.loadAd({
-			adUnitId: resolveAdUnitId(placement),
-		})
+		// Hard cap load — Game Over must never spin forever offline / on bad fill.
+		const ad = await Promise.race([
+			loader.loadAd({
+				adUnitId: resolveAdUnitId(placement),
+			}),
+			new Promise<null>((resolve) => {
+				setTimeout(() => resolve(null), 10000)
+			}),
+		])
 		if (!ad) {
 			return 'failed'
 		}

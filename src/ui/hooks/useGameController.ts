@@ -418,6 +418,37 @@ export function useGameController (): GameController {
 		setShakeKey(null)
 	}, [])
 
+	/**
+	 * Shared Game Over presentation: analytics → interstitial attempt → overlay.
+	 * Always reveals the result overlay (interstitial failure must not hang).
+	 */
+	const presentGameOverFlow = useCallback(
+		async (finalState: GameState) => {
+			logRunMetrics(finalState, startedAt)
+			const durationSec = Math.max(
+				0,
+				Math.round((Date.now() - startedAt) / 1000),
+			)
+			trackEvent('game_over', {
+				score: finalState.score,
+				level: getLevelForScore(finalState.score),
+				moves: finalState.moveCount,
+				duration: durationSec,
+				largestValue: finalState.largestValue,
+				largestGroup: finalState.largestGroup,
+				largestCascade: finalState.largestCascade,
+			})
+			const interstitial = await showInterstitial('gameOverInterstitial')
+			if (interstitial === 'shown') {
+				trackEvent('interstitial_shown')
+			} else {
+				trackEvent('interstitial_failed', { reason: interstitial })
+			}
+			setGameOverVisible(true)
+		},
+		[logRunMetrics, startedAt],
+	)
+
 	const playEvents = useCallback(
 		async (
 			startBoard: Board,
@@ -679,33 +710,14 @@ export function useGameController (): GameController {
 				recordTurnTelemetry(finalState, turn)
 			}
 			if (isGameOver(finalState)) {
-				logRunMetrics(finalState, startedAt)
-				const durationSec = Math.max(
-					0,
-					Math.round((Date.now() - startedAt) / 1000),
-				)
-				trackEvent('game_over', {
-					score: finalState.score,
-					level: getLevelForScore(finalState.score),
-					moves: finalState.moveCount,
-					duration: durationSec,
-					largestValue: finalState.largestValue,
-					largestGroup: finalState.largestGroup,
-					largestCascade: finalState.largestCascade,
-				})
-				// Attempt interstitial before revealing overlay; always show overlay after.
-				const interstitial = await showInterstitial('gameOverInterstitial')
-				if (interstitial === 'shown') {
-					trackEvent('interstitial_shown')
-				} else {
-					trackEvent('interstitial_failed', { reason: interstitial })
-				}
-				if (animTokenRef.current === token) {
-					setGameOverVisible(true)
+				await presentGameOverFlow(finalState)
+				// Drop overlay if this playback was superseded while the ad ran.
+				if (animTokenRef.current !== token) {
+					setGameOverVisible(false)
 				}
 			}
 		},
-		[logRunMetrics, recordTurnTelemetry, startedAt, syncDisplay],
+		[presentGameOverFlow, recordTurnTelemetry, syncDisplay],
 	)
 
 	const commitMove = useCallback(
@@ -903,7 +915,16 @@ export function useGameController (): GameController {
 		confirmRestart,
 		handleLoadFixture: (id: FixtureId) => {
 			if (__DEV__) {
-				beginNewGame(withPresetRules(loadFixture(id), presetRef.current))
+				const next = withPresetRules(
+					loadFixture(id),
+					presetRef.current,
+				)
+				beginNewGame(next)
+				// DEV gameOver fixture is already terminal — run the real
+				// interstitial → overlay path so Phase 4.1 QA can verify it.
+				if (isGameOver(next)) {
+					void presentGameOverFlow(next)
+				}
 			}
 		},
 		handleNewSeed: () => {

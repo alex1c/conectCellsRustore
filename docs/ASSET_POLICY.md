@@ -18,3 +18,12 @@ Do **not** overwrite it destructively. Derived assets are generated from it:
 | `store-assets/icon-1024.png` | Store listing |
 
 Regenerate derived files with a local script if the master is updated — never edit the master in place for size variants.
+
+## Native label / icon reproducibility
+
+Tracked source of truth:
+
+* `app.json` → `expo.name` = **Гексоника** (becomes Android `app_name` on Expo prebuild / `expo run:android`)
+* `app.json` → `expo.icon` + `android.adaptiveIcon.*` + `splash.image`
+
+The generated `android/` directory is gitignored. Production branding must **not** depend on manually editing gitignored `strings.xml`. After a clean native regeneration, the label and icons come from the tracked assets/config above.

@@ -32,6 +32,36 @@ describe('phase4 production shell', () => {
 		expect(APP_VERSION).toBe('1.0.0')
 	})
 
+	it('keeps app.json as native regeneration source of truth for name/icons', () => {
+		// Tracked config must drive Expo prebuild / run:android — not gitignored strings.xml.
+		const appJson = require('../../../app.json') as {
+			expo: {
+				name: string
+				icon: string
+				splash: { image: string }
+				android: {
+					adaptiveIcon: {
+						foregroundImage: string
+						backgroundImage: string
+						monochromeImage: string
+					}
+				}
+			}
+		}
+		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME)
+		expect(appJson.expo.icon).toBe('./assets/icon.png')
+		expect(appJson.expo.splash.image).toBe('./assets/splash-icon.png')
+		expect(appJson.expo.android.adaptiveIcon.foregroundImage).toBe(
+			'./assets/android-icon-foreground.png',
+		)
+		expect(appJson.expo.android.adaptiveIcon.backgroundImage).toBe(
+			'./assets/android-icon-background.png',
+		)
+		expect(appJson.expo.android.adaptiveIcon.monochromeImage).toBe(
+			'./assets/android-icon-monochrome.png',
+		)
+	})
+
 	it('keeps AD_PLACEMENTS IDs exact for RuStore units', () => {
 		expect(AD_PLACEMENTS.homeBanner).toBe('R-M-20075886-1')
 		expect(AD_PLACEMENTS.settingsBanner).toBe('R-M-20075886-2')

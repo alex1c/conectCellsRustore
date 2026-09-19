@@ -2,11 +2,16 @@
  * Sticky banner slot for Home / Settings / How to Play.
  * Collapses to zero height when ads are unavailable so layout stays intact.
  * Never crashes the host screen on SDK errors.
+ *
+ * Yandex BannerView builds `new AdRequest(adRequest)` during render — the
+ * `adRequest` prop MUST be a plain AdRequestParams object (with adUnitId),
+ * never undefined and never a pre-built AdRequest instance (double-wrap
+ * leaves `_adUnitId` empty for the native bridge).
  */
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
-import { Component, useEffect, useState, type ReactNode } from 'react'
+import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 
 import { initAds, isAdsSdkReady } from './adsService'
@@ -44,9 +49,14 @@ class BannerErrorBoundary extends Component<
 export function BannerSlot (props: BannerSlotProps) {
 	const { placement } = props
 	const [adSize, setAdSize] = useState<unknown>(null)
-	const [adRequest, setAdRequest] = useState<unknown>(null)
 	const [failed, setFailed] = useState(false)
 	const [BannerView, setBannerView] = useState<any>(null)
+
+	// Plain params object — BannerView constructs AdRequest itself.
+	const adRequestParams = useMemo(
+		() => ({ adUnitId: resolveAdUnitId(placement) }),
+		[placement],
+	)
 
 	useEffect(() => {
 		let cancelled = false
@@ -64,14 +74,12 @@ export function BannerSlot (props: BannerSlotProps) {
 				const size = await ads.BannerAdSize.stickySize(
 					Dimensions.get('window').width,
 				)
-				// Minimal AdRequest — targeting fields are optional for production fills.
-				const request = new ads.AdRequest({})
 				if (cancelled) {
 					return
 				}
+				// Store the component type (updater form avoids calling it as a function).
 				setBannerView(() => ads.BannerView)
 				setAdSize(size)
-				setAdRequest(request)
 			} catch {
 				if (!cancelled) {
 					setFailed(true)
@@ -83,7 +91,13 @@ export function BannerSlot (props: BannerSlotProps) {
 		}
 	}, [placement])
 
-	if (failed || !adSize || !adRequest || !BannerView || !isAdsSdkReady()) {
+	if (
+		failed ||
+		!adSize ||
+		!BannerView ||
+		!adRequestParams.adUnitId ||
+		!isAdsSdkReady()
+	) {
 		return <View style={styles.empty} accessibilityElementsHidden />
 	}
 
@@ -92,10 +106,8 @@ export function BannerSlot (props: BannerSlotProps) {
 			<View style={styles.wrap} pointerEvents="box-none">
 				<BannerView
 					size={adSize}
-					adUnitId={resolveAdUnitId(placement)}
-					adRequest={adRequest}
+					adRequest={adRequestParams}
 					onAdFailedToLoad={() => setFailed(true)}
-					onAdClose={() => setFailed(true)}
 				/>
 			</View>
 		</BannerErrorBoundary>
