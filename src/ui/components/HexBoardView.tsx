@@ -62,10 +62,11 @@ export function HexBoardView (props: HexBoardViewProps) {
 		shakeKey = null,
 		traveler = null,
 		scorePopup = null,
-		inputLocked,
+		inputLocked: _inputLocked,
 		boardWidth,
 		onCellPress,
 	} = props
+	void _inputLocked
 
 	const rows = board.length || BOARD_ROWS
 	const cols = board[0]?.length || BOARD_COLS
@@ -133,7 +134,9 @@ export function HexBoardView (props: HexBoardViewProps) {
 								spawn={spawnSet.has(key)}
 								shrinking={shrinkSet.has(key)}
 								shake={shakeKey === key}
-								disabled={inputLocked}
+								// Never gate presses via `disabled` — that waits for a full
+								// board re-paint. Controller uses a sync inputLockedRef.
+								disabled={false}
 								onPress={() => onCellPress(position)}
 							/>
 						</View>

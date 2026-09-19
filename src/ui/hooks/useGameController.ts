@@ -229,6 +229,12 @@ export function useGameController (): GameController {
 	const animTokenRef = useRef(0)
 	const metricsLoggedRef = useRef(false)
 	const selectedRef = useRef<Position | null>(null)
+	/**
+	 * Synchronous input gate — must unlock BEFORE waiting for React to re-paint
+	 * every hex `disabled` prop (that paint was ~0.5–1s of perceived latency).
+	 * Tap handlers read this ref; `inputLocked` state only drives chrome UI.
+	 */
+	const inputLockedRef = useRef(false)
 	/** True once a save was loaded as active or New Game persisted. */
 	const persistedActiveRef = useRef(false)
 
@@ -236,6 +242,10 @@ export function useGameController (): GameController {
 		gameRef.current = game
 	}, [game])
 
+	const setInputLock = useCallback((locked: boolean) => {
+		inputLockedRef.current = locked
+		setInputLocked(locked)
+	}, [])
 	useEffect(() => {
 		presetRef.current = activePreset
 	}, [activePreset])
@@ -280,7 +290,7 @@ export function useGameController (): GameController {
 			syncDisplay(next)
 			setSelected(null)
 			setGainFlash(null)
-			setInputLocked(false)
+			setInputLock(false)
 			setShowRestartDialog(false)
 			setPathBlockedFlash(false)
 			setLastTurn(null)
@@ -292,7 +302,7 @@ export function useGameController (): GameController {
 			setHasActiveGame(true)
 			void persist(next, now)
 		},
-		[persist, syncDisplay],
+		[persist, setInputLock, syncDisplay],
 	)
 
 	useEffect(() => {
@@ -353,7 +363,7 @@ export function useGameController (): GameController {
 			if (status !== 'active' && inputLocked) {
 				animTokenRef.current += 1
 				syncDisplay(gameRef.current)
-				setInputLocked(false)
+				setInputLock(false)
 				setTraveler(null)
 				setShrinkKeys([])
 				setSpawnKeys([])
@@ -364,7 +374,7 @@ export function useGameController (): GameController {
 		return () => {
 			sub.remove()
 		}
-	}, [inputLocked, syncDisplay])
+	}, [inputLocked, setInputLock, syncDisplay])
 
 	const logRunMetrics = useCallback(
 		(state: GameState, started: number) => {
@@ -460,8 +470,10 @@ export function useGameController (): GameController {
 			finalState: GameState,
 			token: number,
 			turn: TurnResolution | undefined,
+			interactionStartedAt: number,
+			engineMs: number,
 		) => {
-			const lockStartedAt = Date.now()
+			const lockStartedAt = interactionStartedAt
 			let board = cloneBoard(startBoard)
 			let score = startScore
 
@@ -470,12 +482,18 @@ export function useGameController (): GameController {
 			)
 
 			/**
-			 * Ordinary move + spawn: path is the only critical wait.
-			 * Snap to authoritative final board, flash spawn keys, unlock ASAP.
-			 * Merge/cascade keeps the expressive multi-step playback below.
+			 * Ordinary move + spawn:
+			 * Commit authoritative final board and unlock IMMEDIATELY.
+			 * Do NOT await path setTimeout — after setGame/setInputLock the JS
+			 * thread is busy painting, so a 38ms timer slips to ~300–1000ms on
+			 * OPPO (root cause of ~1s perceived latency).
+			 * Path hop budgets remain for merge playback / diagnostics only.
+			 * Input gates on inputLockedRef (sync), not hex `disabled` re-paint.
 			 */
 			if (!hasMergePlayback) {
 				const moveEvent = events.find((e) => e.type === 'MOVE')
+				let hops = 0
+				let pathBudgetMs = 0
 				if (moveEvent && moveEvent.type === 'MOVE') {
 					playSound('move')
 					void hapticMove()
@@ -483,69 +501,31 @@ export function useGameController (): GameController {
 						moveEvent.path.length > 0
 							? moveEvent.path
 							: [moveEvent.from, moveEvent.to]
-					const totalMoveMs = pathTotalMs(path.length)
-					const stepMs = pathStepMs(path.length)
-					const hops = Math.max(1, path.length - 1)
+					pathBudgetMs = pathTotalMs(path.length)
+					hops = Math.max(1, path.length - 1)
 					if (__DEV__) {
 						console.log(
 							'[ConnectCells] path playback ' +
 								JSON.stringify({
 									pathLength: path.length,
 									hops,
-									stepMs,
-									totalMoveMs,
+									stepMs: pathStepMs(path.length),
+									totalMoveMs: pathBudgetMs,
+									skippedForInteraction: true,
 								}),
 						)
 					}
-
-					board = cloneBoard(board)
-					const fromRow = board[moveEvent.from.row]
-					if (fromRow) {
-						fromRow[moveEvent.from.col] = null
-					}
-					// Vacate + first hop in one React batch before the path clock.
-					unstable_batchedUpdates(() => {
-						setDisplayBoard(board)
-						if (path.length > 1) {
-							setTraveler({
-								position: path[1]!,
-								value: moveEvent.value,
-							})
-						}
-					})
-					const pathStartedAt = Date.now()
-					const moveToken = token
-					for (let i = 2; i < path.length; i += 1) {
-						const hopIndex = i
-						const atMs = Math.round(
-							(totalMoveMs * (hopIndex - 1)) / hops,
-						)
-						void delay(atMs).then(() => {
-							if (animTokenRef.current !== moveToken) {
-								return
-							}
-							setTraveler({
-								position: path[hopIndex]!,
-								value: moveEvent.value,
-							})
-						})
-					}
-					const remaining = Math.max(
-						0,
-						totalMoveMs - (Date.now() - pathStartedAt),
-					)
-					await delay(remaining)
-					if (animTokenRef.current !== token) {
-						return
-					}
 				}
 
-				// One paint: final board + spawn flash + unlock (post-await batch).
 				const spawnEvent = events.find((e) => e.type === 'SPAWN')
 				const spawnKeys =
 					spawnEvent && spawnEvent.type === 'SPAWN'
 						? spawnEvent.cells.map((c) => posKey(c.position))
 						: []
+
+				const commitStartedAt = Date.now()
+				// Sync unlock first — next tap may proceed via ref + gameRef.
+				inputLockedRef.current = false
 				unstable_batchedUpdates(() => {
 					setTraveler(null)
 					setDisplayBoard(cloneBoard(finalState.board))
@@ -555,13 +535,13 @@ export function useGameController (): GameController {
 					setPulseStrong(false)
 					setShakeKey(null)
 					setScorePopup(null)
-					if (spawnKeys.length > 0) {
-						setSpawnKeys(spawnKeys)
-					} else {
-						setSpawnKeys([])
-					}
+					setSpawnKeys(spawnKeys.length > 0 ? spawnKeys : [])
 					setInputLocked(false)
 				})
+				const boardCommitMs = Date.now() - commitStartedAt
+				const interactionLatencyMs = Date.now() - lockStartedAt
+				const pathAnimationMs = 0
+
 				if (spawnKeys.length > 0) {
 					playSound('spawn')
 					const spawnToken = token
@@ -588,20 +568,24 @@ export function useGameController (): GameController {
 					}
 				}
 
-				if (animTokenRef.current !== token) {
-					return
-				}
-				const inputLockMs = Date.now() - lockStartedAt
 				if (__DEV__) {
 					console.log(
-						'[ConnectCells] turn lock ' +
+						'[ConnectCells] interaction latency ' +
 							JSON.stringify({
-								inputLockMs,
+								hops,
+								pathBudgetMs,
+								pathAnimationMs,
+								engineMs,
+								boardCommitMs,
+								paintWaitMs: 0,
+								interactionLatencyMs,
 								eventTypes: events.map((e) => e.type),
-								mergeCount: turn?.mergeCount ?? 0,
-								cascadeDepth: turn?.cascadeDepth ?? 0,
 							}),
 					)
+				}
+
+				if (animTokenRef.current !== token) {
+					return
 				}
 				if (turn) {
 					recordTurnTelemetry(finalState, turn)
@@ -892,7 +876,7 @@ export function useGameController (): GameController {
 				)
 			}
 			// Unlock before the final sync commit so input recovers ASAP.
-			setInputLocked(false)
+			setInputLock(false)
 			syncDisplay(finalState)
 			if (turn) {
 				recordTurnTelemetry(finalState, turn)
@@ -905,22 +889,29 @@ export function useGameController (): GameController {
 				}
 			}
 		},
-		[presentGameOverFlow, recordTurnTelemetry, syncDisplay],
+		[presentGameOverFlow, recordTurnTelemetry, setInputLock, syncDisplay],
 	)
 
 	const commitMove = useCallback(
 		async (move: Move) => {
+			const interactionStartedAt = Date.now()
 			const current = gameRef.current
 			const startBoard = cloneBoard(current.board)
 			const startScore = current.score
+			const engineStartedAt = Date.now()
 			const result = applyMove(current, move)
+			const engineMs = Date.now() - engineStartedAt
 			if (!result.ok) {
 				await flashBlocked(selectedRef.current)
 				return
 			}
 			setSelected(null)
-			setInputLocked(true)
+			selectedRef.current = null
+			setInputLock(true)
+			// Keep gameRef in sync immediately — do not wait for useEffect.
+			gameRef.current = result.state
 			setGame(result.state)
+			// Persistence must never hold the interaction lock.
 			void persist(result.state, startedAt)
 			const token = animTokenRef.current + 1
 			animTokenRef.current = token
@@ -931,14 +922,17 @@ export function useGameController (): GameController {
 				result.state,
 				token,
 				result.turn,
+				interactionStartedAt,
+				engineMs,
 			)
 		},
-		[flashBlocked, persist, playEvents, startedAt],
+		[flashBlocked, persist, playEvents, setInputLock, startedAt],
 	)
 
 	const handleCellPress = useCallback(
 		(position: Position) => {
-			if (inputLocked || !ready) {
+			// Sync gate — do not wait for hex `disabled` props to re-render.
+			if (inputLockedRef.current || !ready) {
 				return
 			}
 			const current = gameRef.current
@@ -947,8 +941,9 @@ export function useGameController (): GameController {
 			}
 
 			const value = getCell(current.board, position)
+			const selectedNow = selectedRef.current
 
-			if (!selected) {
+			if (!selectedNow) {
 				if (value === null) {
 					return
 				}
@@ -964,11 +959,13 @@ export function useGameController (): GameController {
 				}
 				playSound('select')
 				void hapticSelection()
+				selectedRef.current = position
 				setSelected(position)
 				return
 			}
 
-			if (samePosition(selected, position)) {
+			if (samePosition(selectedNow, position)) {
+				selectedRef.current = null
 				setSelected(null)
 				return
 			}
@@ -983,20 +980,21 @@ export function useGameController (): GameController {
 				if (reachable.length > 0) {
 					playSound('select')
 					void hapticSelection()
+					selectedRef.current = position
 					setSelected(position)
 					return
 				}
-				void flashBlocked(selected)
+				void flashBlocked(selectedNow)
 				return
 			}
 
-			void commitMove({ from: selected, to: position })
+			void commitMove({ from: selectedNow, to: position })
 		},
-		[commitMove, flashBlocked, inputLocked, ready, selected],
+		[commitMove, flashBlocked, ready],
 	)
 
 	const handleUndo = useCallback(() => {
-		if (inputLocked) {
+		if (inputLockedRef.current) {
 			return
 		}
 		const current = gameRef.current
@@ -1010,13 +1008,13 @@ export function useGameController (): GameController {
 		syncDisplay(restored)
 		setSelected(null)
 		setGainFlash(null)
-		setInputLocked(false)
+		setInputLock(false)
 		setLastTurn(null)
 		setLevelUpVisible(false)
 		setChainVisible(false)
 		setGameOverVisible(false)
 		void persist(restored, startedAt)
-	}, [inputLocked, persist, startedAt, syncDisplay])
+	}, [persist, setInputLock, startedAt, syncDisplay])
 
 	const confirmRestart = useCallback(() => {
 		// Manual restart must NOT show interstitial.
