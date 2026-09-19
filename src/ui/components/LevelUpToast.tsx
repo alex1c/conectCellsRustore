@@ -5,31 +5,40 @@
 import { useEffect, useMemo } from 'react'
 import { Animated, StyleSheet, Text } from 'react-native'
 
+import { TIMING_LEVEL_UP_MS } from '../feel/timings'
+
 export interface LevelUpToastProps {
 	visible: boolean
 	level: number
 	onHidden: () => void
 }
 
-const SHOW_MS = 1300
-
 export function LevelUpToast (props: LevelUpToastProps) {
 	const { visible, level, onHidden } = props
 	// Stable Animated.Value for the lifetime of this toast (same pattern as HexCellView).
 	const opacity = useMemo(() => new Animated.Value(0), [])
+	const scale = useMemo(() => new Animated.Value(0.94), [])
 
 	useEffect(() => {
 		if (!visible) {
 			return undefined
 		}
 		opacity.setValue(0)
+		scale.setValue(0.94)
 		const show = Animated.sequence([
-			Animated.timing(opacity, {
-				toValue: 1,
-				duration: 160,
-				useNativeDriver: true,
-			}),
-			Animated.delay(SHOW_MS - 320),
+			Animated.parallel([
+				Animated.timing(opacity, {
+					toValue: 1,
+					duration: 160,
+					useNativeDriver: true,
+				}),
+				Animated.timing(scale, {
+					toValue: 1,
+					duration: 160,
+					useNativeDriver: true,
+				}),
+			]),
+			Animated.delay(TIMING_LEVEL_UP_MS - 320),
 			Animated.timing(opacity, {
 				toValue: 0,
 				duration: 160,
@@ -44,16 +53,19 @@ export function LevelUpToast (props: LevelUpToastProps) {
 		return () => {
 			show.stop()
 		}
-	}, [visible, level, opacity, onHidden])
+	}, [visible, level, opacity, scale, onHidden])
 
 	if (!visible) {
 		return null
 	}
 
 	return (
-		<Animated.View style={[styles.toast, { opacity }]} pointerEvents="none">
+		<Animated.View
+			style={[styles.toast, { opacity, transform: [{ scale }] }]}
+			pointerEvents="none"
+		>
 			<Text style={styles.title}>Уровень {level}</Text>
-			<Text style={styles.sub}>Сложность растёт</Text>
+			<Text style={styles.sub}>Сложность повышена</Text>
 		</Animated.View>
 	)
 }

@@ -1,6 +1,9 @@
-# Connect Cells — Game Rules (Phase 2.8)
+# Connect Cells — Game Rules (Phase 2.8 / Phase 3 presentation)
 
 ## History
+
+Phase 3 polishes animation, sound, haptics, and onboarding **without changing**
+approved gameplay mathematics (board, merge, spawn Level 1, level thresholds).
 
 Phase 2.8 adds endless score-based levels with optional bonus spawn pressure on top of the approved observedPressure base.
 

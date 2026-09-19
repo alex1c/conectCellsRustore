@@ -1,34 +1,51 @@
 /**
- * Pointy-top hex cell with selection / pulse / spawn feedback.
- * Logcat may label this as "CellView" via source maps; export is HexCellView.
+ * Pointy-top hex cell with selection / pulse / spawn / shrink feedback.
+ * Uses timing/spring only — never Animated.loop (Hermes-fragile).
  */
 
 import { useEffect, useMemo, useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 
-import { getHexCellVisual } from '../theme/cellVisuals'
+import { TIMING_SELECTION_MS, TIMING_SPAWN_MS } from '../feel/timings'
+import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
 
 export interface HexCellViewProps {
 	value: number | null
 	size: number
 	selected: boolean
 	pulse: boolean
+	/** Extra-strong pop for large merges / cascade. */
+	pulseStrong?: boolean
 	spawn: boolean
+	/** Merge converge: shrink absorbed cells. */
+	shrinking?: boolean
+	/** Light shake when path is blocked while selected. */
+	shake?: boolean
 	disabled: boolean
 	onPress: () => void
+	/** Expand pressable hit area slightly beyond the visual hex. */
+	hitSlop?: number
 }
 
-/**
- * Render one hex cell. Uses timing/spring only — no Animated.loop.
- * (Loop + string rotate interpolate was a runtime failure path on Hermes.)
- */
 export function HexCellView (props: HexCellViewProps) {
-	const { value, size, selected, pulse, spawn, disabled, onPress } = props
+	const {
+		value,
+		size,
+		selected,
+		pulse,
+		pulseStrong = false,
+		spawn,
+		shrinking = false,
+		shake = false,
+		disabled,
+		onPress,
+		hitSlop = 6,
+	} = props
 	const visual = getHexCellVisual(value)
 
-	// Stable Animated.Value instances for the lifetime of this cell.
 	const scale = useMemo(() => new Animated.Value(1), [])
 	const wobble = useMemo(() => new Animated.Value(0), [])
+	const opacity = useMemo(() => new Animated.Value(1), [])
 	const selectionAnimRef = useRef<Animated.CompositeAnimation | null>(null)
 
 	useEffect(() => {
@@ -47,9 +64,8 @@ export function HexCellView (props: HexCellViewProps) {
 			return undefined
 		}
 
-		// Gentle scale bump + one-shot wobble (no infinite loop API).
 		Animated.spring(scale, {
-			toValue: 1.06,
+			toValue: 1.07,
 			friction: 6,
 			useNativeDriver: true,
 		}).start()
@@ -57,17 +73,17 @@ export function HexCellView (props: HexCellViewProps) {
 		const wobbleOnce = Animated.sequence([
 			Animated.timing(wobble, {
 				toValue: 1,
-				duration: 100,
+				duration: TIMING_SELECTION_MS,
 				useNativeDriver: true,
 			}),
 			Animated.timing(wobble, {
 				toValue: -1,
-				duration: 100,
+				duration: TIMING_SELECTION_MS,
 				useNativeDriver: true,
 			}),
 			Animated.timing(wobble, {
 				toValue: 0,
-				duration: 100,
+				duration: TIMING_SELECTION_MS,
 				useNativeDriver: true,
 			}),
 		])
@@ -85,15 +101,16 @@ export function HexCellView (props: HexCellViewProps) {
 		if (!pulse) {
 			return undefined
 		}
+		const peak = pulseStrong ? 1.2 : 1.12
 		const animation = Animated.sequence([
 			Animated.timing(scale, {
-				toValue: 1.12,
-				duration: 90,
+				toValue: peak,
+				duration: pulseStrong ? 110 : 90,
 				useNativeDriver: true,
 			}),
 			Animated.timing(scale, {
-				toValue: selected ? 1.06 : 1,
-				duration: 90,
+				toValue: selected ? 1.07 : 1,
+				duration: pulseStrong ? 110 : 90,
 				useNativeDriver: true,
 			}),
 		])
@@ -101,35 +118,104 @@ export function HexCellView (props: HexCellViewProps) {
 		return () => {
 			animation.stop()
 		}
-	}, [pulse, scale, selected])
+	}, [pulse, pulseStrong, scale, selected])
 
 	useEffect(() => {
 		if (!spawn) {
 			return undefined
 		}
-		scale.setValue(0.6)
-		const animation = Animated.timing(scale, {
-			toValue: 1,
-			duration: 160,
-			useNativeDriver: true,
-		})
+		scale.setValue(0.7)
+		opacity.setValue(0.35)
+		const animation = Animated.parallel([
+			Animated.timing(scale, {
+				toValue: 1,
+				duration: TIMING_SPAWN_MS,
+				useNativeDriver: true,
+			}),
+			Animated.timing(opacity, {
+				toValue: 1,
+				duration: TIMING_SPAWN_MS,
+				useNativeDriver: true,
+			}),
+		])
 		animation.start()
 		return () => {
 			animation.stop()
 		}
-	}, [spawn, scale])
+	}, [spawn, scale, opacity])
+
+	useEffect(() => {
+		if (!shrinking) {
+			opacity.setValue(1)
+			return undefined
+		}
+		const animation = Animated.parallel([
+			Animated.timing(scale, {
+				toValue: 0.35,
+				duration: 130,
+				useNativeDriver: true,
+			}),
+			Animated.timing(opacity, {
+				toValue: 0.15,
+				duration: 130,
+				useNativeDriver: true,
+			}),
+		])
+		animation.start()
+		return () => {
+			animation.stop()
+		}
+	}, [shrinking, scale, opacity])
+
+	useEffect(() => {
+		if (!shake) {
+			return undefined
+		}
+		const animation = Animated.sequence([
+			Animated.timing(wobble, {
+				toValue: 1.4,
+				duration: 50,
+				useNativeDriver: true,
+			}),
+			Animated.timing(wobble, {
+				toValue: -1.4,
+				duration: 50,
+				useNativeDriver: true,
+			}),
+			Animated.timing(wobble, {
+				toValue: 0.8,
+				duration: 50,
+				useNativeDriver: true,
+			}),
+			Animated.timing(wobble, {
+				toValue: 0,
+				duration: 50,
+				useNativeDriver: true,
+			}),
+		])
+		animation.start()
+		return () => {
+			animation.stop()
+		}
+	}, [shake, wobble])
 
 	const rotate = wobble.interpolate({
-		inputRange: [-1, 1],
-		outputRange: ['-4deg', '4deg'],
+		inputRange: [-1.5, 1.5],
+		outputRange: ['-5deg', '5deg'],
 	})
 
 	const width = size
 	const height = size * 1.1
-	const fontSize = value !== null && value >= 100 ? size * 0.28 : size * 0.36
+	const fontSize =
+		value !== null ? hexValueFontSize(value, size) : size * 0.36
 
 	return (
-		<Pressable disabled={disabled} onPress={onPress}>
+		<Pressable
+			disabled={disabled}
+			onPress={onPress}
+			hitSlop={hitSlop}
+			accessibilityRole="button"
+		>
 			<Animated.View
 				style={[
 					styles.hex,
@@ -138,13 +224,18 @@ export function HexCellView (props: HexCellViewProps) {
 						height,
 						backgroundColor: visual.fill,
 						borderColor: selected ? '#1d4ed8' : visual.stroke,
-						borderWidth: selected ? 3 : 1.5,
+						borderWidth: selected ? 3 : value === null ? 1 : 1.5,
+						opacity,
 						transform: [{ scale }, { rotate }],
 					},
 				]}
 			>
 				{value !== null ? (
-					<Text style={[styles.label, { color: visual.text, fontSize }]}>
+					<Text
+						style={[styles.label, { color: visual.text, fontSize }]}
+						numberOfLines={1}
+						adjustsFontSizeToFit
+					>
 						{String(value)}
 					</Text>
 				) : (

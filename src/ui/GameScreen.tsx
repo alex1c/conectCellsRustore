@@ -1,5 +1,5 @@
 /**
- * Main hex playable screen (Phase 2.6).
+ * Main hex playable screen — Phase 3 game-feel polish.
  */
 
 import { useMemo, useState } from 'react'
@@ -15,12 +15,15 @@ import {
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 
-import { HexBoardView } from './components/HexBoardView'
+import { ChainToast } from './components/ChainToast'
 import { DevPanel } from './components/DevPanel'
 import { GameOverOverlay } from './components/GameOverOverlay'
+import { HexBoardView } from './components/HexBoardView'
 import { LevelUpToast } from './components/LevelUpToast'
+import { OnboardingModal } from './components/OnboardingModal'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
+import { SettingsSheet } from './components/SettingsSheet'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
 import { useGameController } from './hooks/useGameController'
 
@@ -29,6 +32,7 @@ const H_PAD = 16
 // pad with RN StatusBar height instead of RNCSafeAreaProvider.
 const TOP_INSET =
 	Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) : 0
+const BOTTOM_INSET = Platform.OS === 'android' ? 12 : 8
 
 export function GameScreen () {
 	const game = useGameController()
@@ -58,8 +62,18 @@ export function GameScreen () {
 			onLayout={handleLayout}
 		>
 			<StatusBar style="dark" />
-			<View style={styles.container}>
-				<Text style={styles.brand}>Connect Cells</Text>
+			<View style={[styles.container, { paddingBottom: BOTTOM_INSET }]}>
+				<View style={styles.brandRow}>
+					<Text style={styles.brand}>Connect Cells</Text>
+					<Pressable
+						style={styles.gear}
+						onPress={game.openSettings}
+						accessibilityLabel="Настройки"
+					>
+						<Text style={styles.gearText}>⚙</Text>
+					</Pressable>
+				</View>
+
 				<ScoreHeader
 					score={game.displayScore}
 					best={game.bestScore}
@@ -82,7 +96,12 @@ export function GameScreen () {
 							board={game.displayBoard}
 							selected={game.selected}
 							pulseKey={game.pulseKey}
+							pulseStrong={game.pulseStrong}
 							spawnKeys={game.spawnKeys}
+							shrinkKeys={game.shrinkKeys}
+							shakeKey={game.shakeKey}
+							traveler={game.traveler}
+							scorePopup={game.scorePopup}
 							inputLocked={game.inputLocked}
 							boardWidth={boardWidth}
 							onCellPress={game.handleCellPress}
@@ -110,7 +129,7 @@ export function GameScreen () {
 						disabled={game.inputLocked}
 						onPress={game.requestRestart}
 					>
-						<Text style={styles.buttonText}>Restart</Text>
+						<Text style={styles.buttonText}>Заново</Text>
 					</Pressable>
 				</View>
 
@@ -141,10 +160,31 @@ export function GameScreen () {
 				level={game.levelUpLevel}
 				onHidden={game.dismissLevelUp}
 			/>
+			<ChainToast
+				visible={game.chainVisible}
+				cascadeLevel={game.chainLevel}
+				onHidden={game.dismissChain}
+			/>
 			<RestartDialog
 				visible={game.showRestartDialog}
 				onCancel={game.cancelRestart}
 				onConfirm={game.confirmRestart}
+			/>
+			<SettingsSheet
+				visible={game.showSettings}
+				soundEnabled={game.soundEnabled}
+				hapticEnabled={game.hapticEnabled}
+				onToggleSound={game.setSoundPref}
+				onToggleHaptic={game.setHapticPref}
+				onHowToPlay={game.openHowToPlay}
+				onClose={game.closeSettings}
+			/>
+			<OnboardingModal
+				visible={game.showOnboarding}
+				step={game.onboardingStep}
+				onNext={game.onboardingNext}
+				onSkip={game.onboardingSkip}
+				onFinish={game.onboardingFinish}
 			/>
 		</View>
 	)
@@ -153,13 +193,13 @@ export function GameScreen () {
 const styles = StyleSheet.create({
 	safe: {
 		flex: 1,
-		backgroundColor: '#f3f6fb',
+		backgroundColor: '#e8eef7',
 	},
 	loading: {
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: '#f3f6fb',
+		backgroundColor: '#e8eef7',
 		gap: 12,
 	},
 	loadingText: {
@@ -169,13 +209,32 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: H_PAD,
 		paddingTop: 4,
-		paddingBottom: 8,
+	},
+	brandRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		marginBottom: 2,
 	},
 	brand: {
-		fontSize: 24,
+		fontSize: 26,
 		fontWeight: '800',
 		color: '#0f172a',
-		marginBottom: 4,
+		letterSpacing: -0.4,
+	},
+	gear: {
+		width: 40,
+		height: 40,
+		borderRadius: 12,
+		backgroundColor: '#ffffff',
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderWidth: 1,
+		borderColor: '#dbe3ef',
+	},
+	gearText: {
+		fontSize: 18,
+		color: '#334155',
 	},
 	hint: {
 		fontSize: 13,

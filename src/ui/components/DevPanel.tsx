@@ -1,8 +1,9 @@
 /**
  * Compact development tools: preset switch, fixtures, turn telemetry.
- * Imports fixtures directly — avoids barrel circular init issues.
+ * Collapsed by default so human playtest is not crowded. Production: null.
  */
 
+import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import {
@@ -49,10 +50,6 @@ function formatGroups (sizes: number[]): string {
 }
 
 export function DevPanel (props: DevPanelProps) {
-	if (!__DEV__) {
-		return null
-	}
-
 	const {
 		activePreset,
 		onSelectPreset,
@@ -62,6 +59,12 @@ export function DevPanel (props: DevPanelProps) {
 		lastTurn,
 	} = props
 
+	const [expanded, setExpanded] = useState(false)
+
+	if (!__DEV__) {
+		return null
+	}
+
 	if (!Array.isArray(FIXTURE_IDS) || FIXTURE_IDS.length === 0) {
 		throw new Error(
 			'DevPanel: FIXTURE_IDS missing — hex fixtures module failed to load',
@@ -70,92 +73,97 @@ export function DevPanel (props: DevPanelProps) {
 
 	return (
 		<View style={styles.wrap}>
-			<View style={styles.headerRow}>
-				<Text style={styles.title}>Dev</Text>
-				<Pressable style={styles.seedBtn} onPress={onNewSeed}>
-					<Text style={styles.seedText}>New seed</Text>
-				</Pressable>
-			</View>
+			<Pressable
+				style={styles.headerRow}
+				onPress={() => setExpanded((v) => !v)}
+			>
+				<Text style={styles.title}>
+					DEV {expanded ? '▾' : '▸'}
+				</Text>
+				{expanded ? (
+					<Pressable
+						style={styles.seedBtn}
+						onPress={(e) => {
+							e.stopPropagation?.()
+							onNewSeed()
+						}}
+					>
+						<Text style={styles.seedText}>New seed</Text>
+					</Pressable>
+				) : (
+					<Text style={styles.collapsedHint}>tools</Text>
+				)}
+			</Pressable>
 
-			<Text style={styles.section}>Preset</Text>
-			<View style={styles.row}>
-				{RULE_PRESET_IDS.map((id) => {
-					const active = id === activePreset
-					return (
-						<Pressable
-							key={id}
-							style={[styles.chip, active && styles.chipActive]}
-							onPress={() => onSelectPreset(id)}
-						>
-							<Text
-								style={[
-									styles.chipText,
-									active && styles.chipTextActive,
-								]}
+			{expanded ? (
+				<>
+					<Text style={styles.section}>Preset</Text>
+					<View style={styles.row}>
+						{RULE_PRESET_IDS.map((id) => {
+							const active = id === activePreset
+							return (
+								<Pressable
+									key={id}
+									style={[styles.chip, active && styles.chipActive]}
+									onPress={() => onSelectPreset(id)}
+								>
+									<Text
+										style={[
+											styles.chipText,
+											active && styles.chipTextActive,
+										]}
+									>
+										{presetDisplayName(id)}
+									</Text>
+								</Pressable>
+							)
+						})}
+					</View>
+					<Text style={styles.activeHint}>
+						Active: {presetDisplayName(activePreset)} ({activePreset})
+					</Text>
+
+					{lastTurn ? (
+						<Text style={styles.telemetry}>
+							Turn {lastTurn.turnNumber}: occ {lastTurn.occupied}/
+							{lastTurn.capacity} · spawn {lastTurn.turn.spawnCount} (base{' '}
+							{lastTurn.turn.baseSpawnCount}+
+							{lastTurn.turn.bonusSpawnCount}) · Level:{' '}
+							{lastTurn.turn.levelBefore}→{lastTurn.turn.levelAfter} ·
+							groups {formatGroups(lastTurn.turn.groupSizes)}
+						</Text>
+					) : null}
+
+					{lastMetrics ? (
+						<Text style={styles.metrics}>
+							moves {lastMetrics.moves} · score {lastMetrics.finalScore} ·
+							max {lastMetrics.largestValue} · group{' '}
+							{lastMetrics.largestGroup} · cascade{' '}
+							{lastMetrics.largestCascade}
+							{lastMetrics.durationSec !== null
+								? ` · ${lastMetrics.durationSec}s`
+								: ''}
+						</Text>
+					) : null}
+
+					<Text style={styles.section}>Fixtures</Text>
+					<ScrollView
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.fixtureRow}
+					>
+						{FIXTURE_IDS.map((id) => (
+							<Pressable
+								key={id}
+								style={styles.fixture}
+								onPress={() => onLoadFixture(id)}
+								accessibilityLabel={id}
 							>
-								{presetDisplayName(id)}
-							</Text>
-						</Pressable>
-					)
-				})}
-			</View>
-			<Text style={styles.activeHint}>
-				Active: {presetDisplayName(activePreset)} ({activePreset})
-			</Text>
-
-			{lastTurn ? (
-				<Text style={styles.telemetry}>
-					Turn: {lastTurn.turnNumber}
-					{'\n'}
-					Level: {lastTurn.turn.levelBefore}
-					{' → '}
-					{lastTurn.turn.levelAfter}
-					{'\n'}
-					Merge: {lastTurn.turn.mergeOccurred ? 'yes' : 'no'}
-					{'\n'}
-					Groups: {formatGroups(lastTurn.turn.groupSizes)}
-					{'\n'}
-					Cascade: {Math.max(0, lastTurn.turn.cascadeDepth - 1)}
-					{'\n'}
-					Spawn: {lastTurn.turn.spawnCount}
-					{' (base '}
-					{lastTurn.turn.baseSpawnCount}
-					{' + bonus '}
-					{lastTurn.turn.bonusSpawnCount}
-					{')'}
-					{'\n'}
-					Spawn values:{' '}
-					{lastTurn.turn.spawnedValues.length > 0
-						? lastTurn.turn.spawnedValues.join(', ')
-						: '—'}
-					{'\n'}
-					Occupied: {lastTurn.occupied}/{lastTurn.capacity}
-				</Text>
-			) : null}
-
-			<Text style={styles.section}>Fixtures</Text>
-			<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-				<View style={styles.row}>
-					{FIXTURE_IDS.map((id) => (
-						<Pressable
-							key={id}
-							style={styles.chip}
-							onPress={() => onLoadFixture(id)}
-						>
-							<Text style={styles.chipText}>{id}</Text>
-						</Pressable>
-					))}
-				</View>
-			</ScrollView>
-			{lastMetrics ? (
-				<Text style={styles.metrics}>
-					moves {lastMetrics.moves} · score {lastMetrics.finalScore} · max{' '}
-					{lastMetrics.largestValue} · group {lastMetrics.largestGroup} ·
-					cascade {lastMetrics.largestCascade}
-					{lastMetrics.durationSec !== null
-						? ` · ${lastMetrics.durationSec}s`
-						: ''}
-				</Text>
+								<Text style={styles.fixtureText}>{id}</Text>
+							</Pressable>
+						))}
+					</ScrollView>
+				</>
 			) : null}
 		</View>
 	)
@@ -180,6 +188,10 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 		color: '#64748b',
 		textTransform: 'uppercase',
+	},
+	collapsedHint: {
+		fontSize: 11,
+		color: '#94a3b8',
 	},
 	section: {
 		fontSize: 10,
@@ -243,5 +255,20 @@ const styles = StyleSheet.create({
 		marginTop: 6,
 		fontSize: 11,
 		color: '#64748b',
+	},
+	fixtureRow: {
+		paddingVertical: 4,
+	},
+	fixture: {
+		backgroundColor: '#e2e8f0',
+		paddingHorizontal: 10,
+		paddingVertical: 8,
+		borderRadius: 8,
+		marginRight: 6,
+	},
+	fixtureText: {
+		fontSize: 11,
+		fontWeight: '600',
+		color: '#0f172a',
 	},
 })

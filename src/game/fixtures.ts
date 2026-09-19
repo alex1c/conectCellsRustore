@@ -366,6 +366,125 @@ export function fixtureHighLevelCap (): GameState {
 	})
 }
 
+/** RuStore-ready balanced beauty shot (dev-only). */
+export function fixtureScreenshotNormal (): GameState {
+	return createGameFromBoard({
+		seed: 4201,
+		score: 860,
+		moveCount: 28,
+		board: boardFromSparse([
+			{ row: 0, col: 1, value: 1 },
+			{ row: 0, col: 4, value: 2 },
+			{ row: 1, col: 2, value: 4 },
+			{ row: 2, col: 0, value: 1 },
+			{ row: 2, col: 3, value: 2 },
+			{ row: 3, col: 2, value: 8 },
+			{ row: 3, col: 5, value: 1 },
+			{ row: 4, col: 1, value: 2 },
+			{ row: 4, col: 4, value: 4 },
+			{ row: 5, col: 2, value: 1 },
+			{ row: 6, col: 0, value: 2 },
+			{ row: 6, col: 3, value: 16 },
+			{ row: 7, col: 2, value: 1 },
+			{ row: 7, col: 5, value: 4 },
+		]),
+	})
+}
+
+/** Selected-cell / movement breathing room. */
+export function fixtureScreenshotMove (): GameState {
+	return createGameFromBoard({
+		seed: 4202,
+		score: 120,
+		moveCount: 8,
+		board: boardFromSparse([
+			{ row: 2, col: 1, value: 2 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 5, col: 4, value: 4 },
+			{ row: 6, col: 0, value: 1 },
+			{ row: 7, col: 5, value: 2 },
+		]),
+	})
+}
+
+/** Ready-to-merge group composition. */
+export function fixtureScreenshotMerge (): GameState {
+	return createGameFromBoard({
+		seed: 4203,
+		score: 240,
+		moveCount: 14,
+		board: boardFromSparse([
+			{ row: 2, col: 2, value: 1 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 2, value: 1 },
+			{ row: 4, col: 2, value: 1 },
+			{ row: 1, col: 4, value: 2 },
+			{ row: 5, col: 4, value: 4 },
+			{ row: 6, col: 0, value: 2 },
+		]),
+	})
+}
+
+/** Strong cascade setup for store storytelling. */
+export function fixtureScreenshotCascade (): GameState {
+	return createGameFromBoard({
+		seed: 4204,
+		score: 980,
+		moveCount: 30,
+		board: boardFromSparse([
+			{ row: 2, col: 1, value: 1 },
+			{ row: 2, col: 2, value: 1 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 2, value: 1 },
+			{ row: 4, col: 2, value: 4 },
+			{ row: 4, col: 3, value: 4 },
+			{ row: 5, col: 2, value: 4 },
+			{ row: 5, col: 3, value: 4 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 7, col: 0, value: 2 },
+		]),
+	})
+}
+
+/** High values + healthy score. */
+export function fixtureScreenshotHigh (): GameState {
+	return createGameFromBoard({
+		seed: 4205,
+		score: 6420,
+		moveCount: 72,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 16 },
+			{ row: 2, col: 3, value: 64 },
+			{ row: 3, col: 2, value: 256 },
+			{ row: 4, col: 4, value: 1024 },
+			{ row: 5, col: 1, value: 8 },
+			{ row: 6, col: 3, value: 32 },
+			{ row: 7, col: 5, value: 4 },
+			{ row: 0, col: 0, value: 2 },
+			{ row: 0, col: 4, value: 1 },
+		]),
+	})
+}
+
+/** Level 3/4 progress showcase. */
+export function fixtureScreenshotLevel (): GameState {
+	return createGameFromBoard({
+		seed: 4206,
+		score: 1450,
+		moveCount: 36,
+		board: boardFromSparse([
+			{ row: 1, col: 1, value: 2 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 0, value: 1 },
+			{ row: 3, col: 3, value: 8 },
+			{ row: 4, col: 2, value: 2 },
+			{ row: 5, col: 4, value: 16 },
+			{ row: 6, col: 1, value: 1 },
+			{ row: 7, col: 3, value: 4 },
+		]),
+	})
+}
+
 export type FixtureId =
 	| 'balancedBoard'
 	| 'simpleMove'
@@ -387,6 +506,12 @@ export type FixtureId =
 	| 'nearLevel3'
 	| 'level5Pressure'
 	| 'highLevelCap'
+	| 'screenshotNormal'
+	| 'screenshotMove'
+	| 'screenshotMerge'
+	| 'screenshotCascade'
+	| 'screenshotHigh'
+	| 'screenshotLevel'
 
 export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	balancedBoard: fixtureBalancedBoard,
@@ -409,6 +534,12 @@ export const FIXTURE_BUILDERS: Record<FixtureId, () => GameState> = {
 	nearLevel3: fixtureNearLevel3,
 	level5Pressure: fixtureLevel5Pressure,
 	highLevelCap: fixtureHighLevelCap,
+	screenshotNormal: fixtureScreenshotNormal,
+	screenshotMove: fixtureScreenshotMove,
+	screenshotMerge: fixtureScreenshotMerge,
+	screenshotCascade: fixtureScreenshotCascade,
+	screenshotHigh: fixtureScreenshotHigh,
+	screenshotLevel: fixtureScreenshotLevel,
 }
 
 export function loadFixture (id: FixtureId): GameState {
@@ -445,4 +576,10 @@ export const FIXTURE_IDS: FixtureId[] = [
 	'nearLevel3',
 	'level5Pressure',
 	'highLevelCap',
+	'screenshotNormal',
+	'screenshotMove',
+	'screenshotMerge',
+	'screenshotCascade',
+	'screenshotHigh',
+	'screenshotLevel',
 ]
