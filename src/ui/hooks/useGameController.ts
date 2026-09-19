@@ -5,7 +5,11 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState, type AppStateStatus } from 'react-native'
+import {
+	AppState,
+	unstable_batchedUpdates,
+	type AppStateStatus,
+} from 'react-native'
 
 import { preloadRewardedUndo, showInterstitial } from '../../ads/adsService'
 import { trackEvent } from '../../analytics/appMetrica'
@@ -83,7 +87,6 @@ import {
 	TIMING_SCORE_FLASH_MS,
 	TIMING_SCORE_POPUP_MS,
 	TIMING_SPAWN_MS,
-	TIMING_SPAWN_STAGGER_MS,
 	TIMING_TERMINAL_CLEAR_MS,
 	pathStepMs,
 	pathTotalMs,
@@ -461,6 +464,158 @@ export function useGameController (): GameController {
 			const lockStartedAt = Date.now()
 			let board = cloneBoard(startBoard)
 			let score = startScore
+
+			const hasMergePlayback = events.some(
+				(e) => e.type === 'MERGE' || e.type === 'TERMINAL_CLEAR',
+			)
+
+			/**
+			 * Ordinary move + spawn: path is the only critical wait.
+			 * Snap to authoritative final board, flash spawn keys, unlock ASAP.
+			 * Merge/cascade keeps the expressive multi-step playback below.
+			 */
+			if (!hasMergePlayback) {
+				const moveEvent = events.find((e) => e.type === 'MOVE')
+				if (moveEvent && moveEvent.type === 'MOVE') {
+					playSound('move')
+					void hapticMove()
+					const path =
+						moveEvent.path.length > 0
+							? moveEvent.path
+							: [moveEvent.from, moveEvent.to]
+					const totalMoveMs = pathTotalMs(path.length)
+					const stepMs = pathStepMs(path.length)
+					const hops = Math.max(1, path.length - 1)
+					if (__DEV__) {
+						console.log(
+							'[ConnectCells] path playback ' +
+								JSON.stringify({
+									pathLength: path.length,
+									hops,
+									stepMs,
+									totalMoveMs,
+								}),
+						)
+					}
+
+					board = cloneBoard(board)
+					const fromRow = board[moveEvent.from.row]
+					if (fromRow) {
+						fromRow[moveEvent.from.col] = null
+					}
+					// Vacate + first hop in one React batch before the path clock.
+					unstable_batchedUpdates(() => {
+						setDisplayBoard(board)
+						if (path.length > 1) {
+							setTraveler({
+								position: path[1]!,
+								value: moveEvent.value,
+							})
+						}
+					})
+					const pathStartedAt = Date.now()
+					const moveToken = token
+					for (let i = 2; i < path.length; i += 1) {
+						const hopIndex = i
+						const atMs = Math.round(
+							(totalMoveMs * (hopIndex - 1)) / hops,
+						)
+						void delay(atMs).then(() => {
+							if (animTokenRef.current !== moveToken) {
+								return
+							}
+							setTraveler({
+								position: path[hopIndex]!,
+								value: moveEvent.value,
+							})
+						})
+					}
+					const remaining = Math.max(
+						0,
+						totalMoveMs - (Date.now() - pathStartedAt),
+					)
+					await delay(remaining)
+					if (animTokenRef.current !== token) {
+						return
+					}
+				}
+
+				// One paint: final board + spawn flash + unlock (post-await batch).
+				const spawnEvent = events.find((e) => e.type === 'SPAWN')
+				const spawnKeys =
+					spawnEvent && spawnEvent.type === 'SPAWN'
+						? spawnEvent.cells.map((c) => posKey(c.position))
+						: []
+				unstable_batchedUpdates(() => {
+					setTraveler(null)
+					setDisplayBoard(cloneBoard(finalState.board))
+					setDisplayScore(finalState.score)
+					setShrinkKeys([])
+					setPulseKey(null)
+					setPulseStrong(false)
+					setShakeKey(null)
+					setScorePopup(null)
+					if (spawnKeys.length > 0) {
+						setSpawnKeys(spawnKeys)
+					} else {
+						setSpawnKeys([])
+					}
+					setInputLocked(false)
+				})
+				if (spawnKeys.length > 0) {
+					playSound('spawn')
+					const spawnToken = token
+					void delay(TIMING_SPAWN_MS).then(() => {
+						if (animTokenRef.current === spawnToken) {
+							setSpawnKeys([])
+						}
+					})
+				}
+				for (const event of events) {
+					if (event.type === 'LEVEL_UP') {
+						trackEvent('level_up', {
+							previousLevel: event.previousLevel,
+							newLevel: event.newLevel,
+							score: event.score,
+						})
+						playSound('levelup')
+						void hapticLevelUp()
+						setLevelUpLevel(event.newLevel)
+						setLevelUpVisible(true)
+					} else if (event.type === 'GAME_OVER') {
+						playSound('gameover')
+						void hapticGameOver()
+					}
+				}
+
+				if (animTokenRef.current !== token) {
+					return
+				}
+				const inputLockMs = Date.now() - lockStartedAt
+				if (__DEV__) {
+					console.log(
+						'[ConnectCells] turn lock ' +
+							JSON.stringify({
+								inputLockMs,
+								eventTypes: events.map((e) => e.type),
+								mergeCount: turn?.mergeCount ?? 0,
+								cascadeDepth: turn?.cascadeDepth ?? 0,
+							}),
+					)
+				}
+				if (turn) {
+					recordTurnTelemetry(finalState, turn)
+				}
+				if (isGameOver(finalState)) {
+					await presentGameOverFlow(finalState)
+					if (animTokenRef.current !== token) {
+						setGameOverVisible(false)
+					}
+				}
+				return
+			}
+
+			// Merge / cascade turns keep stepped playback from the live board.
 			setDisplayBoard(board)
 			setDisplayScore(score)
 
@@ -478,13 +633,18 @@ export function useGameController (): GameController {
 							: [event.from, event.to]
 					const totalMoveMs = pathTotalMs(path.length)
 					const stepMs = pathStepMs(path.length)
+					const hops = Math.max(1, path.length - 1)
 					if (__DEV__) {
-						console.log('[ConnectCells] path playback', {
-							pathLength: path.length,
-							hops: Math.max(1, path.length - 1),
-							stepMs,
-							totalMoveMs,
-						})
+						// Single-line JSON so adb logcat captures full timings.
+						console.log(
+							'[ConnectCells] path playback ' +
+								JSON.stringify({
+									pathLength: path.length,
+									hops,
+									stepMs,
+									totalMoveMs,
+								}),
+						)
 					}
 
 					// Vacate origin so we never show a duplicate cell.
@@ -495,13 +655,39 @@ export function useGameController (): GameController {
 					}
 					setDisplayBoard(board)
 
-					for (let i = 1; i < path.length; i += 1) {
-						if (animTokenRef.current !== token) {
-							return
-						}
-						const pos = path[i]!
-						setTraveler({ position: pos, value: event.value })
-						await delay(stepMs)
+					// Schedule hop paints from t0 — one wall-clock await for the
+					// whole budget (avoids chained setTimeout slip after each render).
+					// First hop paints immediately; later hops at segment starts.
+					const moveToken = token
+					if (path.length > 1) {
+						setTraveler({
+							position: path[1]!,
+							value: event.value,
+						})
+					}
+					const pathStartedAt = Date.now()
+					for (let i = 2; i < path.length; i += 1) {
+						const hopIndex = i
+						const atMs = Math.round(
+							(totalMoveMs * (hopIndex - 1)) / hops,
+						)
+						void delay(atMs).then(() => {
+							if (animTokenRef.current !== moveToken) {
+								return
+							}
+							setTraveler({
+								position: path[hopIndex]!,
+								value: event.value,
+							})
+						})
+					}
+					const remaining = Math.max(
+						0,
+						totalMoveMs - (Date.now() - pathStartedAt),
+					)
+					await delay(remaining)
+					if (animTokenRef.current !== token) {
+						return
 					}
 
 					board = cloneBoard(board)
@@ -651,29 +837,26 @@ export function useGameController (): GameController {
 					playSound('spawn')
 					board = cloneBoard(board)
 					const keys: string[] = []
-					// Near-simultaneous spawn beat — tiny stagger, one shared scale-in.
+					// Place every spawn cell in one commit — near-simultaneous scale-in.
+					// Do NOT hold the input lock for the decorative spawn animation.
 					for (let i = 0; i < event.cells.length; i += 1) {
-						if (animTokenRef.current !== token) {
-							return
-						}
 						const cell = event.cells[i]!
 						const row = board[cell.position.row]
 						if (row) {
 							row[cell.position.col] = cell.value
 						}
 						keys.push(posKey(cell.position))
-						if (i < event.cells.length - 1 && TIMING_SPAWN_STAGGER_MS > 0) {
-							setDisplayBoard(cloneBoard(board))
-							setSpawnKeys([...keys])
-							await delay(TIMING_SPAWN_STAGGER_MS)
-						}
 					}
 					setDisplayBoard(cloneBoard(board))
 					setSpawnKeys(keys)
-					await delay(TIMING_SPAWN_MS)
-					if (animTokenRef.current === token) {
-						setSpawnKeys([])
-					}
+					const spawnToken = token
+					void delay(TIMING_SPAWN_MS).then(() => {
+						if (animTokenRef.current === spawnToken) {
+							setSpawnKeys([])
+						}
+					})
+					// Spawn cells are on the authoritative board — unlock without
+					// waiting for the decorative scale-in to finish.
 				} else if (event.type === 'LEVEL_UP') {
 					trackEvent('level_up', {
 						previousLevel: event.previousLevel,
@@ -695,17 +878,22 @@ export function useGameController (): GameController {
 			if (animTokenRef.current !== token) {
 				return
 			}
-			syncDisplay(finalState)
 			const inputLockMs = Date.now() - lockStartedAt
 			if (__DEV__) {
-				console.log('[ConnectCells] turn lock', {
-					inputLockMs,
-					eventTypes: events.map((e) => e.type),
-					mergeCount: turn?.mergeCount ?? 0,
-					cascadeDepth: turn?.cascadeDepth ?? 0,
-				})
+				// Single-line JSON so adb logcat captures full lock budgets.
+				console.log(
+					'[ConnectCells] turn lock ' +
+						JSON.stringify({
+							inputLockMs,
+							eventTypes: events.map((e) => e.type),
+							mergeCount: turn?.mergeCount ?? 0,
+							cascadeDepth: turn?.cascadeDepth ?? 0,
+						}),
+				)
 			}
+			// Unlock before the final sync commit so input recovers ASAP.
 			setInputLocked(false)
+			syncDisplay(finalState)
 			if (turn) {
 				recordTurnTelemetry(finalState, turn)
 			}

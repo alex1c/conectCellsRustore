@@ -9,8 +9,6 @@ import {
 	TIMING_MERGE_CONVERGE_MS,
 	TIMING_MERGE_POP_LARGE_MS,
 	TIMING_MERGE_POP_MS,
-	TIMING_SPAWN_MS,
-	TIMING_SPAWN_STAGGER_MS,
 	TIMING_TERMINAL_CLEAR_MS,
 	pathTotalMs,
 } from './timings'
@@ -73,10 +71,9 @@ export function estimateEventDurationMs (event: GameEvent): number {
 		case 'SCORE_GAIN':
 			// Non-blocking decorative flash — does not extend input lock.
 			return 0
-		case 'SPAWN': {
-			const n = Math.max(1, event.cells.length)
-			return TIMING_SPAWN_MS + (n - 1) * TIMING_SPAWN_STAGGER_MS
-		}
+		case 'SPAWN':
+			// Spawn scale-in is decorative — does not extend input lock.
+			return 0
 		case 'LEVEL_UP':
 			// Toast animates independently; unlock is not gated on it.
 			return 0
