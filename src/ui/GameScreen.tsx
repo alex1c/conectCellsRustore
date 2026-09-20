@@ -31,12 +31,16 @@ import { ScoreHeader } from './components/ScoreHeader'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
 import { PERF_TELEMETRY } from './feel/perfFlags'
 import {
-	COLOR_ACCENT,
-	COLOR_ACCENT_SECONDARY,
-	COLOR_SURFACE,
-	COLOR_SURFACE_CARD,
+	COLOR_APP_BACKGROUND,
+	COLOR_BUTTON_PRIMARY_TEXT,
+	COLOR_DIVIDER,
+	COLOR_SURFACE_ELEVATED,
 	COLOR_TEXT,
 	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
+	COLOR_ACCENT,
+	COLOR_ACCENT_SECONDARY,
+	COLOR_WARNING,
 } from './theme/colors'
 import type { GameController } from './hooks/useGameController'
 
@@ -150,7 +154,7 @@ export function GameScreen (props: GameScreenProps) {
 	if (!game.ready) {
 		return (
 			<View style={[styles.loading, { paddingTop: insets.top }]}>
-				<ActivityIndicator size="large" color="#1d4ed8" />
+				<ActivityIndicator size="large" color={COLOR_ACCENT} />
 				<Text style={styles.loadingText}>Загрузка…</Text>
 			</View>
 		)
@@ -167,7 +171,7 @@ export function GameScreen (props: GameScreenProps) {
 			]}
 			onLayout={handleLayout}
 		>
-			<StatusBar style="dark" />
+			<StatusBar style="light" />
 			<View style={styles.container}>
 				<View style={styles.brandRow}>
 					{onBackHome ? (
@@ -324,13 +328,13 @@ export function GameScreen (props: GameScreenProps) {
 const styles = StyleSheet.create({
 	safe: {
 		flex: 1,
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 	},
 	loading: {
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 		gap: 12,
 	},
 	loadingText: {
@@ -359,33 +363,33 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 12,
-		backgroundColor: COLOR_SURFACE_CARD,
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		alignItems: 'center',
 		justifyContent: 'center',
 		borderWidth: 1,
-		borderColor: '#c5d0e0',
+		borderColor: COLOR_DIVIDER,
 	},
 	homeBtnSpacer: {
 		width: 40,
 	},
 	homeBtnText: {
 		fontSize: 18,
-		color: COLOR_ACCENT_SECONDARY,
+		color: COLOR_TEXT_SECONDARY,
 		fontWeight: '700',
 	},
 	gear: {
 		width: 40,
 		height: 40,
 		borderRadius: 12,
-		backgroundColor: COLOR_SURFACE_CARD,
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		alignItems: 'center',
 		justifyContent: 'center',
 		borderWidth: 1,
-		borderColor: '#c5d0e0',
+		borderColor: COLOR_DIVIDER,
 	},
 	gearText: {
 		fontSize: 18,
-		color: COLOR_ACCENT_SECONDARY,
+		color: COLOR_TEXT_SECONDARY,
 	},
 	hint: {
 		fontSize: 13,
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
 	},
 	blocked: {
 		fontSize: 13,
-		color: '#b45309',
+		color: COLOR_WARNING,
 		fontWeight: '700',
 		marginBottom: 8,
 		textAlign: 'center',
@@ -433,7 +437,7 @@ const styles = StyleSheet.create({
 		opacity: 0.4,
 	},
 	buttonText: {
-		color: '#fff',
+		color: COLOR_BUTTON_PRIMARY_TEXT,
 		fontWeight: '700',
 		fontSize: 14,
 		textAlign: 'center',

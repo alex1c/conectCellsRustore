@@ -1,8 +1,21 @@
 /**
  * Game Over overlay — New Game + optional rewarded Undo rescue.
+ * Dark theme is the only 1.0 appearance.
  */
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+
+import {
+	COLOR_ACCENT,
+	COLOR_BUTTON_PRIMARY_TEXT,
+	COLOR_BUTTON_SECONDARY,
+	COLOR_DIVIDER,
+	COLOR_MODAL_SCRIM,
+	COLOR_SURFACE_ELEVATED,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
+} from '../theme/colors'
 
 export interface GameOverOverlayProps {
 	visible: boolean
@@ -70,7 +83,7 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 const styles = StyleSheet.create({
 	backdrop: {
 		flex: 1,
-		backgroundColor: 'rgba(15, 23, 42, 0.55)',
+		backgroundColor: COLOR_MODAL_SCRIM,
 		alignItems: 'center',
 		justifyContent: 'center',
 		padding: 24,
@@ -78,20 +91,22 @@ const styles = StyleSheet.create({
 	card: {
 		width: '100%',
 		maxWidth: 360,
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		borderRadius: 16,
 		padding: 24,
+		borderWidth: 1,
+		borderColor: COLOR_DIVIDER,
 	},
 	title: {
 		fontSize: 24,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 12,
 		textAlign: 'center',
 	},
 	line: {
 		fontSize: 17,
-		color: '#334155',
+		color: COLOR_TEXT_SECONDARY,
 		textAlign: 'center',
 		marginBottom: 4,
 	},
@@ -100,25 +115,25 @@ const styles = StyleSheet.create({
 	},
 	primary: {
 		marginTop: 20,
-		backgroundColor: '#2563eb',
+		backgroundColor: COLOR_ACCENT,
 		borderRadius: 12,
 		paddingVertical: 14,
 		alignItems: 'center',
 	},
 	primaryText: {
-		color: '#ffffff',
+		color: COLOR_BUTTON_PRIMARY_TEXT,
 		fontWeight: '700',
 		fontSize: 16,
 	},
 	secondary: {
 		marginTop: 10,
-		backgroundColor: '#e2e8f0',
+		backgroundColor: COLOR_BUTTON_SECONDARY,
 		borderRadius: 12,
 		paddingVertical: 14,
 		alignItems: 'center',
 	},
 	secondaryText: {
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		fontWeight: '600',
 		fontSize: 15,
 		textAlign: 'center',
@@ -129,7 +144,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	homeText: {
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		fontWeight: '600',
 		fontSize: 15,
 	},

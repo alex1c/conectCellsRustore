@@ -16,7 +16,7 @@ import { AboutScreen } from './screens/AboutScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
-import { COLOR_SURFACE, COLOR_TEXT_MUTED } from './theme/colors'
+import { COLOR_ACCENT, COLOR_APP_BACKGROUND, COLOR_TEXT_MUTED } from './theme/colors'
 
 export function AppRoot () {
 	const game = useGameController()
@@ -93,7 +93,7 @@ export function AppRoot () {
 	if (!game.ready) {
 		return (
 			<View style={styles.loading}>
-				<ActivityIndicator size="large" color="#1d4ed8" />
+				<ActivityIndicator size="large" color={COLOR_ACCENT} />
 				<Text style={styles.loadingText}>Загрузка…</Text>
 			</View>
 		)
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 		gap: 12,
 	},
 	loadingText: {

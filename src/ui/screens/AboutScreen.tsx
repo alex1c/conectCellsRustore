@@ -1,5 +1,6 @@
 /**
  * About screen — brand, publisher, version.
+ * Dark theme is the only 1.0 appearance.
  */
 
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -12,10 +13,11 @@ import {
 } from '../../branding'
 import {
 	COLOR_ACCENT,
-	COLOR_SURFACE,
-	COLOR_SURFACE_CARD,
+	COLOR_APP_BACKGROUND,
+	COLOR_DIVIDER,
+	COLOR_SURFACE_ELEVATED,
 	COLOR_TEXT,
-	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
 } from '../theme/colors'
 
 export interface AboutScreenProps {
@@ -48,7 +50,7 @@ export function AboutScreen (props: AboutScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 		paddingHorizontal: 20,
 	},
 	back: {
@@ -58,12 +60,12 @@ const styles = StyleSheet.create({
 		marginBottom: 24,
 	},
 	card: {
-		backgroundColor: COLOR_SURFACE_CARD,
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		borderRadius: 16,
 		padding: 28,
 		alignItems: 'center',
 		borderWidth: 1,
-		borderColor: '#c5d0e0',
+		borderColor: COLOR_DIVIDER,
 	},
 	brand: {
 		fontSize: 28,
@@ -73,7 +75,7 @@ const styles = StyleSheet.create({
 	},
 	line: {
 		fontSize: 16,
-		color: COLOR_TEXT_MUTED,
+		color: COLOR_TEXT_SECONDARY,
 		marginBottom: 6,
 		fontWeight: '600',
 	},

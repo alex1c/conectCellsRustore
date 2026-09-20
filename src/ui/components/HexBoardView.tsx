@@ -9,7 +9,7 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import { BOARD_COLS, BOARD_ROWS, type Board, type Position } from '../../game'
 import { hexValueFontSize } from '../theme/cellVisuals'
-import { COLOR_BOARD_PLANE } from '../theme/colors'
+import { COLOR_BOARD_PLANE, COLOR_SCORE_GAIN } from '../theme/colors'
 import { HexCellView } from './HexCellView'
 import {
 	PathTravelerOverlay,
@@ -227,9 +227,9 @@ const styles = StyleSheet.create({
 	},
 	scorePopupText: {
 		fontWeight: '800',
-		color: '#15803d',
-		textShadowColor: 'rgba(255,255,255,0.9)',
+		color: COLOR_SCORE_GAIN,
+		textShadowColor: 'rgba(0,0,0,0.65)',
 		textShadowOffset: { width: 0, height: 1 },
-		textShadowRadius: 2,
+		textShadowRadius: 3,
 	},
 })

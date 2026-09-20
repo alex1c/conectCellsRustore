@@ -61,16 +61,16 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		padding: 8,
 		borderRadius: 8,
-		backgroundColor: '#fee2e2',
+		backgroundColor: '#3b1d1d',
 	},
 	title: {
 		fontWeight: '700',
-		color: '#991b1b',
+		color: '#fecaca',
 		fontSize: 12,
 	},
 	body: {
 		marginTop: 4,
-		color: '#7f1d1d',
+		color: '#fca5a5',
 		fontSize: 11,
 	},
 })

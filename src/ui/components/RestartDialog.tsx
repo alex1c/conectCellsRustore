@@ -1,8 +1,20 @@
 /**
  * Restart confirmation dialog.
+ * Dark theme is the only 1.0 appearance.
  */
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+
+import {
+	COLOR_ACCENT,
+	COLOR_BUTTON_PRIMARY_TEXT,
+	COLOR_BUTTON_SECONDARY,
+	COLOR_DIVIDER,
+	COLOR_MODAL_SCRIM,
+	COLOR_SURFACE_ELEVATED,
+	COLOR_TEXT,
+	COLOR_TEXT_SECONDARY,
+} from '../theme/colors'
 
 export interface RestartDialogProps {
 	visible: boolean
@@ -37,7 +49,7 @@ export function RestartDialog (props: RestartDialogProps) {
 const styles = StyleSheet.create({
 	backdrop: {
 		flex: 1,
-		backgroundColor: 'rgba(15, 23, 42, 0.45)',
+		backgroundColor: COLOR_MODAL_SCRIM,
 		alignItems: 'center',
 		justifyContent: 'center',
 		padding: 24,
@@ -45,20 +57,23 @@ const styles = StyleSheet.create({
 	card: {
 		width: '100%',
 		maxWidth: 360,
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		borderRadius: 16,
 		padding: 22,
+		borderWidth: 1,
+		borderColor: COLOR_DIVIDER,
 	},
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 8,
 	},
 	body: {
 		fontSize: 15,
-		color: '#475569',
+		color: COLOR_TEXT_SECONDARY,
 		marginBottom: 18,
+		lineHeight: 22,
 	},
 	actions: {
 		flexDirection: 'row',
@@ -69,20 +84,20 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 14,
 		paddingVertical: 12,
 		borderRadius: 10,
-		backgroundColor: '#e2e8f0',
+		backgroundColor: COLOR_BUTTON_SECONDARY,
 	},
 	cancelText: {
 		fontWeight: '600',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 	},
 	confirm: {
 		paddingHorizontal: 14,
 		paddingVertical: 12,
 		borderRadius: 10,
-		backgroundColor: '#2563eb',
+		backgroundColor: COLOR_ACCENT,
 	},
 	confirmText: {
 		fontWeight: '700',
-		color: '#ffffff',
+		color: COLOR_BUTTON_PRIMARY_TEXT,
 	},
 })

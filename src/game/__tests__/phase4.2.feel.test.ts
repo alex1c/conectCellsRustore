@@ -73,7 +73,7 @@ import {
 	resolveMergeSoundId,
 	setSoundEnabled,
 } from '../../ui/feel/sound'
-import { COLOR_SURFACE, COLOR_BOARD_PLANE } from '../../ui/theme/colors'
+import { COLOR_SURFACE, COLOR_BOARD_PLANE, COLOR_APP_BACKGROUND } from '../../ui/theme/colors'
 import { getHexCellVisual } from '../../ui/theme/cellVisuals'
 
 describe('Phase 4.2 settings labels + defaults', () => {
@@ -162,13 +162,16 @@ describe('Phase 4.2 haptic service helpers', () => {
 	})
 })
 
-describe('Phase 4.2 visual tokens', () => {
-	it('uses calmer surface tokens and defined empty cells', () => {
+describe('Phase 4.2 / 4.3 visual tokens', () => {
+	it('uses dark-only surface tokens and defined empty cells', () => {
+		expect(COLOR_APP_BACKGROUND.toLowerCase()).toBe('#101826')
 		expect(COLOR_SURFACE.toLowerCase()).not.toBe('#eef3f8')
 		expect(COLOR_SURFACE.toLowerCase()).not.toBe('#ffffff')
+		expect(COLOR_SURFACE.toLowerCase()).not.toBe('#d8e0eb')
 		expect(COLOR_BOARD_PLANE.length).toBeGreaterThan(0)
 		const empty = getHexCellVisual(null)
 		expect(empty.fill.toLowerCase()).not.toBe('#edf1f7')
+		expect(empty.fill.toLowerCase()).not.toBe('#d5dde8')
 		expect(empty.stroke.toLowerCase()).not.toBe('#c5d0e0')
 	})
 })

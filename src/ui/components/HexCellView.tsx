@@ -12,6 +12,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { TIMING_SELECTION_MS, TIMING_SPAWN_MS } from '../feel/timings'
 import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
+import { COLOR_SELECTION_RING } from '../theme/colors'
 
 export interface HexCellViewProps {
 	value: number | null
@@ -336,7 +337,7 @@ function HexCellViewInner (props: HexCellViewProps) {
 						width,
 						height,
 						backgroundColor: visual.fill,
-						borderColor: selected ? '#1d4ed8' : visual.stroke,
+						borderColor: selected ? COLOR_SELECTION_RING : visual.stroke,
 						borderWidth: selected ? 3 : value === null ? 1 : 1.5,
 						opacity,
 						transform: [{ scale }, { rotate }],

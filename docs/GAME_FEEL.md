@@ -2,20 +2,26 @@
 
 Presentation layer only. **Engine remains the sole source of truth.**
 
-## Visual tokens
+## Visual tokens (1.0 dark theme only)
 
-Shared chrome in `src/ui/theme/colors.ts` (calmer default — not a dark theme):
+Hexonica 1.0 ships **one** appearance: a calm dark blue-gray theme.
+There is no light theme, no selector, and no system theme sync.
 
-| Token | Value | Use |
-|-------|-------|-----|
-| `COLOR_SURFACE` | `#d8e0eb` | Home / Game / Settings / How to Play backdrop |
-| `COLOR_SURFACE_CARD` | `#eef2f7` | Cards / chrome buttons |
-| `COLOR_BOARD_PLANE` | `rgba(198,210,226,0.72)` | Soft plane under hexes |
-| `COLOR_TEXT` / `COLOR_TEXT_MUTED` | `#0f172a` / `#526277` | Primary / secondary text |
-| Empty hex | fill `#d5dde8`, stroke `#9aabbf` | Clear destinations without glare |
+Shared chrome in `src/ui/theme/colors.ts`:
 
-Occupied cell palette in `cellVisuals.ts` is unchanged. Board geometry
+| Token | Role |
+|-------|------|
+| `COLOR_APP_BACKGROUND` | Home / Game / Settings / How to Play backdrop |
+| `COLOR_SURFACE` / `COLOR_SURFACE_ELEVATED` | Panels / cards / chrome |
+| `COLOR_BOARD_BACKGROUND` | Soft plane under hexes |
+| `COLOR_EMPTY_CELL` / `COLOR_EMPTY_CELL_BORDER` | Placeable empty hexes |
+| `COLOR_TEXT_*` | Primary / secondary / muted copy |
+| `COLOR_BUTTON_*` / progress / warning / score gain | Actions & feedback |
+
+Occupied cell fills stay in `cellVisuals.ts` (vivid on dark). Board geometry
 (`boardWrap` flex-start, ScoreHeader gain slots) must stay stable during merge.
+
+Native `Alert` (e.g. ad-unavailable) follows the OS and is not custom-themed.
 
 ## Sound map (SFX only — no BGM)
 

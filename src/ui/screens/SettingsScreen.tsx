@@ -1,5 +1,6 @@
 /**
  * Production Settings screen with sound/haptic toggles and About entry.
+ * Dark theme is the only 1.0 appearance.
  */
 
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
@@ -8,10 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BannerSlot } from '../../ads/BannerSlot'
 import {
 	COLOR_ACCENT,
-	COLOR_SURFACE,
-	COLOR_SURFACE_CARD,
+	COLOR_APP_BACKGROUND,
+	COLOR_DIVIDER,
+	COLOR_SURFACE_ELEVATED,
+	COLOR_SWITCH_THUMB,
+	COLOR_SWITCH_TRACK_OFF,
+	COLOR_SWITCH_TRACK_ON,
 	COLOR_TEXT,
-	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
 } from '../theme/colors'
 
 export interface SettingsScreenProps {
@@ -58,8 +63,11 @@ export function SettingsScreen (props: SettingsScreenProps) {
 					<Switch
 						value={soundEnabled}
 						onValueChange={onToggleSound}
-						trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-						thumbColor={soundEnabled ? COLOR_ACCENT : '#f8fafc'}
+						trackColor={{
+							false: COLOR_SWITCH_TRACK_OFF,
+							true: COLOR_SWITCH_TRACK_ON,
+						}}
+						thumbColor={COLOR_SWITCH_THUMB}
 					/>
 				</View>
 				<View style={styles.row}>
@@ -67,8 +75,11 @@ export function SettingsScreen (props: SettingsScreenProps) {
 					<Switch
 						value={hapticEnabled}
 						onValueChange={onToggleHaptic}
-						trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-						thumbColor={hapticEnabled ? COLOR_ACCENT : '#f8fafc'}
+						trackColor={{
+							false: COLOR_SWITCH_TRACK_OFF,
+							true: COLOR_SWITCH_TRACK_ON,
+						}}
+						thumbColor={COLOR_SWITCH_THUMB}
 					/>
 				</View>
 				<Pressable style={styles.linkRow} onPress={onHowToPlay}>
@@ -88,7 +99,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 		paddingHorizontal: 20,
 	},
 	header: {
@@ -112,12 +123,12 @@ const styles = StyleSheet.create({
 		color: COLOR_TEXT,
 	},
 	card: {
-		backgroundColor: COLOR_SURFACE_CARD,
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		borderRadius: 16,
 		paddingHorizontal: 16,
 		paddingVertical: 4,
 		borderWidth: 1,
-		borderColor: '#c5d0e0',
+		borderColor: COLOR_DIVIDER,
 	},
 	row: {
 		flexDirection: 'row',
@@ -125,17 +136,17 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		paddingVertical: 14,
 		borderBottomWidth: StyleSheet.hairlineWidth,
-		borderBottomColor: '#c5d0e0',
+		borderBottomColor: COLOR_DIVIDER,
 	},
 	label: {
 		fontSize: 16,
 		fontWeight: '600',
-		color: COLOR_TEXT_MUTED,
+		color: COLOR_TEXT_SECONDARY,
 	},
 	linkRow: {
 		paddingVertical: 16,
 		borderBottomWidth: StyleSheet.hairlineWidth,
-		borderBottomColor: '#c5d0e0',
+		borderBottomColor: COLOR_DIVIDER,
 	},
 	linkText: {
 		fontSize: 16,

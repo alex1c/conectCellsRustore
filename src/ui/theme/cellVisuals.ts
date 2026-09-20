@@ -1,7 +1,13 @@
 /**
- * Cohesive light-theme cell palette (original — not a clone of the source game).
+ * Occupied-cell palette (vivid on dark boards) + empty-cell chrome.
  * Neighboring values stay distinguishable; high values keep readable contrast.
  */
+
+import {
+	COLOR_EMPTY_CELL,
+	COLOR_EMPTY_CELL_BORDER,
+	COLOR_TEXT_MUTED,
+} from './colors'
 
 export interface HexCellVisual {
 	fill: string
@@ -25,10 +31,11 @@ const TABLE: Record<number, HexCellVisual> = {
 	16384: { fill: '#4868c8', text: '#f2f6ff', stroke: '#284898' },
 }
 
+/** Empty destinations — subdued but clearly placeable on dark boards. */
 const EMPTY: HexCellVisual = {
-	fill: '#d5dde8',
-	text: '#64748b',
-	stroke: '#9aabbf',
+	fill: COLOR_EMPTY_CELL,
+	text: COLOR_TEXT_MUTED,
+	stroke: COLOR_EMPTY_CELL_BORDER,
 }
 
 const ULTRA: HexCellVisual = {

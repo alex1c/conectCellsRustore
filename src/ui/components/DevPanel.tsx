@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		paddingTop: 8,
 		borderTopWidth: 1,
-		borderTopColor: '#d5dee8',
+		borderTopColor: '#2a3a50',
 		// Keep fixture chips above OPPO 3-button nav (~132px).
 		paddingBottom: 140,
 	},
@@ -188,29 +188,29 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 11,
 		fontWeight: '700',
-		color: '#64748b',
+		color: '#7d8a9c',
 		textTransform: 'uppercase',
 	},
 	collapsedHint: {
 		fontSize: 11,
-		color: '#94a3b8',
+		color: '#7d8a9c',
 	},
 	section: {
 		fontSize: 10,
 		fontWeight: '700',
-		color: '#94a3b8',
+		color: '#7d8a9c',
 		textTransform: 'uppercase',
 		marginTop: 6,
 		marginBottom: 4,
 	},
 	seedBtn: {
-		backgroundColor: '#334155',
+		backgroundColor: '#3a4a63',
 		paddingHorizontal: 10,
 		paddingVertical: 6,
 		borderRadius: 8,
 	},
 	seedText: {
-		color: '#fff',
+		color: '#f8fafc',
 		fontSize: 12,
 		fontWeight: '600',
 	},
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
 		flexWrap: 'wrap',
 	},
 	chip: {
-		backgroundColor: '#1e293b',
+		backgroundColor: '#1e2c42',
 		paddingHorizontal: 8,
 		paddingVertical: 6,
 		borderRadius: 8,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
 		marginBottom: 4,
 	},
 	chipActive: {
-		backgroundColor: '#1d4ed8',
+		backgroundColor: '#3b82f6',
 	},
 	chipText: {
 		color: '#f8fafc',
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
 	},
 	activeHint: {
 		fontSize: 11,
-		color: '#475569',
+		color: '#a8b4c8',
 		marginBottom: 4,
 	},
 	telemetry: {
@@ -247,22 +247,22 @@ const styles = StyleSheet.create({
 		marginBottom: 4,
 		fontSize: 11,
 		lineHeight: 16,
-		color: '#0f172a',
+		color: '#e8eef7',
 		fontFamily: 'monospace',
-		backgroundColor: '#e2e8f0',
+		backgroundColor: '#162033',
 		padding: 8,
 		borderRadius: 8,
 	},
 	metrics: {
 		marginTop: 6,
 		fontSize: 11,
-		color: '#64748b',
+		color: '#7d8a9c',
 	},
 	fixtureRow: {
 		paddingVertical: 4,
 	},
 	fixture: {
-		backgroundColor: '#e2e8f0',
+		backgroundColor: '#1e2c42',
 		paddingHorizontal: 10,
 		paddingVertical: 8,
 		borderRadius: 8,
@@ -271,6 +271,6 @@ const styles = StyleSheet.create({
 	fixtureText: {
 		fontSize: 11,
 		fontWeight: '600',
-		color: '#0f172a',
+		color: '#e8eef7',
 	},
 })

@@ -1,5 +1,6 @@
 /**
  * Home screen — Continue / New Game / records / How to Play / Settings.
+ * Dark theme is the only 1.0 appearance.
  */
 
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -9,10 +10,13 @@ import { BannerSlot } from '../../ads/BannerSlot'
 import { APP_DISPLAY_NAME } from '../../branding'
 import {
 	COLOR_ACCENT,
-	COLOR_ACCENT_SECONDARY,
-	COLOR_SURFACE,
+	COLOR_APP_BACKGROUND,
+	COLOR_BUTTON_PRIMARY_SUB,
+	COLOR_BUTTON_PRIMARY_TEXT,
+	COLOR_BUTTON_SECONDARY,
 	COLOR_TEXT,
 	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
 } from '../theme/colors'
 
 export interface HomeScreenProps {
@@ -45,7 +49,10 @@ export function HomeScreen (props: HomeScreenProps) {
 		<View
 			style={[
 				styles.root,
-				{ paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 8) },
+				{
+					paddingTop: insets.top + 12,
+					paddingBottom: Math.max(insets.bottom, 8),
+				},
 			]}
 		>
 			<View style={styles.body}>
@@ -58,7 +65,12 @@ export function HomeScreen (props: HomeScreenProps) {
 				</View>
 
 				{hasActiveGame ? (
-					<Pressable style={styles.primary} onPress={onContinue}>
+					<Pressable
+						style={styles.primary}
+						onPress={onContinue}
+						accessibilityRole="button"
+						accessibilityLabel={`Продолжить, уровень ${activeLevel} · счёт ${activeScore}`}
+					>
 						<Text style={styles.primaryText}>Продолжить</Text>
 						<Text style={styles.primarySub}>
 							Уровень {activeLevel} · счёт {activeScore}
@@ -69,25 +81,39 @@ export function HomeScreen (props: HomeScreenProps) {
 				<Pressable
 					style={hasActiveGame ? styles.secondary : styles.primary}
 					onPress={onNewGame}
+					accessibilityRole="button"
+					accessibilityLabel="Новая игра"
 				>
 					<Text
 						style={
-							hasActiveGame ? styles.secondaryText : styles.primaryText
+							hasActiveGame
+								? styles.secondaryText
+								: styles.primaryText
 						}
 					>
 						Новая игра
 					</Text>
 				</Pressable>
 
-				<Pressable style={styles.link} onPress={onHowToPlay}>
+				<Pressable
+					style={styles.link}
+					onPress={onHowToPlay}
+					accessibilityRole="button"
+					accessibilityLabel="Как играть"
+				>
 					<Text style={styles.linkText}>Как играть</Text>
 				</Pressable>
-				<Pressable style={styles.link} onPress={onSettings}>
+
+				<Pressable
+					style={styles.link}
+					onPress={onSettings}
+					accessibilityRole="button"
+					accessibilityLabel="Настройки"
+				>
 					<Text style={styles.linkText}>Настройки</Text>
 				</Pressable>
 			</View>
 
-			{/* Banner above bottom safe area — never covers primary controls. */}
 			<BannerSlot placement="homeBanner" />
 		</View>
 	)
@@ -96,7 +122,7 @@ export function HomeScreen (props: HomeScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: COLOR_SURFACE,
+		backgroundColor: COLOR_APP_BACKGROUND,
 		paddingHorizontal: 24,
 	},
 	body: {
@@ -125,7 +151,7 @@ const styles = StyleSheet.create({
 	},
 	stat: {
 		fontSize: 15,
-		color: COLOR_ACCENT_SECONDARY,
+		color: COLOR_TEXT_SECONDARY,
 		fontWeight: '600',
 	},
 	primary: {
@@ -137,18 +163,18 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	primaryText: {
-		color: '#ffffff',
+		color: COLOR_BUTTON_PRIMARY_TEXT,
 		fontSize: 18,
 		fontWeight: '800',
 	},
 	primarySub: {
 		marginTop: 4,
-		color: '#bfdbfe',
+		color: COLOR_BUTTON_PRIMARY_SUB,
 		fontSize: 13,
 		fontWeight: '600',
 	},
 	secondary: {
-		backgroundColor: '#c5d0e0',
+		backgroundColor: COLOR_BUTTON_SECONDARY,
 		borderRadius: 14,
 		paddingVertical: 16,
 		alignItems: 'center',

@@ -6,6 +6,14 @@
 
 import { StyleSheet, Text, View } from 'react-native'
 
+import {
+	COLOR_PROGRESS_FILL,
+	COLOR_PROGRESS_TRACK,
+	COLOR_SCORE_GAIN,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
+
 export interface ScoreHeaderProps {
 	score: number
 	best: number
@@ -100,7 +108,7 @@ const styles = StyleSheet.create({
 	},
 	label: {
 		fontSize: 12,
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		fontWeight: '600',
 		textTransform: 'uppercase',
 		letterSpacing: 0.5,
@@ -113,7 +121,7 @@ const styles = StyleSheet.create({
 	value: {
 		fontSize: 24,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		lineHeight: 30,
 		fontVariant: ['tabular-nums'],
 	},
@@ -127,18 +135,18 @@ const styles = StyleSheet.create({
 	gain: {
 		fontSize: 13,
 		fontWeight: '700',
-		color: '#16a34a',
+		color: COLOR_SCORE_GAIN,
 		lineHeight: SCORE_GAIN_SLOT_HEIGHT,
 	},
 	track: {
 		height: 5,
 		borderRadius: 999,
-		backgroundColor: '#b8c4d4',
+		backgroundColor: COLOR_PROGRESS_TRACK,
 		overflow: 'hidden',
 	},
 	fill: {
 		height: '100%',
-		backgroundColor: '#1d4ed8',
+		backgroundColor: COLOR_PROGRESS_FILL,
 		borderRadius: 999,
 	},
 })

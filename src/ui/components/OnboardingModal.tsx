@@ -5,6 +5,17 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { APP_DISPLAY_NAME } from '../../branding'
+import {
+	COLOR_ACCENT,
+	COLOR_BUTTON_PRIMARY_TEXT,
+	COLOR_DIVIDER,
+	COLOR_MODAL_SCRIM,
+	COLOR_SURFACE,
+	COLOR_SURFACE_ELEVATED,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+	COLOR_TEXT_SECONDARY,
+} from '../theme/colors'
 
 export interface OnboardingModalProps {
 	visible: boolean
@@ -98,19 +109,21 @@ export function OnboardingModal (props: OnboardingModalProps) {
 const styles = StyleSheet.create({
 	backdrop: {
 		flex: 1,
-		backgroundColor: 'rgba(15, 23, 42, 0.55)',
+		backgroundColor: COLOR_MODAL_SCRIM,
 		justifyContent: 'center',
 		padding: 24,
 	},
 	card: {
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_ELEVATED,
 		borderRadius: 18,
 		padding: 22,
+		borderWidth: 1,
+		borderColor: COLOR_DIVIDER,
 	},
 	kicker: {
 		fontSize: 12,
 		fontWeight: '700',
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		textTransform: 'uppercase',
 		letterSpacing: 0.6,
 		marginBottom: 6,
@@ -118,37 +131,39 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 24,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 14,
 	},
 	diagramBox: {
-		backgroundColor: '#eef4ff',
+		backgroundColor: COLOR_SURFACE,
 		borderRadius: 12,
 		paddingVertical: 16,
 		paddingHorizontal: 12,
 		marginBottom: 14,
 		alignItems: 'center',
+		borderWidth: 1,
+		borderColor: COLOR_DIVIDER,
 	},
 	diagram: {
 		fontSize: 18,
 		fontWeight: '800',
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 	},
 	line: {
 		fontSize: 15,
 		lineHeight: 22,
-		color: '#334155',
+		color: COLOR_TEXT_SECONDARY,
 		marginBottom: 8,
 	},
 	primary: {
 		marginTop: 14,
-		backgroundColor: '#1d4ed8',
+		backgroundColor: COLOR_ACCENT,
 		borderRadius: 12,
 		paddingVertical: 14,
 		alignItems: 'center',
 	},
 	primaryText: {
-		color: '#ffffff',
+		color: COLOR_BUTTON_PRIMARY_TEXT,
 		fontWeight: '700',
 		fontSize: 16,
 	},
@@ -158,7 +173,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	secondaryText: {
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		fontWeight: '600',
 	},
 })
