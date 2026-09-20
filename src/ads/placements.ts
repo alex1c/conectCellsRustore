@@ -2,9 +2,16 @@
  * Yandex Mobile Ads placement IDs and demo overrides for __DEV__ safety.
  */
 
+/**
+ * Production Yandex blocks:
+ * Home → -1, Settings → -2, How to Play / About → -3,
+ * Game Over interstitial → -4, Undo rewarded → -5.
+ * Game screen has no banner.
+ */
 export const AD_PLACEMENTS = {
 	homeBanner: 'R-M-20075886-1',
 	settingsBanner: 'R-M-20075886-2',
+	/** Shared by How to Play and About (secondary informational screens). */
 	howToPlayBanner: 'R-M-20075886-3',
 	gameOverInterstitial: 'R-M-20075886-4',
 	rewardedUndo: 'R-M-20075886-5',

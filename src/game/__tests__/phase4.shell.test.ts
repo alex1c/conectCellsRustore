@@ -65,6 +65,7 @@ describe('phase4 production shell', () => {
 	it('keeps AD_PLACEMENTS IDs exact for RuStore units', () => {
 		expect(AD_PLACEMENTS.homeBanner).toBe('R-M-20075886-1')
 		expect(AD_PLACEMENTS.settingsBanner).toBe('R-M-20075886-2')
+		// How to Play + About share the secondary-info banner block.
 		expect(AD_PLACEMENTS.howToPlayBanner).toBe('R-M-20075886-3')
 		expect(AD_PLACEMENTS.gameOverInterstitial).toBe('R-M-20075886-4')
 		expect(AD_PLACEMENTS.rewardedUndo).toBe('R-M-20075886-5')

@@ -1,12 +1,14 @@
 /**
  * About screen — brand, publisher, version, developer contacts.
  * Dark theme is the only 1.0 appearance. No game-screen placement.
+ * Bottom banner reuses howToPlayBanner (R-M-20075886-3).
  */
 
 import { useCallback } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { BannerSlot } from '../../ads/BannerSlot'
 import {
 	APP_DISPLAY_NAME,
 	APP_PUBLISHER,
@@ -96,6 +98,13 @@ export function AboutScreen (props: AboutScreenProps) {
 					<Text style={styles.linkValue}>{FOREST_MUSIC_CONTACT_EMAIL}</Text>
 				</Pressable>
 			</View>
+
+			{/*
+			 * Push banner to the bottom above the system nav / safe area.
+			 * BannerSlot collapses to height 0 on no-fill so contacts stay clean.
+			 */}
+			<View style={styles.flex} />
+			<BannerSlot placement="howToPlayBanner" />
 		</View>
 	)
 }
@@ -159,5 +168,8 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 		color: COLOR_ACCENT,
 		textDecorationLine: 'underline',
+	},
+	flex: {
+		flex: 1,
 	},
 })

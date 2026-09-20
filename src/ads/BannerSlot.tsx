@@ -1,7 +1,9 @@
 /**
- * Sticky banner slot for Home / Settings / How to Play.
+ * Sticky banner slot for Home / Settings / How to Play / About.
+ * About reuses howToPlayBanner (R-M-20075886-3) for secondary info screens.
  * Collapses to zero height when ads are unavailable so layout stays intact.
  * Never crashes the host screen on SDK errors.
+ * Unmount on screen exit tears down the native banner (correct lifecycle).
  *
  * Yandex BannerView builds `new AdRequest(adRequest)` during render — the
  * `adRequest` prop MUST be a plain AdRequestParams object (with adUnitId),
