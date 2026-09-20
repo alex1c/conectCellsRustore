@@ -180,6 +180,7 @@ export function GameScreen (props: GameScreenProps) {
 							inputLocked={game.inputLocked}
 							boardWidth={boardWidth}
 							onCellPress={game.handleCellPress}
+							onTravelerComplete={game.handleTravelerComplete}
 						/>
 					</UiErrorBoundary>
 				</View>

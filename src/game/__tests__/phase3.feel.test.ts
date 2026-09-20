@@ -19,6 +19,8 @@ import {
 	pathStepMs,
 	pathTotalMs,
 } from '../../ui/feel/timings'
+import { PERF_TELEMETRY } from '../../ui/feel/perfFlags'
+import { buildPathHopDurations } from '../../ui/components/PathTravelerOverlay'
 import { canonicalCellTransform } from '../../ui/components/HexCellView'
 import {
 	getHexCellVisual,
@@ -145,6 +147,17 @@ describe('animation hotfix path budgets', () => {
 		expect(pathStepMs(20) * 19).toBeLessThanOrEqual(
 			TIMING_PATH_TOTAL_CAP_MS + 20,
 		)
+	})
+
+	it('splits hop durations to sum to the total budget', () => {
+		const hops = buildPathHopDurations(7, 82)
+		expect(hops).toHaveLength(6)
+		expect(hops.reduce((a, b) => a + b, 0)).toBe(82)
+		expect(buildPathHopDurations(2, 38)).toEqual([38])
+	})
+
+	it('keeps PERF_TELEMETRY off by default', () => {
+		expect(PERF_TELEMETRY).toBe(false)
 	})
 
 	it('exposes canonical transform helper at rest', () => {

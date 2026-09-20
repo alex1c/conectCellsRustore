@@ -1,18 +1,21 @@
 /**
  * Pointy-top odd-r hex board layout with merge/path presentation hooks.
+ * Path movement uses a single native-driver PathTravelerOverlay — the board
+ * does not re-render per BFS hop.
  */
 
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { BOARD_COLS, BOARD_ROWS, type Board, type Position } from '../../game'
-import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
+import { hexValueFontSize } from '../theme/cellVisuals'
 import { HexCellView } from './HexCellView'
+import {
+	PathTravelerOverlay,
+	type PathTravelerSpec,
+} from './PathTravelerOverlay'
 
-export interface BoardTraveler {
-	position: Position
-	value: number
-}
+export type BoardTraveler = PathTravelerSpec
 
 export interface BoardScorePopup {
 	amount: number
@@ -33,6 +36,7 @@ export interface HexBoardViewProps {
 	inputLocked: boolean
 	boardWidth: number
 	onCellPress: (position: Position) => void
+	onTravelerComplete?: (playId: number) => void
 }
 
 function keyOf (position: Position): string {
@@ -65,6 +69,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 		inputLocked: _inputLocked,
 		boardWidth,
 		onCellPress,
+		onTravelerComplete,
 	} = props
 	void _inputLocked
 
@@ -80,13 +85,36 @@ export function HexBoardView (props: HexBoardViewProps) {
 
 	const boardHeight = rowStep * (rows - 1) + cellSize * 1.1
 
-	const cellOrigin = (position: Position) => {
-		const odd = position.row & 1
-		return {
-			left: position.col * colStep + (odd ? colStep * 0.5 : 0),
-			top: position.row * rowStep,
-		}
-	}
+	const cellOrigin = useCallback(
+		(position: Position) => {
+			const odd = position.row & 1
+			return {
+				left: position.col * colStep + (odd ? colStep * 0.5 : 0),
+				top: position.row * rowStep,
+			}
+		},
+		[colStep, rowStep],
+	)
+
+	/** Stable press bridge — HexCellView memo compares this by identity. */
+	const handleCellPress = useCallback(
+		(row: number, col: number) => {
+			onCellPress({ row, col })
+		},
+		[onCellPress],
+	)
+
+	const handleTravelerComplete = useCallback(
+		(playId: number) => {
+			onTravelerComplete?.(playId)
+		},
+		[onTravelerComplete],
+	)
+
+	const travelOriginKey =
+		traveler && traveler.path.length > 0
+			? keyOf(traveler.path[0]!)
+			: null
 
 	return (
 		<View
@@ -106,11 +134,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 						selected.row === row &&
 						selected.col === col
 					const key = keyOf(position)
-					// Hide the static cell while the traveler occupies this hex.
-					const hiddenByTravel =
-						traveler !== null &&
-						traveler.position.row === row &&
-						traveler.position.col === col
+					const hiddenByTravel = travelOriginKey === key
 					return (
 						<View
 							key={key}
@@ -121,70 +145,38 @@ export function HexBoardView (props: HexBoardViewProps) {
 									top,
 									width: cellSize,
 									height: cellSize * 1.1,
-									opacity: hiddenByTravel ? 0 : 1,
 								},
 							]}
 						>
 							<HexCellView
 								value={value}
 								size={cellSize}
+								row={row}
+								col={col}
 								selected={selectedHere}
 								pulse={pulseKey === key}
 								pulseStrong={pulseStrong && pulseKey === key}
 								spawn={spawnSet.has(key)}
 								shrinking={shrinkSet.has(key)}
 								shake={shakeKey === key}
-								// Never gate presses via `disabled` — that waits for a full
-								// board re-paint. Controller uses a sync inputLockedRef.
+								hiddenByTravel={hiddenByTravel}
 								disabled={false}
-								onPress={() => onCellPress(position)}
+								onCellPress={handleCellPress}
 							/>
 						</View>
 					)
 				}),
 			)}
 
-			{traveler ? (() => {
-				const visual = getHexCellVisual(traveler.value)
-				return (
-					<View
-						pointerEvents="none"
-						style={[
-							styles.cellWrap,
-							styles.traveler,
-							{
-								...cellOrigin(traveler.position),
-								width: cellSize,
-								height: cellSize * 1.1,
-								zIndex: 5,
-							},
-						]}
-					>
-						{/* Transient path overlay — not HexCellView (no sticky Animated.Value). */}
-						<View
-							style={[
-								styles.travelerFace,
-								{
-									width: cellSize,
-									height: cellSize * 1.1,
-									backgroundColor: visual.fill,
-									borderColor: visual.stroke,
-								},
-							]}
-						>
-							<Text
-								style={{
-									color: visual.text,
-									fontSize: hexValueFontSize(traveler.value, cellSize),
-									fontWeight: '800',
-								}}
-							>
-								{String(traveler.value)}
-							</Text>
-						</View>
-					</View>
-				)
-			})() : null}
+			{traveler ? (
+				<PathTravelerOverlay
+					key={traveler.playId}
+					traveler={traveler}
+					cellOrigin={cellOrigin}
+					cellSize={cellSize}
+					onComplete={handleTravelerComplete}
+				/>
+			) : null}
 
 			{scorePopup ? (
 				<View
@@ -225,15 +217,6 @@ const styles = StyleSheet.create({
 	},
 	cellWrap: {
 		position: 'absolute',
-	},
-	traveler: {
-		elevation: 4,
-	},
-	travelerFace: {
-		borderRadius: 14,
-		borderWidth: 1.5,
-		alignItems: 'center',
-		justifyContent: 'center',
 	},
 	scorePopup: {
 		position: 'absolute',

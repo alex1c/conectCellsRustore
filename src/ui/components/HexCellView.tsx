@@ -4,9 +4,10 @@
  * animation MUST restore canonical scale/opacity on end or interrupt — otherwise
  * empty/occupied cells stay permanently shrunken after merge/spawn.
  * Uses timing/spring only — never Animated.loop (Hermes-fragile).
+ * Memoized so traveler / unrelated board updates do not re-render idle cells.
  */
 
-import { useEffect, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { TIMING_SELECTION_MS, TIMING_SPAWN_MS } from '../feel/timings'
@@ -15,6 +16,8 @@ import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
 export interface HexCellViewProps {
 	value: number | null
 	size: number
+	row: number
+	col: number
 	selected: boolean
 	pulse: boolean
 	/** Extra-strong pop for large merges / cascade. */
@@ -24,8 +27,11 @@ export interface HexCellViewProps {
 	shrinking?: boolean
 	/** Light shake when path is blocked while selected. */
 	shake?: boolean
+	/** Origin hidden while native path traveler is in flight. */
+	hiddenByTravel?: boolean
 	disabled: boolean
-	onPress: () => void
+	/** Stable parent callback — identity must not change per board render. */
+	onCellPress: (row: number, col: number) => void
 	/** Expand pressable hit area slightly beyond the visual hex. */
 	hitSlop?: number
 }
@@ -58,18 +64,43 @@ function snapCanonical (
 	wobble.setValue(next.wobble)
 }
 
-export function HexCellView (props: HexCellViewProps) {
+function hexCellPropsEqual (
+	prev: HexCellViewProps,
+	next: HexCellViewProps,
+): boolean {
+	return (
+		prev.value === next.value &&
+		prev.size === next.size &&
+		prev.row === next.row &&
+		prev.col === next.col &&
+		prev.selected === next.selected &&
+		prev.pulse === next.pulse &&
+		prev.pulseStrong === next.pulseStrong &&
+		prev.spawn === next.spawn &&
+		prev.shrinking === next.shrinking &&
+		prev.shake === next.shake &&
+		prev.hiddenByTravel === next.hiddenByTravel &&
+		prev.disabled === next.disabled &&
+		prev.hitSlop === next.hitSlop &&
+		prev.onCellPress === next.onCellPress
+	)
+}
+
+function HexCellViewInner (props: HexCellViewProps) {
 	const {
 		value,
 		size,
+		row,
+		col,
 		selected,
 		pulse,
 		pulseStrong = false,
 		spawn,
 		shrinking = false,
 		shake = false,
+		hiddenByTravel = false,
 		disabled,
-		onPress,
+		onCellPress,
 		hitSlop = 6,
 	} = props
 	const visual = getHexCellVisual(value)
@@ -85,6 +116,10 @@ export function HexCellView (props: HexCellViewProps) {
 			activeAnimRef.current = null
 		}
 	}
+
+	const handlePress = useCallback(() => {
+		onCellPress(row, col)
+	}, [onCellPress, row, col])
 
 	// Selection lift + one-shot wobble (no infinite loop).
 	useEffect(() => {
@@ -188,11 +223,8 @@ export function HexCellView (props: HexCellViewProps) {
 		activeAnimRef.current = animation
 		animation.start(({ finished }) => {
 			activeAnimRef.current = null
-			// Always land on canonical — finished or interrupted mid-frame.
 			snapCanonical(scale, opacity, wobble, selected)
-			if (!finished) {
-				// keep snap above
-			}
+			void finished
 		})
 		return () => {
 			stopActive()
@@ -229,7 +261,6 @@ export function HexCellView (props: HexCellViewProps) {
 			}
 		})
 		return () => {
-			// Leaving shrink mode (board cell cleared / flags cleared) → canonical.
 			stopActive()
 			snapCanonical(scale, opacity, wobble, selected)
 		}
@@ -281,12 +312,22 @@ export function HexCellView (props: HexCellViewProps) {
 	const fontSize =
 		value !== null ? hexValueFontSize(value, size) : size * 0.36
 
+	/**
+	 * Occupied cells: onPressIn for snappier selection feedback.
+	 * Empty destinations: onPress so a cancelable finger drag does not
+	 * accidentally commit a move on touch-down.
+	 */
+	const usePressIn = value !== null
+
 	return (
 		<Pressable
 			disabled={disabled}
-			onPress={onPress}
+			onPress={usePressIn ? undefined : handlePress}
+			onPressIn={usePressIn ? handlePress : undefined}
 			hitSlop={hitSlop}
 			accessibilityRole="button"
+			accessibilityState={{ disabled }}
+			style={hiddenByTravel ? styles.hidden : undefined}
 		>
 			<Animated.View
 				style={[
@@ -318,6 +359,8 @@ export function HexCellView (props: HexCellViewProps) {
 	)
 }
 
+export const HexCellView = memo(HexCellViewInner, hexCellPropsEqual)
+
 const styles = StyleSheet.create({
 	hex: {
 		borderRadius: 14,
@@ -326,5 +369,8 @@ const styles = StyleSheet.create({
 	},
 	label: {
 		fontWeight: '800',
+	},
+	hidden: {
+		opacity: 0,
 	},
 })

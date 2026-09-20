@@ -78,6 +78,7 @@ import {
 	setHapticEnabled,
 } from '../feel/haptics'
 import { initSounds, playMergeSound, playSound, setSoundEnabled } from '../feel/sound'
+import { PERF_TELEMETRY } from '../feel/perfFlags'
 import {
 	TIMING_BLOCKED_FLASH_MS,
 	TIMING_CASCADE_PAUSE_MS,
@@ -88,7 +89,6 @@ import {
 	TIMING_SCORE_POPUP_MS,
 	TIMING_SPAWN_MS,
 	TIMING_TERMINAL_CLEAR_MS,
-	pathStepMs,
 	pathTotalMs,
 } from '../feel/timings'
 
@@ -153,6 +153,8 @@ export interface GameController {
 	showOnboarding: boolean
 	onboardingStep: number
 	handleCellPress: (position: Position) => void
+	/** Completes the in-flight native path traveler (board overlay). */
+	handleTravelerComplete: (playId: number) => void
 	/** Authoritative undo apply — no ads inside; GameScreen wraps with rewarded. */
 	handleUndo: () => void
 	/** Alias for handleUndo (rewarded flow callers). */
@@ -235,6 +237,10 @@ export function useGameController (): GameController {
 	 * Tap handlers read this ref; `inputLocked` state only drives chrome UI.
 	 */
 	const inputLockedRef = useRef(false)
+	/** Monotonic id for native PathTravelerOverlay play sessions. */
+	const travelerPlayIdRef = useRef(0)
+	/** Resolvers waiting for a traveler playId to finish. */
+	const travelerWaitersRef = useRef(new Map<number, () => void>())
 	/** True once a save was loaded as active or New Game persisted. */
 	const persistedActiveRef = useRef(false)
 
@@ -254,7 +260,15 @@ export function useGameController (): GameController {
 		selectedRef.current = selected
 	}, [selected])
 
+	const resolveTravelerWaiters = useCallback(() => {
+		for (const resolve of travelerWaitersRef.current.values()) {
+			resolve()
+		}
+		travelerWaitersRef.current.clear()
+	}, [])
+
 	const syncDisplay = useCallback((state: GameState) => {
+		resolveTravelerWaiters()
 		setDisplayBoard(cloneBoard(state.board))
 		setDisplayScore(state.score)
 		setTraveler(null)
@@ -264,7 +278,7 @@ export function useGameController (): GameController {
 		setSpawnKeys([])
 		setScorePopup(null)
 		setShakeKey(null)
-	}, [])
+	}, [resolveTravelerWaiters])
 
 	const persist = useCallback(async (state: GameState, started: number) => {
 		try {
@@ -403,7 +417,8 @@ export function useGameController (): GameController {
 
 	const recordTurnTelemetry = useCallback(
 		(state: GameState, turn: TurnResolution) => {
-			if (!__DEV__) {
+			// Default OFF — per-turn DevPanel metrics re-render the tree every move.
+			if (!__DEV__ || !PERF_TELEMETRY) {
 				return
 			}
 			const capacity =
@@ -414,6 +429,52 @@ export function useGameController (): GameController {
 				occupied: countOccupied(state.board),
 				capacity,
 				turn,
+			})
+		},
+		[],
+	)
+
+	const handleTravelerComplete = useCallback((playId: number) => {
+		const resolve = travelerWaitersRef.current.get(playId)
+		if (resolve) {
+			travelerWaitersRef.current.delete(playId)
+			resolve()
+		}
+	}, [])
+
+	/**
+	 * Show one native-driver traveler and wait until it finishes (or is cancelled).
+	 * Does not setState per hop — PathTravelerOverlay owns transform animation.
+	 * Optionally vacates the origin cell in the same React batch for first paint.
+	 */
+	const runPathTraveler = useCallback(
+		(
+			path: Position[],
+			value: number,
+			durationMs: number,
+			vacatedBoard?: Board,
+		): Promise<void> => {
+			if (path.length < 2) {
+				if (vacatedBoard) {
+					setDisplayBoard(vacatedBoard)
+				}
+				return Promise.resolve()
+			}
+			const playId = travelerPlayIdRef.current + 1
+			travelerPlayIdRef.current = playId
+			return new Promise((resolve) => {
+				travelerWaitersRef.current.set(playId, resolve)
+				unstable_batchedUpdates(() => {
+					if (vacatedBoard) {
+						setDisplayBoard(vacatedBoard)
+					}
+					setTraveler({
+						path,
+						value,
+						durationMs,
+						playId,
+					})
+				})
 			})
 		},
 		[],
@@ -470,10 +531,8 @@ export function useGameController (): GameController {
 			finalState: GameState,
 			token: number,
 			turn: TurnResolution | undefined,
-			interactionStartedAt: number,
-			engineMs: number,
+			persistAfterVisual: () => void,
 		) => {
-			const lockStartedAt = interactionStartedAt
 			let board = cloneBoard(startBoard)
 			let score = startScore
 
@@ -483,48 +542,56 @@ export function useGameController (): GameController {
 
 			/**
 			 * Ordinary move + spawn:
-			 * Commit authoritative final board and unlock IMMEDIATELY.
-			 * Do NOT await path setTimeout — after setGame/setInputLock the JS
-			 * thread is busy painting, so a 38ms timer slips to ~300–1000ms on
-			 * OPPO (root cause of ~1s perceived latency).
-			 * Path hop budgets remain for merge playback / diagnostics only.
-			 * Input gates on inputLockedRef (sync), not hex `disabled` re-paint.
+			 * 1) Immediate native traveler (first visual response)
+			 * 2) Persist asynchronously after traveler is scheduled
+			 * 3) On complete: commit final board, spawn pop, unlock
+			 * Paint / frame timing is NOT instrumented here (NOT MEASURED).
 			 */
 			if (!hasMergePlayback) {
 				const moveEvent = events.find((e) => e.type === 'MOVE')
-				let hops = 0
+				let path: Position[] = []
+				let moveValue = 0
 				let pathBudgetMs = 0
+
 				if (moveEvent && moveEvent.type === 'MOVE') {
 					playSound('move')
 					void hapticMove()
-					const path =
+					path =
 						moveEvent.path.length > 0
 							? moveEvent.path
 							: [moveEvent.from, moveEvent.to]
 					pathBudgetMs = pathTotalMs(path.length)
-					hops = Math.max(1, path.length - 1)
-					if (__DEV__) {
-						console.log(
-							'[ConnectCells] path playback ' +
-								JSON.stringify({
-									pathLength: path.length,
-									hops,
-									stepMs: pathStepMs(path.length),
-									totalMoveMs: pathBudgetMs,
-									skippedForInteraction: true,
-								}),
-						)
+					moveValue = moveEvent.value
+
+					// Hide origin on the board while the overlay travels.
+					board = cloneBoard(startBoard)
+					const fromRow = board[moveEvent.from.row]
+					if (fromRow) {
+						fromRow[moveEvent.from.col] = null
 					}
 				}
 
+				// First visual: traveler + vacated origin in one batch.
+				// Do NOT await before persist — start traveler, then save async.
+				const travelerDone = runPathTraveler(
+					path,
+					moveValue,
+					pathBudgetMs,
+					board,
+				)
+				persistAfterVisual()
+				await travelerDone
+
+				if (animTokenRef.current !== token) {
+					return
+				}
+
 				const spawnEvent = events.find((e) => e.type === 'SPAWN')
-				const spawnKeys =
+				const nextSpawnKeys =
 					spawnEvent && spawnEvent.type === 'SPAWN'
 						? spawnEvent.cells.map((c) => posKey(c.position))
 						: []
 
-				const commitStartedAt = Date.now()
-				// Sync unlock first — next tap may proceed via ref + gameRef.
 				inputLockedRef.current = false
 				unstable_batchedUpdates(() => {
 					setTraveler(null)
@@ -535,14 +602,11 @@ export function useGameController (): GameController {
 					setPulseStrong(false)
 					setShakeKey(null)
 					setScorePopup(null)
-					setSpawnKeys(spawnKeys.length > 0 ? spawnKeys : [])
+					setSpawnKeys(nextSpawnKeys.length > 0 ? nextSpawnKeys : [])
 					setInputLocked(false)
 				})
-				const boardCommitMs = Date.now() - commitStartedAt
-				const interactionLatencyMs = Date.now() - lockStartedAt
-				const pathAnimationMs = 0
 
-				if (spawnKeys.length > 0) {
+				if (nextSpawnKeys.length > 0) {
 					playSound('spawn')
 					const spawnToken = token
 					void delay(TIMING_SPAWN_MS).then(() => {
@@ -568,17 +632,13 @@ export function useGameController (): GameController {
 					}
 				}
 
-				if (__DEV__) {
+				if (__DEV__ && PERF_TELEMETRY) {
 					console.log(
-						'[ConnectCells] interaction latency ' +
+						'[ConnectCells] ordinary move playback ' +
 							JSON.stringify({
-								hops,
+								hops: Math.max(1, path.length - 1),
 								pathBudgetMs,
-								pathAnimationMs,
-								engineMs,
-								boardCommitMs,
-								paintWaitMs: 0,
-								interactionLatencyMs,
+								paintTiming: 'NOT_MEASURED',
 								eventTypes: events.map((e) => e.type),
 							}),
 					)
@@ -599,9 +659,11 @@ export function useGameController (): GameController {
 				return
 			}
 
-			// Merge / cascade turns keep stepped playback from the live board.
+			// Merge / cascade turns — reuse the same native traveler for MOVE entry.
 			setDisplayBoard(board)
 			setDisplayScore(score)
+			// Persist once merge playback starts (after any first visual below).
+			let persisted = false
 
 			for (const event of events) {
 				if (animTokenRef.current !== token) {
@@ -616,60 +678,24 @@ export function useGameController (): GameController {
 							? event.path
 							: [event.from, event.to]
 					const totalMoveMs = pathTotalMs(path.length)
-					const stepMs = pathStepMs(path.length)
-					const hops = Math.max(1, path.length - 1)
-					if (__DEV__) {
-						// Single-line JSON so adb logcat captures full timings.
-						console.log(
-							'[ConnectCells] path playback ' +
-								JSON.stringify({
-									pathLength: path.length,
-									hops,
-									stepMs,
-									totalMoveMs,
-								}),
-						)
-					}
 
-					// Vacate origin so we never show a duplicate cell.
 					board = cloneBoard(board)
 					const fromRow = board[event.from.row]
 					if (fromRow) {
 						fromRow[event.from.col] = null
 					}
-					setDisplayBoard(board)
 
-					// Schedule hop paints from t0 — one wall-clock await for the
-					// whole budget (avoids chained setTimeout slip after each render).
-					// First hop paints immediately; later hops at segment starts.
-					const moveToken = token
-					if (path.length > 1) {
-						setTraveler({
-							position: path[1]!,
-							value: event.value,
-						})
-					}
-					const pathStartedAt = Date.now()
-					for (let i = 2; i < path.length; i += 1) {
-						const hopIndex = i
-						const atMs = Math.round(
-							(totalMoveMs * (hopIndex - 1)) / hops,
-						)
-						void delay(atMs).then(() => {
-							if (animTokenRef.current !== moveToken) {
-								return
-							}
-							setTraveler({
-								position: path[hopIndex]!,
-								value: event.value,
-							})
-						})
-					}
-					const remaining = Math.max(
-						0,
-						totalMoveMs - (Date.now() - pathStartedAt),
+					const travelerDone = runPathTraveler(
+						path,
+						event.value,
+						totalMoveMs,
+						board,
 					)
-					await delay(remaining)
+					if (!persisted) {
+						persistAfterVisual()
+						persisted = true
+					}
+					await travelerDone
 					if (animTokenRef.current !== token) {
 						return
 					}
@@ -681,8 +707,11 @@ export function useGameController (): GameController {
 					}
 					setTraveler(null)
 					setDisplayBoard(board)
-					// No artificial post-move pause — merge/spawn follow immediately.
 				} else if (event.type === 'MERGE') {
+					if (!persisted) {
+						persistAfterVisual()
+						persisted = true
+					}
 					trackEvent('merge', {
 						groupSize: event.groupSize,
 						resultValue: event.resultValue,
@@ -741,7 +770,6 @@ export function useGameController (): GameController {
 						position: event.resultAt,
 						key: `${posKey(event.resultAt)}-${event.cascadeLevel}-${event.scoreGain}`,
 					})
-					// Score popup is decorative — clear later without holding the lock.
 					const popupToken = token
 					void delay(TIMING_SCORE_POPUP_MS).then(() => {
 						if (animTokenRef.current === popupToken) {
@@ -758,13 +786,16 @@ export function useGameController (): GameController {
 						await delay(TIMING_CASCADE_PAUSE_MS)
 					}
 				} else if (event.type === 'TERMINAL_CLEAR') {
+					if (!persisted) {
+						persistAfterVisual()
+						persisted = true
+					}
 					trackEvent('terminal_clear', {
 						sourceValue: event.sourceValue,
 						groupSize: event.groupSize,
 						cascadeLevel: event.cascadeLevel,
 					})
 
-					// Converge group → score → empty. No fictional result cell is placed.
 					const clearKeys = event.cleared.map(posKey)
 					setShrinkKeys(clearKeys)
 					await delay(TIMING_MERGE_CONVERGE_MS)
@@ -807,7 +838,6 @@ export function useGameController (): GameController {
 						await delay(TIMING_CASCADE_PAUSE_MS)
 					}
 				} else if (event.type === 'SCORE_GAIN') {
-					// Decorative flash — update score but do not block unlock.
 					score = event.total
 					setDisplayScore(score)
 					setGainFlash(event.amount)
@@ -821,8 +851,6 @@ export function useGameController (): GameController {
 					playSound('spawn')
 					board = cloneBoard(board)
 					const keys: string[] = []
-					// Place every spawn cell in one commit — near-simultaneous scale-in.
-					// Do NOT hold the input lock for the decorative spawn animation.
 					for (let i = 0; i < event.cells.length; i += 1) {
 						const cell = event.cells[i]!
 						const row = board[cell.position.row]
@@ -839,15 +867,12 @@ export function useGameController (): GameController {
 							setSpawnKeys([])
 						}
 					})
-					// Spawn cells are on the authoritative board — unlock without
-					// waiting for the decorative scale-in to finish.
 				} else if (event.type === 'LEVEL_UP') {
 					trackEvent('level_up', {
 						previousLevel: event.previousLevel,
 						newLevel: event.newLevel,
 						score: event.score,
 					})
-					// Toast animates on its own — do not hold input lock for ~1.3s.
 					playSound('levelup')
 					void hapticLevelUp()
 					setLevelUpLevel(event.newLevel)
@@ -862,20 +887,20 @@ export function useGameController (): GameController {
 			if (animTokenRef.current !== token) {
 				return
 			}
-			const inputLockMs = Date.now() - lockStartedAt
-			if (__DEV__) {
-				// Single-line JSON so adb logcat captures full lock budgets.
+			if (!persisted) {
+				persistAfterVisual()
+			}
+			if (__DEV__ && PERF_TELEMETRY) {
 				console.log(
-					'[ConnectCells] turn lock ' +
+					'[ConnectCells] merge turn complete ' +
 						JSON.stringify({
-							inputLockMs,
+							paintTiming: 'NOT_MEASURED',
 							eventTypes: events.map((e) => e.type),
 							mergeCount: turn?.mergeCount ?? 0,
 							cascadeDepth: turn?.cascadeDepth ?? 0,
 						}),
 				)
 			}
-			// Unlock before the final sync commit so input recovers ASAP.
 			setInputLock(false)
 			syncDisplay(finalState)
 			if (turn) {
@@ -883,24 +908,26 @@ export function useGameController (): GameController {
 			}
 			if (isGameOver(finalState)) {
 				await presentGameOverFlow(finalState)
-				// Drop overlay if this playback was superseded while the ad ran.
 				if (animTokenRef.current !== token) {
 					setGameOverVisible(false)
 				}
 			}
 		},
-		[presentGameOverFlow, recordTurnTelemetry, setInputLock, syncDisplay],
+		[
+			presentGameOverFlow,
+			recordTurnTelemetry,
+			runPathTraveler,
+			setInputLock,
+			syncDisplay,
+		],
 	)
 
 	const commitMove = useCallback(
 		async (move: Move) => {
-			const interactionStartedAt = Date.now()
 			const current = gameRef.current
 			const startBoard = cloneBoard(current.board)
 			const startScore = current.score
-			const engineStartedAt = Date.now()
 			const result = applyMove(current, move)
-			const engineMs = Date.now() - engineStartedAt
 			if (!result.ok) {
 				await flashBlocked(selectedRef.current)
 				return
@@ -911,10 +938,15 @@ export function useGameController (): GameController {
 			// Keep gameRef in sync immediately — do not wait for useEffect.
 			gameRef.current = result.state
 			setGame(result.state)
-			// Persistence must never hold the interaction lock.
-			void persist(result.state, startedAt)
 			const token = animTokenRef.current + 1
 			animTokenRef.current = token
+			// Drop any stale traveler waiters before starting this turn.
+			resolveTravelerWaiters()
+			setTraveler(null)
+			// Persistence runs AFTER first visual feedback inside playEvents.
+			const persistAfterVisual = () => {
+				void persist(result.state, startedAt)
+			}
 			await playEvents(
 				startBoard,
 				startScore,
@@ -922,11 +954,17 @@ export function useGameController (): GameController {
 				result.state,
 				token,
 				result.turn,
-				interactionStartedAt,
-				engineMs,
+				persistAfterVisual,
 			)
 		},
-		[flashBlocked, persist, playEvents, setInputLock, startedAt],
+		[
+			flashBlocked,
+			persist,
+			playEvents,
+			resolveTravelerWaiters,
+			setInputLock,
+			startedAt,
+		],
 	)
 
 	const handleCellPress = useCallback(
@@ -1090,6 +1128,7 @@ export function useGameController (): GameController {
 		showOnboarding,
 		onboardingStep,
 		handleCellPress,
+		handleTravelerComplete,
 		handleUndo,
 		applyUndo: handleUndo,
 		requestRestart: () => {
