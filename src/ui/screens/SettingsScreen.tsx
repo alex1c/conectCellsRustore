@@ -3,10 +3,12 @@
  * Dark theme is the only 1.0 appearance.
  */
 
+import { useCallback } from 'react'
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
+import { openForestMusicRuStore } from '../links/forestMusicRuStore'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -16,6 +18,7 @@ import {
 	COLOR_SWITCH_TRACK_OFF,
 	COLOR_SWITCH_TRACK_ON,
 	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
 	COLOR_TEXT_SECONDARY,
 } from '../theme/colors'
 
@@ -40,6 +43,10 @@ export function SettingsScreen (props: SettingsScreenProps) {
 		onBack,
 	} = props
 	const insets = useSafeAreaInsets()
+
+	const handleOpenOtherApps = useCallback(() => {
+		void openForestMusicRuStore()
+	}, [])
 
 	return (
 		<View
@@ -87,6 +94,21 @@ export function SettingsScreen (props: SettingsScreenProps) {
 				</Pressable>
 				<Pressable style={styles.linkRow} onPress={onAbout}>
 					<Text style={styles.linkText}>О приложении</Text>
+				</Pressable>
+				{/*
+				 * ForestMusic cross-promotion — Settings only.
+				 * Not shown on the game screen / startup; opens externally.
+				 */}
+				<Pressable
+					style={[styles.linkRow, styles.linkRowLast]}
+					onPress={handleOpenOtherApps}
+					accessibilityRole="link"
+					accessibilityLabel="Другие наши приложения. Посмотреть приложения ForestMusic в RuStore"
+				>
+					<Text style={styles.linkText}>Другие наши приложения</Text>
+					<Text style={styles.linkSubtext}>
+						Посмотреть приложения ForestMusic в RuStore
+					</Text>
 				</Pressable>
 			</View>
 
@@ -148,10 +170,20 @@ const styles = StyleSheet.create({
 		borderBottomWidth: StyleSheet.hairlineWidth,
 		borderBottomColor: COLOR_DIVIDER,
 	},
+	linkRowLast: {
+		borderBottomWidth: 0,
+	},
 	linkText: {
 		fontSize: 16,
 		fontWeight: '700',
 		color: COLOR_ACCENT,
+	},
+	linkSubtext: {
+		marginTop: 4,
+		fontSize: 13,
+		fontWeight: '500',
+		color: COLOR_TEXT_MUTED,
+		lineHeight: 18,
 	},
 	flex: {
 		flex: 1,
