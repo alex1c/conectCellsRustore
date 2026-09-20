@@ -16,6 +16,7 @@ import { AboutScreen } from './screens/AboutScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { COLOR_SURFACE, COLOR_TEXT_MUTED } from './theme/colors'
 
 export function AppRoot () {
 	const game = useGameController()
@@ -161,10 +162,10 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: '#eef3f8',
+		backgroundColor: COLOR_SURFACE,
 		gap: 12,
 	},
 	loadingText: {
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 	},
 })

@@ -9,6 +9,7 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import { BOARD_COLS, BOARD_ROWS, type Board, type Position } from '../../game'
 import { hexValueFontSize } from '../theme/cellVisuals'
+import { COLOR_BOARD_PLANE } from '../theme/colors'
 import { HexCellView } from './HexCellView'
 import {
 	PathTravelerOverlay,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
 		left: 0,
 		top: 0,
 		borderRadius: 20,
-		backgroundColor: 'rgba(255,255,255,0.55)',
+		backgroundColor: COLOR_BOARD_PLANE,
 	},
 	cellWrap: {
 		position: 'absolute',

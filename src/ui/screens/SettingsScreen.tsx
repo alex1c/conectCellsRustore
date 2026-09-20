@@ -6,6 +6,13 @@ import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
+import {
+	COLOR_ACCENT,
+	COLOR_SURFACE,
+	COLOR_SURFACE_CARD,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
 
 export interface SettingsScreenProps {
 	soundEnabled: boolean
@@ -46,12 +53,13 @@ export function SettingsScreen (props: SettingsScreenProps) {
 
 			<View style={styles.card}>
 				<View style={styles.row}>
-					<Text style={styles.label}>Звук</Text>
+					{/* SFX only — never labeled «Музыка». */}
+					<Text style={styles.label}>Звуки</Text>
 					<Switch
 						value={soundEnabled}
 						onValueChange={onToggleSound}
 						trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-						thumbColor={soundEnabled ? '#1d4ed8' : '#f8fafc'}
+						thumbColor={soundEnabled ? COLOR_ACCENT : '#f8fafc'}
 					/>
 				</View>
 				<View style={styles.row}>
@@ -60,7 +68,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 						value={hapticEnabled}
 						onValueChange={onToggleHaptic}
 						trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-						thumbColor={hapticEnabled ? '#1d4ed8' : '#f8fafc'}
+						thumbColor={hapticEnabled ? COLOR_ACCENT : '#f8fafc'}
 					/>
 				</View>
 				<Pressable style={styles.linkRow} onPress={onHowToPlay}>
@@ -80,7 +88,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: '#eef3f8',
+		backgroundColor: COLOR_SURFACE,
 		paddingHorizontal: 20,
 	},
 	header: {
@@ -90,7 +98,7 @@ const styles = StyleSheet.create({
 		marginBottom: 16,
 	},
 	back: {
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 		fontWeight: '700',
 		fontSize: 15,
 		width: 80,
@@ -101,13 +109,15 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 	},
 	card: {
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_CARD,
 		borderRadius: 16,
 		paddingHorizontal: 16,
 		paddingVertical: 4,
+		borderWidth: 1,
+		borderColor: '#c5d0e0',
 	},
 	row: {
 		flexDirection: 'row',
@@ -115,22 +125,22 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		paddingVertical: 14,
 		borderBottomWidth: StyleSheet.hairlineWidth,
-		borderBottomColor: '#e2e8f0',
+		borderBottomColor: '#c5d0e0',
 	},
 	label: {
 		fontSize: 16,
 		fontWeight: '600',
-		color: '#334155',
+		color: COLOR_TEXT_MUTED,
 	},
 	linkRow: {
 		paddingVertical: 16,
 		borderBottomWidth: StyleSheet.hairlineWidth,
-		borderBottomColor: '#e2e8f0',
+		borderBottomColor: '#c5d0e0',
 	},
 	linkText: {
 		fontSize: 16,
 		fontWeight: '700',
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 	},
 	flex: {
 		flex: 1,

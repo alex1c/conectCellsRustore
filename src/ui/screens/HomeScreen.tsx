@@ -7,6 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
 import { APP_DISPLAY_NAME } from '../../branding'
+import {
+	COLOR_ACCENT,
+	COLOR_ACCENT_SECONDARY,
+	COLOR_SURFACE,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
 
 export interface HomeScreenProps {
 	hasActiveGame: boolean
@@ -89,7 +96,7 @@ export function HomeScreen (props: HomeScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: '#eef3f8',
+		backgroundColor: COLOR_SURFACE,
 		paddingHorizontal: 24,
 	},
 	body: {
@@ -99,14 +106,14 @@ const styles = StyleSheet.create({
 	brand: {
 		fontSize: 40,
 		fontWeight: '900',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		textAlign: 'center',
 		letterSpacing: 0.5,
 	},
 	tagline: {
 		marginTop: 6,
 		fontSize: 15,
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		textAlign: 'center',
 		fontWeight: '600',
 		marginBottom: 28,
@@ -118,11 +125,11 @@ const styles = StyleSheet.create({
 	},
 	stat: {
 		fontSize: 15,
-		color: '#334155',
+		color: COLOR_ACCENT_SECONDARY,
 		fontWeight: '600',
 	},
 	primary: {
-		backgroundColor: '#1d4ed8',
+		backgroundColor: COLOR_ACCENT,
 		borderRadius: 14,
 		paddingVertical: 16,
 		paddingHorizontal: 18,
@@ -141,14 +148,14 @@ const styles = StyleSheet.create({
 		fontWeight: '600',
 	},
 	secondary: {
-		backgroundColor: '#e2e8f0',
+		backgroundColor: '#c5d0e0',
 		borderRadius: 14,
 		paddingVertical: 16,
 		alignItems: 'center',
 		marginBottom: 12,
 	},
 	secondaryText: {
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		fontSize: 17,
 		fontWeight: '700',
 	},
@@ -157,7 +164,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	linkText: {
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 		fontSize: 16,
 		fontWeight: '700',
 	},

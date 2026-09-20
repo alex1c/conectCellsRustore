@@ -1,8 +1,15 @@
 /**
- * Compact settings sheet: Sound, Haptic, How to Play.
+ * Compact settings sheet: Sounds, Haptic, How to Play.
  */
 
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
+
+import {
+	COLOR_ACCENT,
+	COLOR_SURFACE_CARD,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
 
 export interface SettingsSheetProps {
 	visible: boolean
@@ -32,12 +39,13 @@ export function SettingsSheet (props: SettingsSheetProps) {
 					<Text style={styles.title}>Настройки</Text>
 
 					<View style={styles.row}>
-						<Text style={styles.label}>Звук</Text>
+						{/* SFX only — never labeled «Музыка». */}
+						<Text style={styles.label}>Звуки</Text>
 						<Switch
 							value={soundEnabled}
 							onValueChange={onToggleSound}
 							trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-							thumbColor={soundEnabled ? '#1d4ed8' : '#f8fafc'}
+							thumbColor={soundEnabled ? COLOR_ACCENT : '#f8fafc'}
 						/>
 					</View>
 
@@ -47,7 +55,7 @@ export function SettingsSheet (props: SettingsSheetProps) {
 							value={hapticEnabled}
 							onValueChange={onToggleHaptic}
 							trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-							thumbColor={hapticEnabled ? '#1d4ed8' : '#f8fafc'}
+							thumbColor={hapticEnabled ? COLOR_ACCENT : '#f8fafc'}
 						/>
 					</View>
 
@@ -72,14 +80,16 @@ const styles = StyleSheet.create({
 		padding: 24,
 	},
 	card: {
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_CARD,
 		borderRadius: 16,
 		padding: 20,
+		borderWidth: 1,
+		borderColor: '#c5d0e0',
 	},
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 16,
 		textAlign: 'center',
 	},
@@ -89,23 +99,23 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		paddingVertical: 12,
 		borderBottomWidth: StyleSheet.hairlineWidth,
-		borderBottomColor: '#e2e8f0',
+		borderBottomColor: '#c5d0e0',
 	},
 	label: {
 		fontSize: 16,
 		fontWeight: '600',
-		color: '#334155',
+		color: COLOR_TEXT_MUTED,
 	},
 	help: {
 		marginTop: 16,
-		backgroundColor: '#e2e8f0',
+		backgroundColor: '#d8e0eb',
 		borderRadius: 12,
 		paddingVertical: 14,
 		alignItems: 'center',
 	},
 	helpText: {
 		fontWeight: '700',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		fontSize: 15,
 	},
 	close: {
@@ -114,7 +124,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	closeText: {
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		fontWeight: '600',
 	},
 })

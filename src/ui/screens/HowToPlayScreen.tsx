@@ -6,6 +6,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
+import {
+	COLOR_ACCENT,
+	COLOR_SURFACE,
+	COLOR_SURFACE_CARD,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
 
 const SECTIONS = [
 	{
@@ -86,7 +93,7 @@ export function HowToPlayScreen (props: HowToPlayScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: '#eef3f8',
+		backgroundColor: COLOR_SURFACE,
 		paddingHorizontal: 20,
 	},
 	header: {
@@ -96,7 +103,7 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	back: {
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 		fontWeight: '700',
 		fontSize: 15,
 		width: 80,
@@ -107,7 +114,7 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 	},
 	scroll: {
 		flex: 1,
@@ -117,19 +124,22 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	card: {
-		backgroundColor: '#ffffff',
+		// Keep tutorial cards lighter than the page for readability.
+		backgroundColor: COLOR_SURFACE_CARD,
 		borderRadius: 14,
 		padding: 16,
+		borderWidth: 1,
+		borderColor: '#c5d0e0',
 	},
 	cardTitle: {
 		fontSize: 17,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 8,
 	},
 	line: {
 		fontSize: 15,
-		color: '#334155',
+		color: COLOR_TEXT_MUTED,
 		lineHeight: 22,
 		marginBottom: 4,
 	},

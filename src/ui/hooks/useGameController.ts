@@ -77,7 +77,7 @@ import {
 	hapticTerminalClear,
 	setHapticEnabled,
 } from '../feel/haptics'
-import { initSounds, playMergeSound, playSound, setSoundEnabled } from '../feel/sound'
+import { initSounds, pauseGameplayAudio, playMergeSound, playSound, playTerminal, setSoundEnabled } from '../feel/sound'
 import { PERF_TELEMETRY } from '../feel/perfFlags'
 import {
 	TIMING_BLOCKED_FLASH_MS,
@@ -374,6 +374,10 @@ export function useGameController (): GameController {
 	// If the app backgrounds mid-playback, snap UI to authoritative engine state.
 	useEffect(() => {
 		const onChange = (status: AppStateStatus) => {
+			if (status !== 'active') {
+				// Stop SFX so nothing sticks under ads / background audio.
+				pauseGameplayAudio()
+			}
 			if (status !== 'active' && inputLocked) {
 				animTokenRef.current += 1
 				syncDisplay(gameRef.current)
@@ -512,6 +516,8 @@ export function useGameController (): GameController {
 				largestGroup: finalState.largestGroup,
 				largestCascade: finalState.largestCascade,
 			})
+			// Do not let gameplay SFX compete with interstitial audio.
+			pauseGameplayAudio()
 			const interstitial = await showInterstitial('gameOverInterstitial')
 			if (interstitial === 'shown') {
 				trackEvent('interstitial_shown')
@@ -752,7 +758,7 @@ export function useGameController (): GameController {
 					setPulseStrong(event.groupSize >= 5 || event.cascadeLevel >= 2)
 					setPulseKey(posKey(event.resultAt))
 
-					playMergeSound(event.cascadeLevel)
+					playMergeSound(event.cascadeLevel, event.groupSize)
 					if (event.cascadeLevel >= 3) {
 						void hapticCascade3()
 						setChainLevel(event.cascadeLevel)
@@ -815,7 +821,7 @@ export function useGameController (): GameController {
 					setPulseStrong(event.groupSize >= 5 || event.cascadeLevel >= 2)
 					setPulseKey(posKey(event.position))
 
-					playSound('merge3')
+					playTerminal()
 					void hapticTerminalClear()
 
 					setScorePopup({

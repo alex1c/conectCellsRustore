@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { showRewardedUndo } from '../ads/adsService'
 import { trackEvent } from '../analytics/appMetrica'
+import { pauseGameplayAudio } from './feel/sound'
 import { APP_DISPLAY_NAME } from '../branding'
 import { ChainToast } from './components/ChainToast'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -29,6 +30,14 @@ import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
 import { PERF_TELEMETRY } from './feel/perfFlags'
+import {
+	COLOR_ACCENT,
+	COLOR_ACCENT_SECONDARY,
+	COLOR_SURFACE,
+	COLOR_SURFACE_CARD,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from './theme/colors'
 import type { GameController } from './hooks/useGameController'
 
 const H_PAD = 16
@@ -97,6 +106,8 @@ export function GameScreen (props: GameScreenProps) {
 		trackEvent('undo_offer')
 		trackEvent('undo_rewarded_started')
 		try {
+			// Stop SFX so rewarded ad audio is not mixed with gameplay.
+			pauseGameplayAudio()
 			const result = await showRewardedUndo()
 			if (result.status === 'rewarded') {
 				trackEvent('undo_rewarded_completed')
@@ -313,17 +324,17 @@ export function GameScreen (props: GameScreenProps) {
 const styles = StyleSheet.create({
 	safe: {
 		flex: 1,
-		backgroundColor: '#e8eef7',
+		backgroundColor: COLOR_SURFACE,
 	},
 	loading: {
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: '#e8eef7',
+		backgroundColor: COLOR_SURFACE,
 		gap: 12,
 	},
 	loadingText: {
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 	},
 	container: {
 		flex: 1,
@@ -340,7 +351,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		fontSize: 24,
 		fontWeight: '800',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		letterSpacing: -0.4,
 		textAlign: 'center',
 	},
@@ -348,37 +359,37 @@ const styles = StyleSheet.create({
 		width: 40,
 		height: 40,
 		borderRadius: 12,
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_CARD,
 		alignItems: 'center',
 		justifyContent: 'center',
 		borderWidth: 1,
-		borderColor: '#dbe3ef',
+		borderColor: '#c5d0e0',
 	},
 	homeBtnSpacer: {
 		width: 40,
 	},
 	homeBtnText: {
 		fontSize: 18,
-		color: '#334155',
+		color: COLOR_ACCENT_SECONDARY,
 		fontWeight: '700',
 	},
 	gear: {
 		width: 40,
 		height: 40,
 		borderRadius: 12,
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_CARD,
 		alignItems: 'center',
 		justifyContent: 'center',
 		borderWidth: 1,
-		borderColor: '#dbe3ef',
+		borderColor: '#c5d0e0',
 	},
 	gearText: {
 		fontSize: 18,
-		color: '#334155',
+		color: COLOR_ACCENT_SECONDARY,
 	},
 	hint: {
 		fontSize: 13,
-		color: '#64748b',
+		color: COLOR_TEXT_MUTED,
 		marginBottom: 8,
 		textAlign: 'center',
 		// Fixed line box so blocked/hint swap cannot nudge the board.
@@ -408,14 +419,14 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		flex: 1,
-		backgroundColor: '#1d4ed8',
+		backgroundColor: COLOR_ACCENT,
 		paddingVertical: 14,
 		paddingHorizontal: 8,
 		borderRadius: 12,
 		alignItems: 'center',
 	},
 	buttonSecondary: {
-		backgroundColor: '#334155',
+		backgroundColor: COLOR_ACCENT_SECONDARY,
 		flex: 0.55,
 	},
 	buttonDisabled: {

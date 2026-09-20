@@ -26,9 +26,9 @@ const TABLE: Record<number, HexCellVisual> = {
 }
 
 const EMPTY: HexCellVisual = {
-	fill: '#edf1f7',
-	text: '#94a3b8',
-	stroke: '#c5d0e0',
+	fill: '#d5dde8',
+	text: '#64748b',
+	stroke: '#9aabbf',
 }
 
 const ULTRA: HexCellVisual = {

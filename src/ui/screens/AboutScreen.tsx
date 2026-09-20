@@ -10,6 +10,13 @@ import {
 	APP_PUBLISHER,
 	APP_VERSION,
 } from '../../branding'
+import {
+	COLOR_ACCENT,
+	COLOR_SURFACE,
+	COLOR_SURFACE_CARD,
+	COLOR_TEXT,
+	COLOR_TEXT_MUTED,
+} from '../theme/colors'
 
 export interface AboutScreenProps {
 	onBack: () => void
@@ -41,30 +48,32 @@ export function AboutScreen (props: AboutScreenProps) {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: '#eef3f8',
+		backgroundColor: COLOR_SURFACE,
 		paddingHorizontal: 20,
 	},
 	back: {
-		color: '#1d4ed8',
+		color: COLOR_ACCENT,
 		fontWeight: '700',
 		fontSize: 15,
 		marginBottom: 24,
 	},
 	card: {
-		backgroundColor: '#ffffff',
+		backgroundColor: COLOR_SURFACE_CARD,
 		borderRadius: 16,
 		padding: 28,
 		alignItems: 'center',
+		borderWidth: 1,
+		borderColor: '#c5d0e0',
 	},
 	brand: {
 		fontSize: 28,
 		fontWeight: '900',
-		color: '#0f172a',
+		color: COLOR_TEXT,
 		marginBottom: 12,
 	},
 	line: {
 		fontSize: 16,
-		color: '#475569',
+		color: COLOR_TEXT_MUTED,
 		marginBottom: 6,
 		fontWeight: '600',
 	},

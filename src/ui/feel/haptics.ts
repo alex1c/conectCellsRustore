@@ -1,6 +1,7 @@
 /**
- * Unified haptic mapping for Phase 3 game feel.
- * Honors the persisted haptic preference; failures never block gameplay.
+ * Unified haptic mapping for Hexonica game feel.
+ * Fire-and-forget: callers should `void hapticX()` — never await on hot path.
+ * Honors persisted «Вибрация» preference; failures never block gameplay.
  */
 
 import * as Haptics from 'expo-haptics'
@@ -16,99 +17,87 @@ export function isHapticEnabled (): boolean {
 	return enabled
 }
 
-async function run (action: () => Promise<void>): Promise<void> {
+function run (action: () => Promise<void>): void {
 	if (!enabled) {
 		return
 	}
-	try {
-		await action()
-	} catch {
+	void action().catch(() => {
 		// Platforms without haptics are fine.
-	}
+	})
 }
 
-/** Select occupied cell. */
-export async function hapticSelection (): Promise<void> {
-	await run(() => Haptics.selectionAsync())
+/** Select occupied cell — very light. */
+export function hapticSelection (): void {
+	run(() => Haptics.selectionAsync())
 }
 
-/** Successful short move — very light / optional. */
-export async function hapticMove (): Promise<void> {
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft),
-	)
+/**
+ * Normal move — intentionally silent on OPPO.
+ * Movement already has strong visual feedback; vibration felt noisy.
+ */
+export function hapticMove (): void {
+	// no-op by design (Phase 4.2 OPPO feel)
 }
 
 /** Blocked / illegal path. */
-export async function hapticBlocked (): Promise<void> {
-	await run(() =>
+export function hapticBlocked (): void {
+	run(() =>
 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning),
 	)
 }
 
 /** Merge of exactly 4. */
-export async function hapticMerge4 (): Promise<void> {
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
-	)
+export function hapticMerge4 (): void {
+	run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium))
 }
 
 /** Merge of 5+. */
-export async function hapticMergeLarge (): Promise<void> {
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
-	)
+export function hapticMergeLarge (): void {
+	run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))
 }
 
 /** Cascade step 2. */
-export async function hapticCascade2 (): Promise<void> {
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
-	)
+export function hapticCascade2 (): void {
+	run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium))
 }
 
 /** Cascade step 3+. */
-export async function hapticCascade3 (): Promise<void> {
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
-	)
+export function hapticCascade3 (): void {
+	run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))
 }
 
-/** Terminal merge clear — celebratory success + heavy impact. */
-export async function hapticTerminalClear (): Promise<void> {
-	await run(() =>
+/** Terminal clear — strongest brief success hit (single cue, no chain). */
+export function hapticTerminalClear (): void {
+	run(() =>
 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-	)
-	await run(() =>
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
 	)
 }
 
 /** Level-up success feedback. */
-export async function hapticLevelUp (): Promise<void> {
-	await run(() =>
+export function hapticLevelUp (): void {
+	run(() =>
 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
 	)
 }
 
 /** Game over — distinct but not aggressive. */
-export async function hapticGameOver (): Promise<void> {
-	await run(() =>
+export function hapticGameOver (): void {
+	run(() =>
 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error),
 	)
 }
 
-/** @deprecated Prefer hapticBlocked — kept for older call sites. */
-export async function hapticInvalid (): Promise<void> {
-	await hapticBlocked()
+/** @deprecated Prefer hapticBlocked. */
+export function hapticInvalid (): void {
+	hapticBlocked()
 }
 
 /** @deprecated Prefer hapticMerge4 / hapticMergeLarge. */
-export async function hapticMerge (): Promise<void> {
-	await hapticMerge4()
+export function hapticMerge (): void {
+	hapticMerge4()
 }
 
 /** @deprecated Prefer hapticCascade2 / hapticCascade3. */
-export async function hapticChain (): Promise<void> {
-	await hapticCascade2()
+export function hapticChain (): void {
+	hapticCascade2()
 }

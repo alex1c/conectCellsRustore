@@ -1,80 +1,72 @@
-# Connect Cells — Game Feel (Phase 3)
+# Hexonica — Game Feel (Phase 4.2 polish)
 
 Presentation layer only. **Engine remains the sole source of truth.**
 
-## Animation sequence
+## Visual tokens
 
-Successful turn playback order:
+Shared chrome in `src/ui/theme/colors.ts` (calmer default — not a dark theme):
 
-1. `MOVE` — BFS path stepped hex→hex (traveler overlay; origin cleared)
-2. `MERGE` — absorbed cells shrink, then anchor pops with new value
-3. cascade `MERGE` steps — sequential with pause (no simultaneous merges)
-4. `SCORE_GAIN` — header sync + optional flash
-5. `SPAWN` — short scale/fade with light stagger
-6. `LEVEL_UP` — brief toast
-7. `GAME_OVER` — sound/haptic; overlay after input unlock
+| Token | Value | Use |
+|-------|-------|-----|
+| `COLOR_SURFACE` | `#d8e0eb` | Home / Game / Settings / How to Play backdrop |
+| `COLOR_SURFACE_CARD` | `#eef2f7` | Cards / chrome buttons |
+| `COLOR_BOARD_PLANE` | `rgba(198,210,226,0.72)` | Soft plane under hexes |
+| `COLOR_TEXT` / `COLOR_TEXT_MUTED` | `#0f172a` / `#526277` | Primary / secondary text |
+| Empty hex | fill `#d5dde8`, stroke `#9aabbf` | Clear destinations without glare |
 
-Interrupted playback (token bump / app background) snaps UI to the authoritative final `GameState`.
+Occupied cell palette in `cellVisuals.ts` is unchanged. Board geometry
+(`boardWrap` flex-start, ScoreHeader gain slots) must stay stable during merge.
 
-## Timing constants
+## Sound map (SFX only — no BGM)
 
-Centralized in `src/ui/feel/timings.ts` (TUNABLE after real-device review):
+Settings label: **Звуки** (never «Музыка»). Default ON. Persisted locally.
 
-| Constant | Role |
-|----------|------|
-| `pathTotalMs` / `pathStepMs` | BFS path budget (short/medium/long, **hard cap 300ms**) |
-| `TIMING_SELECTION_MS` | selection wobble piece |
-| `TIMING_MERGE_CONVERGE_MS` | shrink absorbed cells |
-| `TIMING_MERGE_POP_MS` / `LARGE` | anchor pop |
-| `TIMING_CASCADE_PAUSE_MS` | gap between cascade merges |
-| `TIMING_SCORE_POPUP_MS` / `FLASH` | float `+N` / header flash wait |
-| `TIMING_SPAWN_MS` / `STAGGER` | spawn appear |
-| `TIMING_LEVEL_UP_MS` | level-up toast |
-| `TIMING_BLOCKED_FLASH_MS` | «Путь закрыт» |
-| `TIMING_CHAIN_TOAST_MS` | «Цепочка ×N» |
+Central API: `src/ui/feel/sound.ts` (`playSelect`, `playMove`, `playBlocked`,
+`playSpawn`, `playMerge(cascade, groupSize)`, `playTerminal`, `playLevelUp`,
+`playGameOver`, `pauseGameplayAudio`). Fire-and-forget; never await on hot path.
 
-### Hotfix (cell scale)
+| Cue | Asset | Notes |
+|-----|-------|-------|
+| select | `select.wav` | Quiet click |
+| move | `move.wav` | One cue per move, not per hop |
+| blocked | `blocked.wav` | Path closed |
+| spawn | `spawn.wav` | One soft pop per turn spawn |
+| merge4 | `merge.wav` | Cascade 1, group ≤4 |
+| merge5+ / cascade2 | `merge2.wav` | Richer |
+| cascade3+ | `merge3.wav` | Highest escalate |
+| terminal | `terminal.wav` | Distinct ≥128 clear |
+| level up | `levelup.wav` | Non-blocking toast |
+| game over | `gameover.wav` | Before interstitial; paused for ads |
 
-`HexCellView` keeps per-position `Animated.Value`s. Merge shrink and spawn must
-**snap back to canonical scale=1 / opacity=1** when the transient flag ends or
-the animation is interrupted. Path traveler is a separate non-animated overlay.
+### Asset license
 
-## Haptic mapping
+All files under `assets/sounds/` are original short tones generated for this
+project (simple synthesized WAV). Safe to ship commercially. No third-party
+game audio copied.
+
+`pauseGameplayAudio()` runs on app background and before interstitial / rewarded.
+
+## Haptic map
+
+Settings label: **Вибрация**. Default ON. `src/ui/feel/haptics.ts`.
 
 | Event | Feedback |
 |-------|----------|
-| select | selection |
-| move | Soft (optional feel) |
+| select | `selectionAsync` (light; human may drop after OPPO feel check) |
+| move | **none** (OPPO: movement already has strong visual feedback) |
 | blocked | Warning notification |
 | merge4 | Medium impact |
 | merge5+ | Heavy impact |
 | cascade2 | Medium |
 | cascade3+ | Heavy |
+| terminal | Success notification (single cue) |
 | level up | Success |
 | game over | Error (distinct, not aggressive) |
 
-Honors Settings → Вибрация (default ON).
+No haptic on spawn or score popup. Never await haptic before unlock.
 
-## Sound mapping
+## Input lock / performance
 
-Original short WAV tones in `assets/sounds/` via `expo-audio`:
-
-| Id | Use |
-|----|-----|
-| select | cell select |
-| move | path travel start |
-| merge / merge2 / merge3 | cascade pitch escalate |
-| spawn | new cells |
-| blocked | path closed |
-| levelup | level toast |
-| gameover | end of run |
-
-Honors Settings → Звук (default ON). Soft-fails if native audio module is unavailable.
-
-## Input lock
-
-`inputLocked` is true for the whole successful turn playback. Undo / Restart / cell taps are blocked. Rapid taps cannot enqueue a second move.
-
-## Balance
-
-Phase 3 **does not** change spawn math, thresholds, or scoring.
+`inputLocked` covers successful turn playback. Path traveler uses native driver.
+PERF_TELEMETRY defaults false. Sound/haptic must not regress movement
+responsiveness or merge board stability (HEAD 361b690 / 78166cb).

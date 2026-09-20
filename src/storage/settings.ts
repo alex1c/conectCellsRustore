@@ -12,6 +12,12 @@ export const SETTINGS_DEFAULTS = {
 	onboardingDone: false,
 } as const
 
+/** Russian Settings labels (SFX only — never «Музыка»). */
+export const SETTINGS_LABELS = {
+	sound: 'Звуки',
+	haptic: 'Вибрация',
+} as const
+
 /** Parse a stored boolean preference; invalid → default. */
 export function parseBoolSetting (
 	raw: unknown,
