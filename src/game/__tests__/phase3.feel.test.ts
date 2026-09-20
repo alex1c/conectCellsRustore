@@ -31,7 +31,7 @@ import {
 	SETTINGS_DEFAULTS,
 	parseBoolSetting,
 } from '../../storage/settings'
-import { ONBOARDING_STEP_COUNT } from '../../ui/components/OnboardingModal'
+import { TUTORIAL_STEP_COUNT } from '../../ui/tutorial/tutorialSteps'
 
 describe('Phase 3 settings helpers', () => {
 	it('parses sound/haptic/onboarding flags with safe defaults', () => {
@@ -44,8 +44,9 @@ describe('Phase 3 settings helpers', () => {
 		expect(SETTINGS_DEFAULTS.onboardingDone).toBe(false)
 	})
 
-	it('keeps onboarding to four steps', () => {
-		expect(ONBOARDING_STEP_COUNT).toBe(4)
+	it('keeps interactive tutorial step count in a short range', () => {
+		expect(TUTORIAL_STEP_COUNT).toBeGreaterThanOrEqual(7)
+		expect(TUTORIAL_STEP_COUNT).toBeLessThanOrEqual(12)
 	})
 })
 

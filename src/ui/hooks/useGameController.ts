@@ -63,7 +63,6 @@ import type {
 	BoardScorePopup,
 	BoardTraveler,
 } from '../components/HexBoardView'
-import { ONBOARDING_STEP_COUNT } from '../components/OnboardingModal'
 import {
 	hapticBlocked,
 	hapticCascade2,
@@ -150,8 +149,8 @@ export interface GameController {
 	soundEnabled: boolean
 	hapticEnabled: boolean
 	showSettings: boolean
-	showOnboarding: boolean
-	onboardingStep: number
+	/** True after first-run tutorial completed or skipped. */
+	onboardingCompleted: boolean
 	handleCellPress: (position: Position) => void
 	/** Completes the in-flight native path traveler (board overlay). */
 	handleTravelerComplete: (playId: number) => void
@@ -179,10 +178,10 @@ export interface GameController {
 	closeSettings: () => void
 	setSoundPref: (value: boolean) => void
 	setHapticPref: (value: boolean) => void
-	openHowToPlay: () => void
-	onboardingNext: () => void
-	onboardingSkip: () => void
-	onboardingFinish: () => void
+	/** Persist tutorial completion (first-run or skip). */
+	markOnboardingComplete: () => void
+	/** DEV-only: clear onboarding flag so tutorial runs again. */
+	resetOnboardingForDev: () => void
 }
 
 export function useGameController (): GameController {
@@ -223,8 +222,7 @@ export function useGameController (): GameController {
 	const [soundEnabled, setSoundEnabledState] = useState(true)
 	const [hapticEnabled, setHapticEnabledState] = useState(true)
 	const [showSettings, setShowSettings] = useState(false)
-	const [showOnboarding, setShowOnboarding] = useState(false)
-	const [onboardingStep, setOnboardingStep] = useState(0)
+	const [onboardingCompleted, setOnboardingCompleted] = useState(false)
 
 	const gameRef = useRef(game)
 	const presetRef = useRef(activePreset)
@@ -341,7 +339,7 @@ export function useGameController (): GameController {
 			void initSounds()
 			setBestScore(best)
 			setBestLevel(bestLvl)
-			setShowOnboarding(!onboardingDone)
+			setOnboardingCompleted(onboardingDone)
 			if (saved && isActiveParty(saved.game)) {
 				// Persisted party — Continue will use this; do not auto-enter game.
 				persistedActiveRef.current = true
@@ -1086,14 +1084,21 @@ export function useGameController (): GameController {
 		setGameOverVisible(false)
 	}, [])
 
-	const finishOnboarding = useCallback(async () => {
-		setShowOnboarding(false)
-		setOnboardingStep(0)
-		try {
-			await saveOnboardingDone(true)
-		} catch {
+	const markOnboardingComplete = useCallback(() => {
+		setOnboardingCompleted(true)
+		void saveOnboardingDone(true).catch(() => {
 			// ignore
+		})
+	}, [])
+
+	const resetOnboardingForDev = useCallback(() => {
+		if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+			return
 		}
+		setOnboardingCompleted(false)
+		void saveOnboardingDone(false).catch(() => {
+			// ignore
+		})
 	}, [])
 
 	const levelInfo = getLevelProgress(displayScore)
@@ -1131,8 +1136,7 @@ export function useGameController (): GameController {
 		soundEnabled,
 		hapticEnabled,
 		showSettings,
-		showOnboarding,
-		onboardingStep,
+		onboardingCompleted,
 		handleCellPress,
 		handleTravelerComplete,
 		handleUndo,
@@ -1189,21 +1193,7 @@ export function useGameController (): GameController {
 			setHapticEnabled(value)
 			void saveHapticEnabled(value)
 		},
-		openHowToPlay: () => {
-			setShowSettings(false)
-			setOnboardingStep(0)
-			setShowOnboarding(true)
-		},
-		onboardingNext: () => {
-			setOnboardingStep((s) =>
-				Math.min(ONBOARDING_STEP_COUNT - 1, s + 1),
-			)
-		},
-		onboardingSkip: () => {
-			void finishOnboarding()
-		},
-		onboardingFinish: () => {
-			void finishOnboarding()
-		},
+		markOnboardingComplete,
+		resetOnboardingForDev,
 	}
 }

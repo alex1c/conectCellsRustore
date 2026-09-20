@@ -38,6 +38,8 @@ export interface DevPanelProps {
 	onSelectPreset: (id: RulePresetId) => void
 	onLoadFixture: (id: FixtureId) => void
 	onNewSeed: () => void
+	/** Clears onboarding flag and opens tutorial (DEV). */
+	onResetOnboarding?: () => void
 	lastMetrics: RunMetrics | null
 	lastTurn: DevTurnTelemetry | null
 }
@@ -55,6 +57,7 @@ export function DevPanel (props: DevPanelProps) {
 		onSelectPreset,
 		onLoadFixture,
 		onNewSeed,
+		onResetOnboarding,
 		lastMetrics,
 		lastTurn,
 	} = props
@@ -81,15 +84,28 @@ export function DevPanel (props: DevPanelProps) {
 					DEV {expanded ? '▾' : '▸'}
 				</Text>
 				{expanded ? (
-					<Pressable
-						style={styles.seedBtn}
-						onPress={(e) => {
-							e.stopPropagation?.()
-							onNewSeed()
-						}}
-					>
-						<Text style={styles.seedText}>New seed</Text>
-					</Pressable>
+					<>
+						<Pressable
+							style={styles.seedBtn}
+							onPress={(e) => {
+								e.stopPropagation?.()
+								onNewSeed()
+							}}
+						>
+							<Text style={styles.seedText}>New seed</Text>
+						</Pressable>
+						{onResetOnboarding ? (
+							<Pressable
+								style={styles.seedBtn}
+								onPress={(e) => {
+									e.stopPropagation?.()
+									onResetOnboarding()
+								}}
+							>
+								<Text style={styles.seedText}>Reset onboarding</Text>
+							</Pressable>
+						) : null}
+					</>
 				) : (
 					<Text style={styles.collapsedHint}>tools</Text>
 				)}
@@ -184,6 +200,8 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		marginBottom: 6,
+		gap: 8,
+		flexWrap: 'wrap',
 	},
 	title: {
 		fontSize: 11,

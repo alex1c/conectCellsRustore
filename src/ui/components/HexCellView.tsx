@@ -20,6 +20,8 @@ export interface HexCellViewProps {
 	row: number
 	col: number
 	selected: boolean
+	/** Soft tutorial highlight for intended cells / destinations. */
+	hint?: boolean
 	pulse: boolean
 	/** Extra-strong pop for large merges / cascade. */
 	pulseStrong?: boolean
@@ -75,6 +77,7 @@ function hexCellPropsEqual (
 		prev.row === next.row &&
 		prev.col === next.col &&
 		prev.selected === next.selected &&
+		prev.hint === next.hint &&
 		prev.pulse === next.pulse &&
 		prev.pulseStrong === next.pulseStrong &&
 		prev.spawn === next.spawn &&
@@ -94,6 +97,7 @@ function HexCellViewInner (props: HexCellViewProps) {
 		row,
 		col,
 		selected,
+		hint = false,
 		pulse,
 		pulseStrong = false,
 		spawn,
@@ -337,8 +341,12 @@ function HexCellViewInner (props: HexCellViewProps) {
 						width,
 						height,
 						backgroundColor: visual.fill,
-						borderColor: selected ? COLOR_SELECTION_RING : visual.stroke,
-						borderWidth: selected ? 3 : value === null ? 1 : 1.5,
+						borderColor: selected
+							? COLOR_SELECTION_RING
+							: hint
+								? COLOR_SELECTION_RING
+								: visual.stroke,
+						borderWidth: selected ? 3 : hint ? 2.5 : value === null ? 1 : 1.5,
 						opacity,
 						transform: [{ scale }, { rotate }],
 					},

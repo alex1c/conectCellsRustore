@@ -7,6 +7,8 @@ export type AppRoute =
 	| 'game'
 	| 'settings'
 	| 'howToPlay'
+	| 'tutorial'
 	| 'about'
+	| 'boot'
 
 export type GameEntryReason = 'continue' | 'new_game' | 'resume'

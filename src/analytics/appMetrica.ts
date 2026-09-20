@@ -32,6 +32,10 @@ export type AnalyticsEventName =
 	| 'interstitial_failed'
 	| 'settings_open'
 	| 'how_to_play_open'
+	| 'tutorial_start'
+	| 'tutorial_step'
+	| 'tutorial_complete'
+	| 'tutorial_skip'
 
 let activated = false
 let sinkDisabled = false

@@ -1,20 +1,45 @@
-# Connect Cells — Onboarding (Phase 3)
+# Hexonica — Interactive Onboarding (Phase 4.4)
 
-Short first-launch teaching flow. Not a playable tutorial engine.
+Short interactive tutorial on the real 6×8 hex board.
 
-## Steps (4)
+## First launch
 
-1. **Ход** — select a cell, tap empty destination, free path required.
-2. **Объединение** — 4+ equal cells → higher value (`1×4 → 4`, `2×4 → 8`).
-3. **Новые клетки** — spawns after moves; large merges help control fill.
-4. **Уровни** — score raises level; higher levels fill faster → **Играть**.
+`onboardingDone == false` (default)
+→ interactive tutorial (`source=first_launch`)
+→ Home
 
-## Persistence
+Skip or complete both set `connectcells.onboarding.done.v1 = true`.
 
-- Key: `connectcells.onboarding.done.v1`
-- Shown only when flag is unset/false
-- Skip / Finish both set the flag
+Later launches go straight to Home.
 
-## Re-open
+## Replay
 
-Settings (gear) → **Как играть** reopens the same flow without clearing progress.
+Home / Settings → **Как играть**
+→ same tutorial (`source=help`)
+→ returns to previous route
+
+Replay does **not** reset active party, best score, best level, or settings.
+
+## Steps
+
+1. Select highlighted cell  
+2. Move to highlighted empty  
+3. Free-path tip  
+4. Guided merge (4×1 → 4)  
+5. Merge tip  
+6. Large-group tip (≥5 helps pressure)  
+7. Spawn demo move  
+8. Levels tip  
+9. Done → **Играть**
+
+## Isolation
+
+- Local `GameState` only (`createGameFromBoard` / `applyMove`)
+- No `saveGameState` / best updates
+- No banners / interstitial / rewarded
+- Tutorial analytics: `tutorial_start|step|complete|skip` only  
+  (no `move` / `merge` / `game_over` gameplay events)
+
+## DEV
+
+DevPanel → **Reset onboarding** clears the flag and opens the tutorial.

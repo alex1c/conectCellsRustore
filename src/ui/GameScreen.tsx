@@ -25,7 +25,6 @@ import { DevPanel } from './components/DevPanel'
 import { GameOverOverlay } from './components/GameOverOverlay'
 import { HexBoardView } from './components/HexBoardView'
 import { LevelUpToast } from './components/LevelUpToast'
-import { OnboardingModal } from './components/OnboardingModal'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
@@ -52,10 +51,12 @@ export interface GameScreenProps {
 	onBackHome?: () => void
 	onOpenSettings?: () => void
 	onOpenHowToPlay?: () => void
+	/** DEV: relaunch interactive tutorial without wiping the party. */
+	onResetOnboarding?: () => void
 }
 
 export function GameScreen (props: GameScreenProps) {
-	const { game, onBackHome, onOpenSettings } = props
+	const { game, onBackHome, onOpenSettings, onResetOnboarding } = props
 	const insets = useSafeAreaInsets()
 	const [viewportWidth, setViewportWidth] = useState(360)
 	const [undoConfirmVisible, setUndoConfirmVisible] = useState(false)
@@ -267,6 +268,7 @@ export function GameScreen (props: GameScreenProps) {
 							onSelectPreset={game.handleSelectPreset}
 							onLoadFixture={game.handleLoadFixture}
 							onNewSeed={game.handleNewSeed}
+							onResetOnboarding={onResetOnboarding}
 							lastMetrics={game.lastMetrics}
 							lastTurn={game.lastTurn}
 						/>
@@ -313,13 +315,6 @@ export function GameScreen (props: GameScreenProps) {
 				onConfirm={() => {
 					void runRewardedUndo()
 				}}
-			/>
-			<OnboardingModal
-				visible={game.showOnboarding}
-				step={game.onboardingStep}
-				onNext={game.onboardingNext}
-				onSkip={game.onboardingSkip}
-				onFinish={game.onboardingFinish}
 			/>
 		</View>
 	)

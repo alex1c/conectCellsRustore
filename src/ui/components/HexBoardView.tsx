@@ -32,6 +32,8 @@ export interface HexBoardViewProps {
 	spawnKeys: string[]
 	shrinkKeys?: string[]
 	shakeKey?: string | null
+	/** Tutorial coach highlights (stable keys "r,c"). */
+	hintKeys?: string[]
 	traveler?: BoardTraveler | null
 	scorePopup?: BoardScorePopup | null
 	inputLocked: boolean
@@ -65,6 +67,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 		spawnKeys,
 		shrinkKeys = [],
 		shakeKey = null,
+		hintKeys = [],
 		traveler = null,
 		scorePopup = null,
 		inputLocked: _inputLocked,
@@ -78,6 +81,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 	const cols = board[0]?.length || BOARD_COLS
 	const spawnSet = useMemo(() => new Set(spawnKeys), [spawnKeys])
 	const shrinkSet = useMemo(() => new Set(shrinkKeys), [shrinkKeys])
+	const hintSet = useMemo(() => new Set(hintKeys), [hintKeys])
 
 	const { cellSize, rowStep, colStep } = useMemo(
 		() => HexCellLayoutMetrics(boardWidth, cols),
@@ -155,6 +159,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 								row={row}
 								col={col}
 								selected={selectedHere}
+								hint={hintSet.has(key) && !selectedHere}
 								pulse={pulseKey === key}
 								pulseStrong={pulseStrong && pulseKey === key}
 								spawn={spawnSet.has(key)}
