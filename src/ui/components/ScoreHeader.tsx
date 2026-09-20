@@ -1,5 +1,7 @@
 /**
  * Score / level / best header with thin level progress bar.
+ * Geometry is intentionally STABLE — gain flash must never change header
+ * height (that previously recentered HexBoard via flex + justifyContent).
  */
 
 import { StyleSheet, Text, View } from 'react-native'
@@ -12,6 +14,9 @@ export interface ScoreHeaderProps {
 	gainFlash: number | null
 }
 
+/** Fixed slot under the score value so +gain never reflows the board. */
+export const SCORE_GAIN_SLOT_HEIGHT = 16
+
 export function ScoreHeader (props: ScoreHeaderProps) {
 	const { score, best, level, levelProgress, gainFlash } = props
 	const clamped = Math.min(1, Math.max(0, levelProgress))
@@ -21,18 +26,47 @@ export function ScoreHeader (props: ScoreHeaderProps) {
 			<View style={styles.row}>
 				<View style={styles.block}>
 					<Text style={styles.label}>Счёт</Text>
-					<Text style={styles.value}>{score}</Text>
-					{gainFlash !== null ? (
-						<Text style={styles.gain}>+{gainFlash}</Text>
-					) : null}
+					{/* Fixed-height value line — digit growth must not reflow. */}
+					<View style={styles.valueSlot}>
+						<Text
+							style={styles.value}
+							numberOfLines={1}
+							adjustsFontSizeToFit
+							minimumFontScale={0.7}
+						>
+							{score}
+						</Text>
+					</View>
+					{/* Always-reserved gain slot; text overlays inside (no mount height). */}
+					<View style={styles.gainSlot} pointerEvents="none">
+						{gainFlash !== null ? (
+							<Text style={styles.gain}>+{gainFlash}</Text>
+						) : null}
+					</View>
 				</View>
 				<View style={[styles.block, styles.alignCenter]}>
 					<Text style={styles.label}>Уровень</Text>
-					<Text style={styles.value}>{level}</Text>
+					<View style={styles.valueSlot}>
+						<Text style={styles.value} numberOfLines={1}>
+							{level}
+						</Text>
+					</View>
+					{/* Matching spacer so all three columns share identical height. */}
+					<View style={styles.gainSlot} />
 				</View>
 				<View style={[styles.block, styles.alignEnd]}>
 					<Text style={styles.label}>Рекорд</Text>
-					<Text style={styles.value}>{best}</Text>
+					<View style={styles.valueSlot}>
+						<Text
+							style={[styles.value, styles.valueEnd]}
+							numberOfLines={1}
+							adjustsFontSizeToFit
+							minimumFontScale={0.7}
+						>
+							{best}
+						</Text>
+					</View>
+					<View style={styles.gainSlot} />
 				</View>
 			</View>
 			<View style={styles.track}>
@@ -52,6 +86,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		marginBottom: 8,
+		alignItems: 'flex-start',
 	},
 	block: {
 		flex: 1,
@@ -69,17 +104,31 @@ const styles = StyleSheet.create({
 		fontWeight: '600',
 		textTransform: 'uppercase',
 		letterSpacing: 0.5,
+		height: 16,
+	},
+	valueSlot: {
+		height: 30,
+		justifyContent: 'center',
 	},
 	value: {
 		fontSize: 24,
 		fontWeight: '800',
 		color: '#0f172a',
+		lineHeight: 30,
+		fontVariant: ['tabular-nums'],
+	},
+	valueEnd: {
+		textAlign: 'right',
+	},
+	gainSlot: {
+		height: SCORE_GAIN_SLOT_HEIGHT,
+		justifyContent: 'flex-start',
 	},
 	gain: {
-		marginTop: 2,
 		fontSize: 13,
 		fontWeight: '700',
 		color: '#16a34a',
+		lineHeight: SCORE_GAIN_SLOT_HEIGHT,
 	},
 	track: {
 		height: 5,

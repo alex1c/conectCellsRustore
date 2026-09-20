@@ -2,7 +2,7 @@
  * Main hex playable screen — Phase 4 production shell (no banners).
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
 	ActivityIndicator,
 	Alert,
@@ -28,6 +28,7 @@ import { OnboardingModal } from './components/OnboardingModal'
 import { RestartDialog } from './components/RestartDialog'
 import { ScoreHeader } from './components/ScoreHeader'
 import { UiErrorBoundary } from './components/UiErrorBoundary'
+import { PERF_TELEMETRY } from './feel/perfFlags'
 import type { GameController } from './hooks/useGameController'
 
 const H_PAD = 16
@@ -55,6 +56,36 @@ export function GameScreen (props: GameScreenProps) {
 	const handleLayout = (event: LayoutChangeEvent) => {
 		setViewportWidth(event.nativeEvent.layout.width)
 	}
+
+	/**
+	 * DEV/PERF only: detect board layout shifts during merge playback.
+	 * Default OFF — never spam logcat during ordinary play.
+	 */
+	const lastBoardGeomRef = useRef<{
+		y: number
+		width: number
+		height: number
+	} | null>(null)
+	const handleBoardLayout = useCallback((event: LayoutChangeEvent) => {
+		if (!__DEV__ || !PERF_TELEMETRY) {
+			return
+		}
+		const { y, width, height } = event.nativeEvent.layout
+		const prev = lastBoardGeomRef.current
+		lastBoardGeomRef.current = { y, width, height }
+		if (
+			prev &&
+			(prev.y !== y || prev.width !== width || prev.height !== height)
+		) {
+			console.log(
+				'[ConnectCells] board geometry changed ' +
+					JSON.stringify({
+						before: prev,
+						after: { y, width, height },
+					}),
+			)
+		}
+	}, [])
 
 	/** Shared rewarded undo path for in-game button and Game Over rescue. */
 	const runRewardedUndo = useCallback(async () => {
@@ -165,7 +196,12 @@ export function GameScreen (props: GameScreenProps) {
 					</Text>
 				)}
 
-				<View style={styles.boardWrap}>
+				{/*
+				 * Board is pinned to the top of remaining space (not vertically
+				 * recentered). Header/gain/DevPanel height changes must not
+				 * visually shove the hex field — ScoreHeader geometry is stable.
+				 */}
+				<View style={styles.boardWrap} onLayout={handleBoardLayout}>
 					<UiErrorBoundary label="HexBoard">
 						<HexBoardView
 							board={game.displayBoard}
@@ -345,6 +381,9 @@ const styles = StyleSheet.create({
 		color: '#64748b',
 		marginBottom: 8,
 		textAlign: 'center',
+		// Fixed line box so blocked/hint swap cannot nudge the board.
+		minHeight: 36,
+		lineHeight: 18,
 	},
 	blocked: {
 		fontSize: 13,
@@ -352,11 +391,15 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 		marginBottom: 8,
 		textAlign: 'center',
+		minHeight: 36,
+		lineHeight: 18,
 	},
 	boardWrap: {
 		flexGrow: 1,
-		justifyContent: 'center',
+		// Pin board top — do NOT justifyContent:'center' (reflows on sibling height).
+		justifyContent: 'flex-start',
 		alignItems: 'center',
+		paddingTop: 4,
 	},
 	actions: {
 		flexDirection: 'row',

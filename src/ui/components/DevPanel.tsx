@@ -176,6 +176,8 @@ const styles = StyleSheet.create({
 		paddingTop: 8,
 		borderTopWidth: 1,
 		borderTopColor: '#d5dee8',
+		// Keep fixture chips above OPPO 3-button nav (~132px).
+		paddingBottom: 140,
 	},
 	headerRow: {
 		flexDirection: 'row',

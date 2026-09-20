@@ -21,6 +21,7 @@ import {
 } from '../../ui/feel/timings'
 import { PERF_TELEMETRY } from '../../ui/feel/perfFlags'
 import { buildPathHopDurations } from '../../ui/components/PathTravelerOverlay'
+import { SCORE_GAIN_SLOT_HEIGHT } from '../../ui/components/ScoreHeader'
 import { canonicalCellTransform } from '../../ui/components/HexCellView'
 import {
 	getHexCellVisual,
@@ -174,6 +175,10 @@ describe('animation hotfix path budgets', () => {
 		const state = loadFixture('animationStress')
 		expect(state.board).toHaveLength(8)
 		expect(state.board[0]).toHaveLength(6)
+	})
+	it('keeps ScoreHeader gain slot height stable', () => {
+		expect(SCORE_GAIN_SLOT_HEIGHT).toBeGreaterThan(0)
+		expect(SCORE_GAIN_SLOT_HEIGHT).toBeLessThanOrEqual(24)
 	})
 })
 
