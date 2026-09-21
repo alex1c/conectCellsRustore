@@ -441,12 +441,36 @@ export function fixtureHighLevelCap (): GameState {
 /**
  * RuStore hero / beauty shot (dev-only).
  * Score 860 → Level 3; varied mid values with readable empty space.
+ * Includes a valid undo snapshot so Rewarded Undo stays enabled.
  */
 export function fixtureScreenshotNormal (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4201,
+		score: 840,
+		moveCount: 27,
+		board: boardFromSparse([
+			{ row: 0, col: 1, value: 1 },
+			{ row: 0, col: 4, value: 2 },
+			{ row: 1, col: 2, value: 4 },
+			{ row: 2, col: 0, value: 1 },
+			{ row: 2, col: 3, value: 2 },
+			{ row: 3, col: 2, value: 8 },
+			{ row: 3, col: 5, value: 1 },
+			{ row: 4, col: 1, value: 2 },
+			{ row: 4, col: 4, value: 4 },
+			{ row: 5, col: 2, value: 1 },
+			{ row: 6, col: 0, value: 2 },
+			{ row: 6, col: 3, value: 16 },
+			{ row: 7, col: 2, value: 1 },
+			// Prior: 4 sat one cell left before the last move.
+			{ row: 7, col: 4, value: 4 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4201,
 		score: 860,
 		moveCount: 28,
+		undoFrom: prior,
 		board: boardFromSparse([
 			{ row: 0, col: 1, value: 1 },
 			{ row: 0, col: 4, value: 2 },
@@ -467,15 +491,29 @@ export function fixtureScreenshotNormal (): GameState {
 }
 
 /**
- * Movement storytelling: sparse board so one occupied cell has clear empty paths.
- * Capture with that cell selected (production selection chrome only).
+ * Movement storytelling: sparse board; select (2,1)=2 for production selection chrome.
+ * Open empty corridor toward the center makes reachable destinations obvious.
  */
 export function fixtureScreenshotMove (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4202,
+		score: 160,
+		moveCount: 8,
+		board: boardFromSparse([
+			{ row: 2, col: 0, value: 2 },
+			{ row: 3, col: 4, value: 1 },
+			{ row: 5, col: 2, value: 4 },
+			{ row: 6, col: 5, value: 1 },
+			{ row: 7, col: 0, value: 2 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4202,
 		score: 180,
 		moveCount: 9,
+		undoFrom: prior,
 		board: boardFromSparse([
+			// Primary selectable piece with long empty paths east/south.
 			{ row: 2, col: 1, value: 2 },
 			{ row: 3, col: 4, value: 1 },
 			{ row: 5, col: 2, value: 4 },
@@ -487,10 +525,27 @@ export function fixtureScreenshotMove (): GameState {
 
 /** Ready-to-merge cluster of four equal mid-values (visually obvious). */
 export function fixtureScreenshotMerge (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4203,
+		score: 400,
+		moveCount: 15,
+		board: boardFromSparse([
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 1, value: 4 },
+			{ row: 3, col: 2, value: 4 },
+			// Fourth 4 one step away before the merge-setup move.
+			{ row: 4, col: 3, value: 4 },
+			{ row: 1, col: 4, value: 2 },
+			{ row: 5, col: 4, value: 8 },
+			{ row: 6, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 1 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4203,
 		score: 420,
 		moveCount: 16,
+		undoFrom: prior,
 		board: boardFromSparse([
 			{ row: 2, col: 2, value: 4 },
 			{ row: 3, col: 1, value: 4 },
@@ -506,13 +561,30 @@ export function fixtureScreenshotMerge (): GameState {
 
 /**
  * Cascade setup: merging the four 1s yields a 4 that joins the existing 4-group.
- * Capture either the primed board or the post-cascade result with real UI feedback.
  */
 export function fixtureScreenshotCascade (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4204,
+		score: 960,
+		moveCount: 29,
+		board: boardFromSparse([
+			{ row: 2, col: 1, value: 1 },
+			{ row: 2, col: 2, value: 1 },
+			{ row: 3, col: 1, value: 1 },
+			{ row: 3, col: 3, value: 1 },
+			{ row: 4, col: 2, value: 4 },
+			{ row: 4, col: 3, value: 4 },
+			{ row: 5, col: 2, value: 4 },
+			{ row: 5, col: 3, value: 4 },
+			{ row: 0, col: 5, value: 2 },
+			{ row: 7, col: 0, value: 2 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4204,
 		score: 980,
 		moveCount: 30,
+		undoFrom: prior,
 		board: boardFromSparse([
 			{ row: 2, col: 1, value: 1 },
 			{ row: 2, col: 2, value: 1 },
@@ -529,14 +601,33 @@ export function fixtureScreenshotCascade (): GameState {
 }
 
 /**
- * Advanced board with realistic persistent highs (terminal merges clear ≥128 sources,
- * so store boards stay at ≤256 — never invent 512/1024 tiles).
+ * Advanced board with realistic persistent highs (≤256).
  */
 export function fixtureScreenshotHigh (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4205,
+		score: 4800,
+		moveCount: 67,
+		board: boardFromSparse([
+			{ row: 0, col: 0, value: 2 },
+			{ row: 0, col: 4, value: 1 },
+			{ row: 1, col: 1, value: 16 },
+			{ row: 2, col: 3, value: 64 },
+			{ row: 3, col: 1, value: 8 },
+			{ row: 3, col: 2, value: 256 },
+			{ row: 4, col: 5, value: 128 },
+			{ row: 5, col: 1, value: 32 },
+			{ row: 5, col: 3, value: 4 },
+			{ row: 6, col: 2, value: 16 },
+			{ row: 7, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 8 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4205,
 		score: 4860,
 		moveCount: 68,
+		undoFrom: prior,
 		board: boardFromSparse([
 			{ row: 0, col: 0, value: 2 },
 			{ row: 0, col: 4, value: 1 },
@@ -556,10 +647,32 @@ export function fixtureScreenshotHigh (): GameState {
 
 /** Level 4 pressure showcase (score 1450 → Level 4). */
 export function fixtureScreenshotLevel (): GameState {
+	const prior = createGameFromBoard({
+		seed: 4206,
+		score: 1420,
+		moveCount: 35,
+		board: boardFromSparse([
+			{ row: 0, col: 2, value: 1 },
+			{ row: 1, col: 1, value: 2 },
+			{ row: 1, col: 4, value: 4 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 0, value: 1 },
+			{ row: 3, col: 3, value: 8 },
+			{ row: 4, col: 1, value: 2 },
+			{ row: 4, col: 4, value: 2 },
+			{ row: 5, col: 2, value: 16 },
+			{ row: 5, col: 5, value: 1 },
+			{ row: 6, col: 0, value: 4 },
+			{ row: 6, col: 3, value: 8 },
+			{ row: 7, col: 2, value: 2 },
+			{ row: 7, col: 4, value: 4 },
+		]),
+	})
 	return createGameFromBoard({
 		seed: 4206,
 		score: 1450,
 		moveCount: 36,
+		undoFrom: prior,
 		board: boardFromSparse([
 			{ row: 0, col: 2, value: 1 },
 			{ row: 1, col: 1, value: 2 },

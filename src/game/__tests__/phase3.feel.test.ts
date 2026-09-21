@@ -209,6 +209,8 @@ describe('Phase 3 visuals + screenshot fixtures', () => {
 			expect(state.board).toHaveLength(8)
 			expect(state.board[0]).toHaveLength(6)
 			expect(state.score).toBeGreaterThanOrEqual(0)
+			// Store shots keep Rewarded Undo enabled via a real prior snapshot.
+			expect(state.undoSnapshot).not.toBeNull()
 		}
 		expect(loadFixture('screenshotLevel').score).toBeGreaterThanOrEqual(1200)
 	})

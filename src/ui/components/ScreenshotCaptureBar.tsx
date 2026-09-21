@@ -1,16 +1,21 @@
 /**
- * DEV-only top strip for RuStore screenshot fixtures.
- * Kept near the header so adb taps never hit the OPPO gesture/nav zone.
- * Production builds never mount this component (__DEV__ gate at call site).
+ * DEV-only RuStore fixture loader.
+ * When store-capture UI is hidden, chrome is fully invisible (production-identical
+ * pixels). An opacity-0 a11y target remains for the capture script to reopen.
  */
 
-import { useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import {
 	SCREENSHOT_FIXTURE_IDS,
 	type FixtureId,
 } from '../../game/fixtures'
+import {
+	isStoreCaptureUiHidden,
+	setStoreCaptureUiHidden,
+	subscribeStoreCaptureUi,
+} from '../dev/storeCaptureUi'
 
 export interface ScreenshotCaptureBarProps {
 	onLoadFixture: (id: FixtureId) => void
@@ -18,22 +23,27 @@ export interface ScreenshotCaptureBarProps {
 
 export function ScreenshotCaptureBar (props: ScreenshotCaptureBarProps) {
 	const { onLoadFixture } = props
-	const [visible, setVisible] = useState(true)
+	const captureHidden = useSyncExternalStore(
+		subscribeStoreCaptureUi,
+		isStoreCaptureUiHidden,
+		isStoreCaptureUiHidden,
+	)
 
 	if (!__DEV__) {
 		return null
 	}
 
-	if (!visible) {
-		// Keep a barely-visible but a11y-present reopen control for capture scripts.
+	if (captureHidden) {
+		// 1×1 a11y hit-target so capture scripts can reopen the bar without
+		// painting any DEV chrome into store screenshots.
 		return (
 			<Pressable
-				style={styles.toggle}
-				onPress={() => setVisible(true)}
+				style={styles.invisibleReopen}
+				onPress={() => setStoreCaptureUiHidden(false)}
 				accessibilityLabel="showScreenshotBar"
-			>
-				<Text style={styles.toggleText}>shots</Text>
-			</Pressable>
+				accessible
+				collapsable={false}
+			/>
 		)
 	}
 
@@ -56,7 +66,7 @@ export function ScreenshotCaptureBar (props: ScreenshotCaptureBarProps) {
 				))}
 				<Pressable
 					style={styles.hideChip}
-					onPress={() => setVisible(false)}
+					onPress={() => setStoreCaptureUiHidden(true)}
 					accessibilityLabel="hideScreenshotBar"
 				>
 					<Text style={styles.chipText}>hide</Text>
@@ -68,7 +78,6 @@ export function ScreenshotCaptureBar (props: ScreenshotCaptureBarProps) {
 
 const styles = StyleSheet.create({
 	bar: {
-		// Sit under the score header — clear of status bar / gear / gesture zone.
 		position: 'absolute',
 		top: 210,
 		left: 8,
@@ -103,21 +112,16 @@ const styles = StyleSheet.create({
 		fontSize: 11,
 		fontWeight: '700',
 	},
-	toggle: {
-		// Below the 1080x1920 store crop on OPPO 1080x2400 (crop starts at y=80 → ends 2000).
+	invisibleReopen: {
 		position: 'absolute',
-		bottom: 20,
-		left: 12,
+		// Transparent hit-target for capture scripts — paints no DEV chrome.
+		bottom: 8,
+		left: 8,
+		width: 48,
+		height: 48,
+		opacity: 0,
+		backgroundColor: 'transparent',
 		zIndex: 50,
 		elevation: 50,
-		backgroundColor: '#3a4a63',
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		borderRadius: 8,
-	},
-	toggleText: {
-		color: '#f8fafc',
-		fontSize: 11,
-		fontWeight: '700',
 	},
 })

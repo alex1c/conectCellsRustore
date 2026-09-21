@@ -4,7 +4,7 @@
 
 import { cloneBoard, findLargestValue } from './board'
 import { hasLegalMoves } from './moves'
-import { createRng } from './random'
+import { cloneRng, createRng } from './random'
 import {
 	cloneHexRules,
 	getDefaultHexRules,
@@ -12,7 +12,26 @@ import {
 	type HexRules,
 	type RulePresetId,
 } from './rules'
-import type { Board, GameState } from './types'
+import type { Board, GameState, GameStateSnapshot } from './types'
+
+function toUndoSnapshot (state: GameState): GameStateSnapshot {
+	return {
+		board: cloneBoard(state.board),
+		score: state.score,
+		moveCount: state.moveCount,
+		status: state.status,
+		rng: cloneRng(state.rng),
+		seed: state.seed,
+		largestValue: state.largestValue,
+		largestGroup: state.largestGroup,
+		largestCascade: state.largestCascade,
+		merges: state.merges,
+		cascades: state.cascades,
+		cellsSpawned: state.cellsSpawned,
+		cellsCleared: state.cellsCleared,
+		rules: cloneHexRules(state.rules),
+	}
+}
 
 export interface CustomGameOptions {
 	board: Board
@@ -27,6 +46,11 @@ export interface CustomGameOptions {
 	/** Override rules; defaults to Phase 2.6 (or presetId when set). */
 	rules?: HexRules
 	presetId?: RulePresetId
+	/**
+	 * Optional prior state for a valid Undo snapshot (Rewarded Undo enabled).
+	 * Must be a full GameState without relying on its own undo chain.
+	 */
+	undoFrom?: GameState
 }
 
 export function createGameFromBoard (options: CustomGameOptions): GameState {
@@ -57,7 +81,10 @@ export function createGameFromBoard (options: CustomGameOptions): GameState {
 		cellsSpawned: 0,
 		cellsCleared: 0,
 		rules: cloneHexRules(base),
-		undoSnapshot: null,
+		// Valid Rewarded-Undo prior state when fixture supplies undoFrom.
+		undoSnapshot: options.undoFrom
+			? toUndoSnapshot(options.undoFrom)
+			: null,
 	}
 }
 

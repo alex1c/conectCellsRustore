@@ -107,10 +107,22 @@ function withPresetRules (
 	const rules = getRulesForPreset(presetId)
 	rules.boardRows = state.board.length
 	rules.boardCols = state.board[0]?.length ?? rules.boardCols
+	// Preserve fixture undo snapshots so Rewarded Undo stays enabled in DEV shots.
+	const undoSnapshot = state.undoSnapshot
+		? {
+				...state.undoSnapshot,
+				rules: {
+					...rules,
+					boardRows: state.undoSnapshot.board.length,
+					boardCols:
+						state.undoSnapshot.board[0]?.length ?? rules.boardCols,
+				},
+			}
+		: null
 	return {
 		...state,
 		rules,
-		undoSnapshot: null,
+		undoSnapshot,
 	}
 }
 

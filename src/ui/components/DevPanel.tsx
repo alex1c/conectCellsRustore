@@ -3,7 +3,7 @@
  * Collapsed by default so human playtest is not crowded. Production: null.
  */
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import {
@@ -15,6 +15,10 @@ import {
 	presetDisplayName,
 	type RulePresetId,
 } from '../../game/rules'
+import {
+	isStoreCaptureUiHidden,
+	subscribeStoreCaptureUi,
+} from '../dev/storeCaptureUi'
 import type { TurnResolution } from '../../game/types'
 
 export interface RunMetrics {
@@ -63,8 +67,18 @@ export function DevPanel (props: DevPanelProps) {
 	} = props
 
 	const [expanded, setExpanded] = useState(false)
+	const captureHidden = useSyncExternalStore(
+		subscribeStoreCaptureUi,
+		isStoreCaptureUiHidden,
+		isStoreCaptureUiHidden,
+	)
 
 	if (!__DEV__) {
+		return null
+	}
+
+	// Store captures must match production pixels — no DEV footer at all.
+	if (captureHidden) {
 		return null
 	}
 
