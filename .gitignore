@@ -35,8 +35,10 @@ Thumbs.db
 # local env / secrets
 .env
 .env*.local
-credentials/
+credentials/keystore.properties
 *.secret
+local.properties
+**/local.properties
 
 # typescript
 *.tsbuildinfo
@@ -54,3 +56,7 @@ coverage/
 *.ipa
 release-artifacts/**
 !release-artifacts/.gitkeep
+
+# local tooling jars
+tools/
+
