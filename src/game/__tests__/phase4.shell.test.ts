@@ -40,6 +40,8 @@ describe('phase4 production shell', () => {
 				icon: string
 				plugins: (string | [string, Record<string, unknown>])[]
 				android: {
+					versionCode: number
+					blockedPermissions: string[]
 					adaptiveIcon: {
 						foregroundImage: string
 						backgroundImage: string
@@ -50,6 +52,30 @@ describe('phase4 production shell', () => {
 		}
 		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME)
 		expect(appJson.expo.icon).toBe('./assets/icon.png')
+		expect(appJson.expo.android.versionCode).toBe(1)
+		// Puzzle SFX only — never ship mic / overlay / legacy storage claims.
+		expect(appJson.expo.android.blockedPermissions).toEqual(
+			expect.arrayContaining([
+				'android.permission.RECORD_AUDIO',
+				'android.permission.SYSTEM_ALERT_WINDOW',
+				'android.permission.READ_EXTERNAL_STORAGE',
+				'android.permission.WRITE_EXTERNAL_STORAGE',
+			]),
+		)
+		const audioPlugin = appJson.expo.plugins.find(
+			(entry) => Array.isArray(entry) && entry[0] === 'expo-audio',
+		) as
+			| [
+					string,
+					{
+						recordAudioAndroid: boolean
+						enableBackgroundPlayback: boolean
+					},
+			  ]
+			| undefined
+		expect(audioPlugin).toBeDefined()
+		expect(audioPlugin![1].recordAudioAndroid).toBe(false)
+		expect(audioPlugin![1].enableBackgroundPlayback).toBe(false)
 		const splashPlugin = appJson.expo.plugins.find(
 			(entry) =>
 				Array.isArray(entry) && entry[0] === 'expo-splash-screen',
