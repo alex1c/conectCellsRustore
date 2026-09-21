@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "connectcells",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#101826"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ru.forestmusic.connectcells"
@@ -31,7 +26,20 @@
     },
     "plugins": [
       "expo-audio",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#101826",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#101826",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ]
     ]
   }
 }

@@ -37,7 +37,23 @@ rounded adaptive mask. Raise only if a specific OEM needs a larger mark; lower
 further (e.g. `0.60`) if another mask still clips the title.
 Store / Expo `icon.png` may keep the full master bleed where no adaptive mask applies.
 
-## Native label / icon reproducibility
+## Splash (reproducible)
+
+Tracked source of truth:
+
+* `app.json` → plugin `expo-splash-screen` with `backgroundColor` `#101826`
+  and `image` `./assets/splash-icon.png` (also mirrored under `dark`)
+
+Do **not** keep the legacy top-level `expo.splash` field — Expo Doctor rejects
+it when the splash-screen plugin is present, and the plugin default background
+is white (`#ffffff`) if `backgroundColor` is omitted.
+
+After `npx expo prebuild --platform android`, verify:
+
+* `android/.../values/colors.xml` → `splashscreen_background` = `#101826`
+* splash logo drawables come from `assets/splash-icon.png`
+
+Do **not** hand-patch gitignored `android/` splash files for release.
 
 Tracked source of truth:
 

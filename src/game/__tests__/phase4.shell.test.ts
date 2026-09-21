@@ -38,7 +38,7 @@ describe('phase4 production shell', () => {
 			expo: {
 				name: string
 				icon: string
-				splash: { image: string }
+				plugins: (string | [string, Record<string, unknown>])[]
 				android: {
 					adaptiveIcon: {
 						foregroundImage: string
@@ -50,7 +50,13 @@ describe('phase4 production shell', () => {
 		}
 		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME)
 		expect(appJson.expo.icon).toBe('./assets/icon.png')
-		expect(appJson.expo.splash.image).toBe('./assets/splash-icon.png')
+		const splashPlugin = appJson.expo.plugins.find(
+			(entry) =>
+				Array.isArray(entry) && entry[0] === 'expo-splash-screen',
+		) as [string, { backgroundColor: string; image: string }] | undefined
+		expect(splashPlugin).toBeDefined()
+		expect(splashPlugin![1].backgroundColor).toBe('#101826')
+		expect(splashPlugin![1].image).toBe('./assets/splash-icon.png')
 		expect(appJson.expo.android.adaptiveIcon.foregroundImage).toBe(
 			'./assets/android-icon-foreground.png',
 		)

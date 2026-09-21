@@ -121,11 +121,11 @@ export function trackEvent (
 	}
 }
 
-/** Masked key for QA reports (first 8 + last 4). */
+/** Masked key for QA reports (first 8 + last 5 → …8111e). */
 export function maskedAppMetricaKey (): string {
 	const key = APPMETRICA_API_KEY
 	if (key.length < 16) {
 		return '****'
 	}
-	return `${key.slice(0, 8)}…${key.slice(-4)}`
+	return `${key.slice(0, 8)}…${key.slice(-5)}`
 }
