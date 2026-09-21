@@ -7,13 +7,13 @@ Future submission checklist. Unknown fields stay blank — do not invent values.
 | Final app name | **Гексоника** / store: **Гексоника — числовая головоломка** |
 | Package | `ru.forestmusic.connectcells` |
 | versionName | `1.0.0` (`app.json`) |
-| versionCode | _TBD at release_ |
-| Support email | _TBD_ |
+| versionCode | `1` (`app.json` → Expo prebuild) |
+| Support email | `rustore-alex1c@yandex.ru` |
 | Privacy policy URL | _TBD_ |
 | Icon | Master `assets/icon_gpt.png` → derived tracked assets (`docs/ASSET_POLICY.md`) |
-| Screenshots | ~6 deterministic shots (`docs/SCREENSHOT_PLAN.md`) |
-| Short description | _TBD_ |
-| Full description | _TBD_ |
+| Screenshots | `store-assets/screenshots/01-hero.png` … `06-levels.png` |
+| Short description | See `docs/rustore/STORE_LISTING.md` |
+| Full description | See `docs/rustore/STORE_LISTING.md` |
 | Tags | _TBD_ |
 | Age rating | _TBD_ |
 | Ads declaration | Yandex Ads units R-M-20075886-1…5 (banners / interstitial / rewarded) |

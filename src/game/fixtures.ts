@@ -438,7 +438,10 @@ export function fixtureHighLevelCap (): GameState {
 	})
 }
 
-/** RuStore-ready balanced beauty shot (dev-only). */
+/**
+ * RuStore hero / beauty shot (dev-only).
+ * Score 860 → Level 3; varied mid values with readable empty space.
+ */
 export function fixtureScreenshotNormal (): GameState {
 	return createGameFromBoard({
 		seed: 4201,
@@ -463,41 +466,48 @@ export function fixtureScreenshotNormal (): GameState {
 	})
 }
 
-/** Selected-cell / movement breathing room. */
+/**
+ * Movement storytelling: sparse board so one occupied cell has clear empty paths.
+ * Capture with that cell selected (production selection chrome only).
+ */
 export function fixtureScreenshotMove (): GameState {
 	return createGameFromBoard({
 		seed: 4202,
-		score: 120,
-		moveCount: 8,
+		score: 180,
+		moveCount: 9,
 		board: boardFromSparse([
 			{ row: 2, col: 1, value: 2 },
-			{ row: 3, col: 3, value: 1 },
-			{ row: 5, col: 4, value: 4 },
-			{ row: 6, col: 0, value: 1 },
-			{ row: 7, col: 5, value: 2 },
+			{ row: 3, col: 4, value: 1 },
+			{ row: 5, col: 2, value: 4 },
+			{ row: 6, col: 5, value: 1 },
+			{ row: 7, col: 0, value: 2 },
 		]),
 	})
 }
 
-/** Ready-to-merge group composition. */
+/** Ready-to-merge cluster of four equal mid-values (visually obvious). */
 export function fixtureScreenshotMerge (): GameState {
 	return createGameFromBoard({
 		seed: 4203,
-		score: 240,
-		moveCount: 14,
+		score: 420,
+		moveCount: 16,
 		board: boardFromSparse([
-			{ row: 2, col: 2, value: 1 },
-			{ row: 3, col: 1, value: 1 },
-			{ row: 3, col: 2, value: 1 },
-			{ row: 4, col: 2, value: 1 },
+			{ row: 2, col: 2, value: 4 },
+			{ row: 3, col: 1, value: 4 },
+			{ row: 3, col: 2, value: 4 },
+			{ row: 4, col: 2, value: 4 },
 			{ row: 1, col: 4, value: 2 },
-			{ row: 5, col: 4, value: 4 },
+			{ row: 5, col: 4, value: 8 },
 			{ row: 6, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 1 },
 		]),
 	})
 }
 
-/** Strong cascade setup for store storytelling. */
+/**
+ * Cascade setup: merging the four 1s yields a 4 that joins the existing 4-group.
+ * Capture either the primed board or the post-cascade result with real UI feedback.
+ */
 export function fixtureScreenshotCascade (): GameState {
 	return createGameFromBoard({
 		seed: 4204,
@@ -518,41 +528,53 @@ export function fixtureScreenshotCascade (): GameState {
 	})
 }
 
-/** High values + healthy score. */
+/**
+ * Advanced board with realistic persistent highs (terminal merges clear ≥128 sources,
+ * so store boards stay at ≤256 — never invent 512/1024 tiles).
+ */
 export function fixtureScreenshotHigh (): GameState {
 	return createGameFromBoard({
 		seed: 4205,
-		score: 6420,
-		moveCount: 72,
+		score: 4860,
+		moveCount: 68,
 		board: boardFromSparse([
-			{ row: 1, col: 1, value: 16 },
-			{ row: 2, col: 3, value: 64 },
-			{ row: 3, col: 2, value: 256 },
-			{ row: 4, col: 4, value: 1024 },
-			{ row: 5, col: 1, value: 8 },
-			{ row: 6, col: 3, value: 32 },
-			{ row: 7, col: 5, value: 4 },
 			{ row: 0, col: 0, value: 2 },
 			{ row: 0, col: 4, value: 1 },
+			{ row: 1, col: 1, value: 16 },
+			{ row: 2, col: 3, value: 64 },
+			{ row: 3, col: 1, value: 8 },
+			{ row: 3, col: 2, value: 256 },
+			{ row: 4, col: 4, value: 128 },
+			{ row: 5, col: 1, value: 32 },
+			{ row: 5, col: 3, value: 4 },
+			{ row: 6, col: 2, value: 16 },
+			{ row: 7, col: 0, value: 2 },
+			{ row: 7, col: 5, value: 8 },
 		]),
 	})
 }
 
-/** Level 3/4 progress showcase. */
+/** Level 4 pressure showcase (score 1450 → Level 4). */
 export function fixtureScreenshotLevel (): GameState {
 	return createGameFromBoard({
 		seed: 4206,
 		score: 1450,
 		moveCount: 36,
 		board: boardFromSparse([
+			{ row: 0, col: 2, value: 1 },
 			{ row: 1, col: 1, value: 2 },
+			{ row: 1, col: 4, value: 4 },
 			{ row: 2, col: 2, value: 4 },
 			{ row: 3, col: 0, value: 1 },
 			{ row: 3, col: 3, value: 8 },
-			{ row: 4, col: 2, value: 2 },
-			{ row: 5, col: 4, value: 16 },
-			{ row: 6, col: 1, value: 1 },
-			{ row: 7, col: 3, value: 4 },
+			{ row: 4, col: 1, value: 2 },
+			{ row: 4, col: 4, value: 2 },
+			{ row: 5, col: 2, value: 16 },
+			{ row: 5, col: 5, value: 1 },
+			{ row: 6, col: 0, value: 4 },
+			{ row: 6, col: 3, value: 8 },
+			{ row: 7, col: 2, value: 2 },
+			{ row: 7, col: 5, value: 4 },
 		]),
 	})
 }
@@ -658,7 +680,17 @@ export function loadFixture (id: FixtureId): GameState {
  * Keep as a literal array (not Object.keys) so the export cannot be
  * undefined during barrel evaluation / partial module init.
  */
+export const SCREENSHOT_FIXTURE_IDS: FixtureId[] = [
+	'screenshotNormal',
+	'screenshotMove',
+	'screenshotMerge',
+	'screenshotCascade',
+	'screenshotHigh',
+	'screenshotLevel',
+]
+
 export const FIXTURE_IDS: FixtureId[] = [
+	...SCREENSHOT_FIXTURE_IDS,
 	'balancedBoard',
 	'simpleMove',
 	'longPath',
@@ -683,11 +715,5 @@ export const FIXTURE_IDS: FixtureId[] = [
 	'nearLevel3',
 	'level5Pressure',
 	'highLevelCap',
-	'screenshotNormal',
-	'screenshotMove',
-	'screenshotMerge',
-	'screenshotCascade',
-	'screenshotHigh',
-	'screenshotLevel',
 	'animationStress',
 ]

@@ -1,33 +1,27 @@
-# Screenshot plan (hex) — Phase 3
-
-Store screenshots must **not** be captured from random live gameplay.
+# Screenshot plan — Hexonica RuStore
 
 ## Principles
 
-- Deterministic **hex fixtures** drive future screenshot boards.
-- Fixture / demo entry points stay **dev-only** (`__DEV__` DevPanel).
-- Target ~6 RuStore screenshots at **1080×1920** later (not in Phase 3).
-- One master icon for app + storefront (`docs/ASSET_POLICY.md`).
+- Deterministic **hex fixtures** drive store boards (`screenshot*` in `src/game/fixtures.ts`).
+- Fixture / capture chrome is **DEV-only** (`ScreenshotCaptureBar`, `DevPanel`).
+- Final PNGs: **1080×1920**, dark theme, no GameScreen banner.
+- Capture helper: `scripts/capture-rustore-screenshots.py`
 
-## Deterministic fixtures
+## Fixtures → files
 
-| Fixture | Intent |
-|---------|--------|
-| `screenshotNormal` | Beautiful balanced field |
-| `screenshotMove` | Open movement / selection space |
-| `screenshotMerge` | Ready group of 4 |
-| `screenshotCascade` | Strong chain setup |
-| `screenshotHigh` | High values + score |
-| `screenshotLevel` | Level 3/4 + progress |
+| Fixture | File | Intent |
+|---------|------|--------|
+| `screenshotNormal` | `store-assets/screenshots/01-hero.png` | Mid-game beauty / Level 3 |
+| `screenshotMove` | `store-assets/screenshots/02-movement.png` | Sparse board / movement |
+| `screenshotMerge` | `store-assets/screenshots/03-merge.png` | Ready group of four 4s |
+| `screenshotCascade` | `store-assets/screenshots/04-cascade.png` | 1s + 4s cascade setup |
+| `screenshotHigh` | `store-assets/screenshots/05-high-values.png` | High values ≤256 |
+| `screenshotLevel` | `store-assets/screenshots/06-levels.png` | Level 4 pressure |
 
-Also available for drafting: `balancedBoard`, `merge4`, `cascade3`, `highValues`, `nearLevel3`.
+Optional Home / onboarding shot: not included (gameplay dominates gallery).
 
-## Folders
+## Capture notes
 
-- `store-assets/` — master marketing / icon sources
-- `screenshots/` — exported store outputs
-- `release-artifacts/` — local AAB/APK drops (gitignored binaries)
-
-## Phase 3 status
-
-Fixtures prepared and visually loadable in DEV. **Final RuStore captures deferred.**
+- OPPO 1080×2400 raw → crop status bar + exclude DEV/nav → pad to 1080×1920 with `#101826`.
+- Do not click production ads during capture.
+- Master icon: `assets/icon_gpt.png` (immutable).

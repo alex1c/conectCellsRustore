@@ -22,6 +22,7 @@ import { APP_DISPLAY_NAME } from '../branding'
 import { ChainToast } from './components/ChainToast'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { DevPanel } from './components/DevPanel'
+import { ScreenshotCaptureBar } from './components/ScreenshotCaptureBar'
 import { GameOverOverlay } from './components/GameOverOverlay'
 import { HexBoardView } from './components/HexBoardView'
 import { LevelUpToast } from './components/LevelUpToast'
@@ -275,6 +276,10 @@ export function GameScreen (props: GameScreenProps) {
 					</UiErrorBoundary>
 				) : null}
 			</View>
+
+			{__DEV__ ? (
+				<ScreenshotCaptureBar onLoadFixture={game.handleLoadFixture} />
+			) : null}
 
 			<GameOverOverlay
 				visible={game.gameOverVisible}

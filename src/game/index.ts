@@ -63,6 +63,7 @@ export {
 export {
 	FIXTURE_BUILDERS,
 	FIXTURE_IDS,
+	SCREENSHOT_FIXTURE_IDS,
 	loadFixture,
 	type FixtureId,
 } from './fixtures'
