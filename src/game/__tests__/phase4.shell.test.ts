@@ -4,7 +4,10 @@
 
 import {
 	AD_PLACEMENTS,
+	DEMO_AD_UNITS,
+	GAME_BANNER_RESERVED_HEIGHT,
 	resolveAdUnitId,
+	resolveDemoAdUnitId,
 	type AdPlacementKey,
 } from '../../ads/placements'
 import type { RewardedResult } from '../../ads/adsService'
@@ -101,6 +104,7 @@ describe('phase4 production shell', () => {
 		expect(AD_PLACEMENTS.howToPlayBanner).toBe('R-M-20075886-3')
 		expect(AD_PLACEMENTS.gameOverInterstitial).toBe('R-M-20075886-4')
 		expect(AD_PLACEMENTS.rewardedUndo).toBe('R-M-20075886-5')
+		expect(AD_PLACEMENTS.gameBanner).toBe('R-M-20075886-6')
 	})
 
 	it('resolveAdUnitId returns production IDs in test env', () => {
@@ -108,6 +112,15 @@ describe('phase4 production shell', () => {
 		for (const key of keys) {
 			expect(resolveAdUnitId(key)).toBe(AD_PLACEMENTS[key])
 		}
+	})
+
+	it('gameBanner production ID never resolves to a demo unit', () => {
+		expect(resolveAdUnitId('gameBanner')).toBe('R-M-20075886-6')
+		expect(resolveAdUnitId('gameBanner')).not.toBe(
+			DEMO_AD_UNITS.gameBanner,
+		)
+		expect(resolveDemoAdUnitId('gameBanner')).toBe('demo-banner-yandex')
+		expect(GAME_BANNER_RESERVED_HEIGHT).toBe(50)
 	})
 
 	it('isActiveParty matches Continue eligibility', () => {

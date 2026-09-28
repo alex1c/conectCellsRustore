@@ -1,5 +1,7 @@
 /**
- * Main hex playable screen — Phase 4 production shell (no banners).
+ * Main hex playable screen — Phase 4 production shell.
+ * Bottom sticky gameBanner (R-M-20075886-6) sits below Undo/Restart in a
+ * fixed-height dock so load/no-fill cannot move the hex board.
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -15,6 +17,10 @@ import {
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import {
+	BannerSlot,
+	GAME_BANNER_RESERVED_HEIGHT,
+} from '../ads/BannerSlot'
 import { showRewardedUndo } from '../ads/adsService'
 import { trackEvent } from '../analytics/appMetrica'
 import { pauseGameplayAudio } from './feel/sound'
@@ -81,11 +87,48 @@ export function GameScreen (props: GameScreenProps) {
 		width: number
 		height: number
 	} | null>(null)
+	/**
+	 * DEV one-shot geometry probe for game-banner QA (board must not move
+	 * when the fixed dock is present). Independent of PERF_TELEMETRY.
+	 */
+	const bannerGeomProbeRef = useRef<{
+		board: { y: number; height: number } | null
+		banner: { y: number; height: number } | null
+		controls: { y: number } | null
+		logged: boolean
+	}>({ board: null, banner: null, controls: null, logged: false })
+
+	const maybeLogBannerGeom = useCallback(() => {
+		if (!__DEV__) {
+			return
+		}
+		const probe = bannerGeomProbeRef.current
+		if (probe.logged || !probe.board || !probe.banner) {
+			return
+		}
+		probe.logged = true
+		console.log(
+			'[ConnectCells] game-banner geom ' +
+				JSON.stringify({
+					boardTopY: probe.board.y,
+					boardHeight: probe.board.height,
+					controlsTopY: probe.controls?.y ?? null,
+					bannerTopY: probe.banner.y,
+					bannerHeight: probe.banner.height,
+					reservedHeight: GAME_BANNER_RESERVED_HEIGHT,
+				}),
+		)
+	}, [])
+
 	const handleBoardLayout = useCallback((event: LayoutChangeEvent) => {
+		const { y, width, height } = event.nativeEvent.layout
+		if (__DEV__) {
+			bannerGeomProbeRef.current.board = { y, height }
+			maybeLogBannerGeom()
+		}
 		if (!__DEV__ || !PERF_TELEMETRY) {
 			return
 		}
-		const { y, width, height } = event.nativeEvent.layout
 		const prev = lastBoardGeomRef.current
 		lastBoardGeomRef.current = { y, width, height }
 		if (
@@ -100,7 +143,26 @@ export function GameScreen (props: GameScreenProps) {
 					}),
 			)
 		}
-	}, [])
+	}, [maybeLogBannerGeom])
+
+	const handleActionsLayout = useCallback((event: LayoutChangeEvent) => {
+		if (!__DEV__) {
+			return
+		}
+		bannerGeomProbeRef.current.controls = {
+			y: event.nativeEvent.layout.y,
+		}
+		maybeLogBannerGeom()
+	}, [maybeLogBannerGeom])
+
+	const handleBannerLayout = useCallback((event: LayoutChangeEvent) => {
+		if (!__DEV__) {
+			return
+		}
+		const { y, height } = event.nativeEvent.layout
+		bannerGeomProbeRef.current.banner = { y, height }
+		maybeLogBannerGeom()
+	}, [maybeLogBannerGeom])
 
 	/**
 	 * Shared rewarded undo path for in-game button and Game Over rescue.
@@ -180,6 +242,7 @@ export function GameScreen (props: GameScreenProps) {
 				styles.safe,
 				{
 					paddingTop: insets.top,
+					// Banner sits above Android nav; keep inset as true bottom pad.
 					paddingBottom: Math.max(insets.bottom, 8),
 				},
 			]}
@@ -229,6 +292,8 @@ export function GameScreen (props: GameScreenProps) {
 				 * Board is pinned to the top of remaining space (not vertically
 				 * recentered). Header/gain/DevPanel height changes must not
 				 * visually shove the hex field — ScoreHeader geometry is stable.
+				 * Fixed banner dock below actions consumes flex slack only —
+				 * board metrics (width/cell/height) stay identical.
 				 */}
 				<View style={styles.boardWrap} onLayout={handleBoardLayout}>
 					<UiErrorBoundary label="HexBoard">
@@ -250,7 +315,7 @@ export function GameScreen (props: GameScreenProps) {
 					</UiErrorBoundary>
 				</View>
 
-				<View style={styles.actions}>
+				<View style={styles.actions} onLayout={handleActionsLayout}>
 					<Pressable
 						style={[
 							styles.button,
@@ -287,6 +352,17 @@ export function GameScreen (props: GameScreenProps) {
 						/>
 					</UiErrorBoundary>
 				) : null}
+			</View>
+
+			{/*
+			 * Fixed bottom dock — full-bleed under the padded play column.
+			 * Mounts once with GameScreen; not tied to move/score state.
+			 */}
+			<View onLayout={handleBannerLayout} style={styles.bannerDock}>
+				<BannerSlot
+					placement="gameBanner"
+					reservedHeight={GAME_BANNER_RESERVED_HEIGHT}
+				/>
 			</View>
 
 			{__DEV__ ? (
@@ -431,7 +507,13 @@ const styles = StyleSheet.create({
 	actions: {
 		flexDirection: 'row',
 		gap: 10,
-		marginTop: 10,
+		// Slightly tighter than pre-banner (10→6) to reclaim slack for the
+		// fixed dock without changing button size or board metrics.
+		marginTop: 6,
+		marginBottom: 4,
+	},
+	bannerDock: {
+		width: '100%',
 	},
 	button: {
 		flex: 1,
