@@ -60,5 +60,5 @@ ru.forestmusic.connectcells
 
 ## VERSION
 
-versionName 1.0.0
-versionCode 1
+versionName 1.0.1
+versionCode 2

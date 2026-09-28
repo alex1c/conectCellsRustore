@@ -6,8 +6,8 @@ Future submission checklist. Unknown fields stay blank — do not invent values.
 |------|----------------|
 | Final app name | **Гексоника** / store: **Гексоника — числовая головоломка** |
 | Package | `ru.forestmusic.connectcells` |
-| versionName | `1.0.0` (`app.json`) |
-| versionCode | `1` (`app.json` → Expo prebuild) |
+| versionName | `1.0.1` (`app.json`) |
+| versionCode | `2` (`app.json` → Expo prebuild) |
 | Support email | `rustore-alex1c@yandex.ru` |
 | Privacy policy URL | _TBD_ |
 | Icon | Master `assets/icon_gpt.png` → derived tracked assets (`docs/ASSET_POLICY.md`) |

@@ -102,36 +102,48 @@ export function GameScreen (props: GameScreenProps) {
 		}
 	}, [])
 
-	/** Shared rewarded undo path for in-game button and Game Over rescue. */
-	const runRewardedUndo = useCallback(async () => {
+	/**
+	 * Shared rewarded undo path for in-game button and Game Over rescue.
+	 * undo_rewarded_started = user confirmed attempt (not proof of impression).
+	 */
+	const runRewardedUndo = useCallback(async (
+		source: 'game' | 'game_over',
+	) => {
 		if (undoBusy || !game.canUndoMove) {
 			return
 		}
 		setUndoBusy(true)
 		setUndoConfirmVisible(false)
 		trackEvent('undo_offer')
-		trackEvent('undo_rewarded_started')
+		trackEvent('undo_rewarded_started', { source })
 		try {
 			// Stop SFX so rewarded ad audio is not mixed with gameplay.
 			pauseGameplayAudio()
-			const result = await showRewardedUndo()
+			const result = await showRewardedUndo({ source })
 			if (result.status === 'rewarded') {
-				trackEvent('undo_rewarded_completed')
+				trackEvent('undo_rewarded_completed', { source })
 				game.applyUndo()
 				game.dismissGameOver()
 			} else if (
 				result.status === 'failed' ||
 				result.status === 'unavailable'
 			) {
-				trackEvent('undo_rewarded_failed', { reason: result.status })
+				trackEvent('undo_rewarded_failed', {
+					reason: result.status,
+					source,
+				})
 				Alert.alert('Реклама', result.reason || ADS_UNAVAILABLE_MSG)
 			} else {
 				trackEvent('undo_rewarded_failed', {
 					reason: 'dismissed_without_reward',
+					source,
 				})
 			}
 		} catch {
-			trackEvent('undo_rewarded_failed', { reason: 'exception' })
+			trackEvent('undo_rewarded_failed', {
+				reason: 'exception',
+				source,
+			})
 			Alert.alert('Реклама', ADS_UNAVAILABLE_MSG)
 		} finally {
 			setUndoBusy(false)
@@ -291,7 +303,7 @@ export function GameScreen (props: GameScreenProps) {
 				undoBusy={undoBusy}
 				onNewGame={game.handleNewGameFromOver}
 				onRewardedUndo={() => {
-					void runRewardedUndo()
+					void runRewardedUndo('game_over')
 				}}
 				onBackHome={onBackHome}
 			/>
@@ -318,7 +330,7 @@ export function GameScreen (props: GameScreenProps) {
 				busy={undoBusy}
 				onCancel={() => setUndoConfirmVisible(false)}
 				onConfirm={() => {
-					void runRewardedUndo()
+					void runRewardedUndo('game')
 				}}
 			/>
 		</View>

@@ -29,7 +29,7 @@ describe('phase4 production shell', () => {
 		expect(APP_DISPLAY_NAME).toBe('Гексоника')
 		expect(APP_STORE_TITLE).toBe('Гексоника — числовая головоломка')
 		expect(APP_PUBLISHER).toBe('ForestMusic')
-		expect(APP_VERSION).toBe('1.0.0')
+		expect(APP_VERSION).toBe('1.0.1')
 	})
 
 	it('keeps app.json as native regeneration source of truth for name/icons', () => {
@@ -52,7 +52,7 @@ describe('phase4 production shell', () => {
 		}
 		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME)
 		expect(appJson.expo.icon).toBe('./assets/icon.png')
-		expect(appJson.expo.android.versionCode).toBe(1)
+		expect(appJson.expo.android.versionCode).toBe(2)
 		// Puzzle SFX only — never ship mic / overlay / legacy storage claims.
 		expect(appJson.expo.android.blockedPermissions).toEqual(
 			expect.arrayContaining([

@@ -12,6 +12,25 @@ export const APPMETRICA_API_KEY = '96143264-a11a-44d0-875d-c960d4f8111e'
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>
 
+/**
+ * Analytics event names.
+ *
+ * Undo continuity (keep for historical comparison):
+ * - undo_rewarded_started = user confirmed rewarded Undo attempt
+ *   (NOT proof of impression / show).
+ * - undo_rewarded_completed = reward successfully resulted in Undo.
+ * - undo_rewarded_failed = attempt ended without Undo.
+ *
+ * Rewarded lifecycle (diagnostic, placement=undo):
+ * - rewarded_load_requested → immediately before SDK loadAd
+ * - rewarded_loaded → SDK returned usable RewardedAd
+ * - rewarded_show_requested → immediately before ad.show()
+ * - rewarded_impression → onAdImpression
+ * - rewarded_reward → onRewarded
+ * - rewarded_closed → onAdDismissed
+ * - rewarded_load_failed → loadAd failed/rejected
+ * - rewarded_show_failed → show Promise rejection OR onAdFailedToShow
+ */
 export type AnalyticsEventName =
 	| 'app_open'
 	| 'home_continue'
@@ -27,6 +46,14 @@ export type AnalyticsEventName =
 	| 'undo_rewarded_started'
 	| 'undo_rewarded_completed'
 	| 'undo_rewarded_failed'
+	| 'rewarded_load_requested'
+	| 'rewarded_loaded'
+	| 'rewarded_show_requested'
+	| 'rewarded_impression'
+	| 'rewarded_reward'
+	| 'rewarded_closed'
+	| 'rewarded_load_failed'
+	| 'rewarded_show_failed'
 	| 'game_over'
 	| 'interstitial_shown'
 	| 'interstitial_failed'
