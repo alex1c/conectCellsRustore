@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
-import { APP_DISPLAY_NAME } from '../../branding'
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -44,6 +44,7 @@ export function HomeScreen (props: HomeScreenProps) {
 		onSettings,
 	} = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 
 	return (
 		<View
@@ -56,12 +57,16 @@ export function HomeScreen (props: HomeScreenProps) {
 			]}
 		>
 			<View style={styles.body}>
-				<Text style={styles.brand}>{APP_DISPLAY_NAME}</Text>
-				<Text style={styles.tagline}>Числовая головоломка</Text>
+				<Text style={styles.brand}>{t('brand.name')}</Text>
+				<Text style={styles.tagline}>{t('brand.tagline')}</Text>
 
 				<View style={styles.stats}>
-					<Text style={styles.stat}>Рекорд: {bestScore}</Text>
-					<Text style={styles.stat}>Лучший уровень: {bestLevel}</Text>
+					<Text style={styles.stat}>
+						{t('home.bestScore', { score: bestScore })}
+					</Text>
+					<Text style={styles.stat}>
+						{t('home.bestLevel', { level: bestLevel })}
+					</Text>
 				</View>
 
 				{hasActiveGame ? (
@@ -69,11 +74,19 @@ export function HomeScreen (props: HomeScreenProps) {
 						style={styles.primary}
 						onPress={onContinue}
 						accessibilityRole="button"
-						accessibilityLabel={`Продолжить, уровень ${activeLevel} · счёт ${activeScore}`}
+						accessibilityLabel={t('home.continueA11y', {
+							level: activeLevel,
+							score: activeScore,
+						})}
 					>
-						<Text style={styles.primaryText}>Продолжить</Text>
+						<Text style={styles.primaryText}>
+							{t('home.continue')}
+						</Text>
 						<Text style={styles.primarySub}>
-							Уровень {activeLevel} · счёт {activeScore}
+							{t('home.continueSub', {
+								level: activeLevel,
+								score: activeScore,
+							})}
 						</Text>
 					</Pressable>
 				) : null}
@@ -82,7 +95,7 @@ export function HomeScreen (props: HomeScreenProps) {
 					style={hasActiveGame ? styles.secondary : styles.primary}
 					onPress={onNewGame}
 					accessibilityRole="button"
-					accessibilityLabel="Новая игра"
+					accessibilityLabel={t('home.newGame')}
 				>
 					<Text
 						style={
@@ -91,7 +104,7 @@ export function HomeScreen (props: HomeScreenProps) {
 								: styles.primaryText
 						}
 					>
-						Новая игра
+						{t('home.newGame')}
 					</Text>
 				</Pressable>
 
@@ -99,18 +112,18 @@ export function HomeScreen (props: HomeScreenProps) {
 					style={styles.link}
 					onPress={onHowToPlay}
 					accessibilityRole="button"
-					accessibilityLabel="Как играть"
+					accessibilityLabel={t('home.howToPlay')}
 				>
-					<Text style={styles.linkText}>Как играть</Text>
+					<Text style={styles.linkText}>{t('home.howToPlay')}</Text>
 				</Pressable>
 
 				<Pressable
 					style={styles.link}
 					onPress={onSettings}
 					accessibilityRole="button"
-					accessibilityLabel="Настройки"
+					accessibilityLabel={t('home.settings')}
 				>
-					<Text style={styles.linkText}>Настройки</Text>
+					<Text style={styles.linkText}>{t('home.settings')}</Text>
 				</Pressable>
 			</View>
 

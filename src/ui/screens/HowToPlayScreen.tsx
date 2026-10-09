@@ -1,5 +1,7 @@
 /**
- * How to Play screen — reuses onboarding copy with a bottom banner.
+ * How to Play screen — static rules copy with a bottom banner.
+ * Orphan relative to AppRoot (interactive TutorialScreen is the live path),
+ * but kept localized so a future remount stays consistent.
  * Dark theme is the only 1.0 appearance.
  */
 
@@ -7,6 +9,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -16,33 +19,26 @@ import {
 	COLOR_TEXT_SECONDARY,
 } from '../theme/colors'
 
-const SECTIONS = [
+const SECTION_KEYS = [
 	{
-		title: 'Ход',
-		lines: [
-			'Выберите клетку.',
-			'Переместите её на пустую клетку по свободному пути.',
-		],
+		id: 'move',
+		titleKey: 'howToPlay.move.title',
+		lineKeys: ['howToPlay.move.line1', 'howToPlay.move.line2'],
 	},
 	{
-		title: 'Объединение',
-		lines: [
-			'Соединяйте 4 или больше одинаковых клеток.',
-			'Они превратятся в одну более ценную.',
-		],
+		id: 'merge',
+		titleKey: 'howToPlay.merge.title',
+		lineKeys: ['howToPlay.merge.line1', 'howToPlay.merge.line2'],
 	},
 	{
-		title: 'Большие группы',
-		lines: [
-			'Большие группы лучше очищают поле и дают больше очков.',
-		],
+		id: 'largeGroups',
+		titleKey: 'howToPlay.largeGroups.title',
+		lineKeys: ['howToPlay.largeGroups.line1'],
 	},
 	{
-		title: 'Уровни',
-		lines: [
-			'С ростом счёта уровень повышается.',
-			'Сложность растёт постепенно.',
-		],
+		id: 'levels',
+		titleKey: 'howToPlay.levels.title',
+		lineKeys: ['howToPlay.levels.line1', 'howToPlay.levels.line2'],
 	},
 ] as const
 
@@ -53,6 +49,7 @@ export interface HowToPlayScreenProps {
 export function HowToPlayScreen (props: HowToPlayScreenProps) {
 	const { onBack } = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 
 	return (
 		<View
@@ -63,9 +60,9 @@ export function HowToPlayScreen (props: HowToPlayScreenProps) {
 		>
 			<View style={styles.header}>
 				<Pressable onPress={onBack} hitSlop={12}>
-					<Text style={styles.back}>← Назад</Text>
+					<Text style={styles.back}>{t('common.back')}</Text>
 				</Pressable>
-				<Text style={styles.title}>Как играть</Text>
+				<Text style={styles.title}>{t('howToPlay.title')}</Text>
 				<View style={styles.backSpacer} />
 			</View>
 
@@ -74,12 +71,12 @@ export function HowToPlayScreen (props: HowToPlayScreenProps) {
 				contentContainerStyle={styles.scrollContent}
 				showsVerticalScrollIndicator={false}
 			>
-				{SECTIONS.map((section) => (
-					<View key={section.title} style={styles.card}>
-						<Text style={styles.cardTitle}>{section.title}</Text>
-						{section.lines.map((line) => (
-							<Text key={line} style={styles.line}>
-								{line}
+				{SECTION_KEYS.map((section) => (
+					<View key={section.id} style={styles.card}>
+						<Text style={styles.cardTitle}>{t(section.titleKey)}</Text>
+						{section.lineKeys.map((lineKey) => (
+							<Text key={lineKey} style={styles.line}>
+								{t(lineKey)}
 							</Text>
 						))}
 					</View>
@@ -108,15 +105,17 @@ const styles = StyleSheet.create({
 		color: COLOR_ACCENT,
 		fontWeight: '700',
 		fontSize: 15,
-		width: 80,
+		width: 96,
 	},
 	backSpacer: {
-		width: 80,
+		width: 96,
 	},
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
 		color: COLOR_TEXT,
+		flexShrink: 1,
+		textAlign: 'center',
 	},
 	scroll: {
 		flex: 1,

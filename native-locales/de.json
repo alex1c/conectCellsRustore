@@ -1,0 +1,9 @@
+{
+	"ios": {
+		"CFBundleDisplayName": "Hexonica",
+		"CFBundleName": "Hexonica"
+	},
+	"android": {
+		"app_name": "Hexonica"
+	}
+}

@@ -41,9 +41,9 @@ describe('gameplay banner contracts', () => {
 		const bannerIdx = src.indexOf('placement="gameBanner"')
 		expect(actionsIdx).toBeGreaterThan(0)
 		expect(bannerIdx).toBeGreaterThan(actionsIdx)
-		// Undo / Restart structure preserved.
-		expect(src).toContain('Отменить ход')
-		expect(src).toContain('Заново')
+		// Undo / Restart structure preserved (copy via i18n keys).
+		expect(src).toContain("t('game.undo')")
+		expect(src).toContain("t('game.restart')")
 		expect(src).toContain('handleUndoPress')
 		expect(src).toContain('requestRestart')
 	})

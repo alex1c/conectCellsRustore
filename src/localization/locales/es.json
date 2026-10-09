@@ -1,0 +1,201 @@
+{
+	"brand": {
+		"name": "Hexonica",
+		"tagline": "Puzzle numérico",
+		"storeTitle": "Hexonica — puzzle numérico"
+	},
+	"common": {
+		"cancel": "Cancelar",
+		"loading": "Cargando…",
+		"back": "← Atrás",
+		"close": "Cerrar",
+		"next": "Siguiente",
+		"skip": "Omitir",
+		"play": "Jugar",
+		"progress": "{{current}} / {{total}}"
+	},
+	"home": {
+		"bestScore": "Récord: {{score}}",
+		"bestLevel": "Mejor nivel: {{level}}",
+		"continue": "Continuar",
+		"continueSub": "Nivel {{level}} · puntos {{score}}",
+		"continueA11y": "Continuar, nivel {{level}} · puntos {{score}}",
+		"newGame": "Nueva partida",
+		"howToPlay": "Cómo jugar",
+		"settings": "Ajustes"
+	},
+	"game": {
+		"loading": "Cargando…",
+		"homeA11y": "Inicio",
+		"settingsA11y": "Ajustes",
+		"score": "Puntos",
+		"level": "Nivel",
+		"best": "Récord",
+		"hint": "Elige una celda y luego un destino vacío por un camino libre",
+		"pathBlocked": "Camino bloqueado",
+		"undo": "↶ Deshacer 🎬",
+		"restart": "Reiniciar"
+	},
+	"scoreHeader": {
+		"score": "Puntos",
+		"level": "Nivel",
+		"best": "Récord"
+	},
+	"levelUp": {
+		"title": "Nivel {{level}}",
+		"subtitle": "Dificultad aumentada"
+	},
+	"chain": {
+		"toast": "Cadena ×{{count}}"
+	},
+	"gameOver": {
+		"title": "Fin de la partida",
+		"score": "Puntos: {{score}}",
+		"level": "Nivel: {{level}}",
+		"best": "Récord: {{best}}",
+		"bestLevel": "Mejor nivel: {{bestLevel}}",
+		"newGame": "Nueva partida",
+		"undoRescue": "↶ Deshacer el último movimiento 🎬",
+		"undoLoading": "Cargando anuncio…",
+		"home": "Inicio"
+	},
+	"undo": {
+		"title": "¿Deshacer movimiento?",
+		"body": "Mira un anuncio corto para deshacer el último movimiento.",
+		"confirm": "Ver",
+		"adsAlertTitle": "Anuncios"
+	},
+	"restart": {
+		"title": "¿Empezar una partida nueva?",
+		"body": "Se perderá la partida actual.",
+		"bodyConfirm": "Se perderá la partida actual. ¿Continuar?",
+		"confirm": "Nueva partida"
+	},
+	"ads": {
+		"unavailable": "Los anuncios no están disponibles ahora. Inténtalo más tarde."
+	},
+	"settings": {
+		"title": "Ajustes",
+		"sound": "Sonidos",
+		"haptic": "Vibración",
+		"howToPlay": "Cómo jugar",
+		"about": "Acerca de",
+		"otherApps": "Nuestras otras apps",
+		"otherAppsSub": "Ver apps de ForestMusic en RuStore",
+		"otherAppsA11y": "Nuestras otras apps. Ver apps de ForestMusic en RuStore"
+	},
+	"about": {
+		"title": "Acerca de",
+		"version": "Versión {{version}}",
+		"developer": "Desarrollador",
+		"website": "Sitio web",
+		"contact": "Contactar al desarrollador",
+		"websiteA11y": "Sitio web {{label}}",
+		"emailA11y": "Escribir a {{email}}"
+	},
+	"tutorial": {
+		"close": "Cerrar",
+		"skip": "Omitir",
+		"nudge": "Toca la celda resaltada.",
+		"followHighlight": "Sigue el resaltado del tablero",
+		"select": {
+			"title": "Elige una celda",
+			"body": "Toca una celda con un número."
+		},
+		"move": {
+			"title": "Mueve la celda",
+			"body": "Toca un espacio vacío."
+		},
+		"path_tip": {
+			"title": "Las celdas necesitan un camino libre",
+			"body": "Otras celdas pueden bloquear el camino."
+		},
+		"merge": {
+			"title": "Une celdas iguales",
+			"body": "Conecta 4 o más celdas con el mismo número."
+		},
+		"merge_tip": {
+			"title": "¡Bien!",
+			"body": "4 celdas iguales se convierten en una de mayor valor.\n1 × 4 → 4    ·    2 × 4 → 8"
+		},
+		"large_group": {
+			"title": "¡Haz grupos mayores!",
+			"body": "Los grupos de 5 o más dan más puntos y liberan mejor el tablero."
+		},
+		"spawn": {
+			"title": "Tras cada movimiento aparecen celdas nuevas",
+			"body": "Haz un movimiento. No dejes que el tablero se llene."
+		},
+		"levels": {
+			"title": "Suma puntos y sube de nivel",
+			"body": "Cada nivel llena el tablero más rápido.\nLas combos grandes ayudan a liberar espacio."
+		},
+		"done": {
+			"title": "¡Listo!",
+			"body": "Crea combos, libera espacio y bate tu récord."
+		}
+	},
+	"howToPlay": {
+		"title": "Cómo jugar",
+		"move": {
+			"title": "Movimiento",
+			"line1": "Elige una celda.",
+			"line2": "Muévela a una celda vacía por un camino libre."
+		},
+		"merge": {
+			"title": "Fusión",
+			"line1": "Conecta 4 o más celdas iguales.",
+			"line2": "Se convierten en una de mayor valor."
+		},
+		"largeGroups": {
+			"title": "Grupos grandes",
+			"line1": "Los grupos grandes liberan más espacio y dan más puntos."
+		},
+		"levels": {
+			"title": "Niveles",
+			"line1": "El nivel sube al crecer tu puntuación.",
+			"line2": "La dificultad aumenta poco a poco."
+		}
+	},
+	"onboarding": {
+		"kicker": "{{name}} · cómo jugar · {{step}}/{{total}}",
+		"move": {
+			"title": "Movimiento",
+			"line1": "Elige una celda.",
+			"line2": "Toca un espacio vacío para moverla.",
+			"line3": "Debe haber un camino libre hasta el destino."
+		},
+		"merge": {
+			"title": "Fusión",
+			"line1": "Conecta 4 o más celdas iguales.",
+			"line2": "Se convierten en una de mayor valor.",
+			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
+		},
+		"spawn": {
+			"title": "Celdas nuevas",
+			"line1": "Tras un movimiento aparecen celdas nuevas en el tablero.",
+			"line2": "Las fusiones grandes ayudan a que el tablero no se llene.",
+			"diagram": "★ fusión → menos celdas nuevas"
+		},
+		"levels": {
+			"title": "Niveles",
+			"line1": "Suma puntos y sube de nivel.",
+			"line2": "Cada nivel llena el tablero más rápido.",
+			"diagram": "Nv. 1 → Nv. 2 → …"
+		}
+	},
+	"settingsSheet": {
+		"title": "Ajustes",
+		"howToPlay": "Cómo jugar",
+		"close": "Cerrar"
+	},
+	"a11y": {
+		"hexBoard": "Tablero hexagonal"
+	},
+	"plurals": {
+		"cells_one": "{{count}} celda",
+		"cells_few": "{{count}} celdas",
+		"cells_many": "{{count}} celdas",
+		"cells_other": "{{count}} celdas"
+	}
+}

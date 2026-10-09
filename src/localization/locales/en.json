@@ -1,0 +1,201 @@
+{
+	"brand": {
+		"name": "Hexonica",
+		"tagline": "Number puzzle",
+		"storeTitle": "Hexonica — number puzzle"
+	},
+	"common": {
+		"cancel": "Cancel",
+		"loading": "Loading…",
+		"back": "← Back",
+		"close": "Close",
+		"next": "Next",
+		"skip": "Skip",
+		"play": "Play",
+		"progress": "{{current}} / {{total}}"
+	},
+	"home": {
+		"bestScore": "Best: {{score}}",
+		"bestLevel": "Best level: {{level}}",
+		"continue": "Continue",
+		"continueSub": "Level {{level}} · score {{score}}",
+		"continueA11y": "Continue, level {{level}} · score {{score}}",
+		"newGame": "New Game",
+		"howToPlay": "How to Play",
+		"settings": "Settings"
+	},
+	"game": {
+		"loading": "Loading…",
+		"homeA11y": "Home",
+		"settingsA11y": "Settings",
+		"score": "Score",
+		"level": "Level",
+		"best": "Best",
+		"hint": "Select a cell, then an empty target along a free path",
+		"pathBlocked": "Path blocked",
+		"undo": "↶ Undo 🎬",
+		"restart": "Restart"
+	},
+	"scoreHeader": {
+		"score": "Score",
+		"level": "Level",
+		"best": "Best"
+	},
+	"levelUp": {
+		"title": "Level {{level}}",
+		"subtitle": "Difficulty increased"
+	},
+	"chain": {
+		"toast": "Chain ×{{count}}"
+	},
+	"gameOver": {
+		"title": "Game Over",
+		"score": "Score: {{score}}",
+		"level": "Level: {{level}}",
+		"best": "Best: {{best}}",
+		"bestLevel": "Best level: {{bestLevel}}",
+		"newGame": "New Game",
+		"undoRescue": "↶ Undo last move 🎬",
+		"undoLoading": "Loading ad…",
+		"home": "Home"
+	},
+	"undo": {
+		"title": "Undo move?",
+		"body": "Watch a short ad to undo your last move.",
+		"confirm": "Watch",
+		"adsAlertTitle": "Ads"
+	},
+	"restart": {
+		"title": "Start a new game?",
+		"body": "Your current game will be lost.",
+		"bodyConfirm": "Your current game will be lost. Continue?",
+		"confirm": "New Game"
+	},
+	"ads": {
+		"unavailable": "Ads are unavailable right now. Please try again later."
+	},
+	"settings": {
+		"title": "Settings",
+		"sound": "Sounds",
+		"haptic": "Haptics",
+		"howToPlay": "How to Play",
+		"about": "About",
+		"otherApps": "Our other apps",
+		"otherAppsSub": "Browse ForestMusic apps on RuStore",
+		"otherAppsA11y": "Our other apps. Browse ForestMusic apps on RuStore"
+	},
+	"about": {
+		"title": "About",
+		"version": "Version {{version}}",
+		"developer": "Developer",
+		"website": "Website",
+		"contact": "Contact the developer",
+		"websiteA11y": "Website {{label}}",
+		"emailA11y": "Email {{email}}"
+	},
+	"tutorial": {
+		"close": "Close",
+		"skip": "Skip",
+		"nudge": "Tap the highlighted cell.",
+		"followHighlight": "Follow the board highlight",
+		"select": {
+			"title": "Select a cell",
+			"body": "Tap a cell that has a number."
+		},
+		"move": {
+			"title": "Move the cell",
+			"body": "Tap an empty space."
+		},
+		"path_tip": {
+			"title": "Cells need a free path",
+			"body": "Other cells can block the path."
+		},
+		"merge": {
+			"title": "Connect matching cells",
+			"body": "Join 4 or more cells with the same number."
+		},
+		"merge_tip": {
+			"title": "Nice!",
+			"body": "4 matching cells become one higher-value cell.\n1 × 4 → 4    ·    2 × 4 → 8"
+		},
+		"large_group": {
+			"title": "Go bigger!",
+			"body": "Groups of 5 or more score more and clear the board better."
+		},
+		"spawn": {
+			"title": "New cells appear after moves",
+			"body": "Make a move. Do not let the board fill up."
+		},
+		"levels": {
+			"title": "Score points and level up",
+			"body": "Each level fills the board faster.\nBigger combos help free space."
+		},
+		"done": {
+			"title": "You're ready!",
+			"body": "Build combos, clear space, and chase a new best score."
+		}
+	},
+	"howToPlay": {
+		"title": "How to Play",
+		"move": {
+			"title": "Move",
+			"line1": "Select a cell.",
+			"line2": "Move it to an empty cell along a free path."
+		},
+		"merge": {
+			"title": "Merge",
+			"line1": "Connect 4 or more matching cells.",
+			"line2": "They become one higher-value cell."
+		},
+		"largeGroups": {
+			"title": "Large groups",
+			"line1": "Larger groups clear more space and score more points."
+		},
+		"levels": {
+			"title": "Levels",
+			"line1": "Your level rises as your score grows.",
+			"line2": "Difficulty increases gradually."
+		}
+	},
+	"onboarding": {
+		"kicker": "{{name}} · how to play · {{step}}/{{total}}",
+		"move": {
+			"title": "Move",
+			"line1": "Select a cell.",
+			"line2": "Tap an empty space to move it.",
+			"line3": "There must be a free path to the target."
+		},
+		"merge": {
+			"title": "Merge",
+			"line1": "Connect 4 or more matching cells.",
+			"line2": "They become one higher-value cell.",
+			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
+		},
+		"spawn": {
+			"title": "New cells",
+			"line1": "After a move, new cells appear on the board.",
+			"line2": "Larger merges help keep the board from filling up.",
+			"diagram": "★ merge → fewer new cells"
+		},
+		"levels": {
+			"title": "Levels",
+			"line1": "Score points and level up.",
+			"line2": "Each level fills the board faster.",
+			"diagram": "Lv. 1 → Lv. 2 → …"
+		}
+	},
+	"settingsSheet": {
+		"title": "Settings",
+		"howToPlay": "How to Play",
+		"close": "Close"
+	},
+	"a11y": {
+		"hexBoard": "Hex game board"
+	},
+	"plurals": {
+		"cells_one": "{{count}} cell",
+		"cells_few": "{{count}} cells",
+		"cells_many": "{{count}} cells",
+		"cells_other": "{{count}} cells"
+	}
+}

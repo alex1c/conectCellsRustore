@@ -1,15 +1,25 @@
 {
   "expo": {
-    "name": "Гексоника",
+    "name": "Hexonica",
     "slug": "connect-cells",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "connectcells",
+    "locales": {
+      "en": "./native-locales/en.json",
+      "ru": "./native-locales/ru.json",
+      "es": "./native-locales/es.json",
+      "de": "./native-locales/de.json",
+      "tr": "./native-locales/tr.json"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ru.forestmusic.connectcells"
+      "bundleIdentifier": "ru.forestmusic.connectcells",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      }
     },
     "android": {
       "package": "ru.forestmusic.connectcells",
@@ -55,7 +65,16 @@
           }
         }
       ],
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "ru", "es", "de", "tr"],
+            "android": ["en", "ru", "es", "de", "tr"]
+          }
+        }
+      ]
     ]
   }
 }

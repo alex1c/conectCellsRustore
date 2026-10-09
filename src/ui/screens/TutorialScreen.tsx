@@ -13,6 +13,7 @@ import {
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { useTranslation } from '../../localization/useTranslation'
 import { HexBoardView } from '../components/HexBoardView'
 import {
 	COLOR_ACCENT,
@@ -42,6 +43,7 @@ export interface TutorialScreenProps {
 export function TutorialScreen (props: TutorialScreenProps) {
 	const { source, onFinished, onSkipped } = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 	const [boardWidth, setBoardWidth] = useState(320)
 
 	const tutorial = useTutorialController({
@@ -71,6 +73,9 @@ export function TutorialScreen (props: TutorialScreenProps) {
 
 	const showClose = source === 'help'
 	const showSkip = source === 'first_launch'
+	const primaryLabel = tutorial.step.primaryLabelKey
+		? t(tutorial.step.primaryLabelKey)
+		: t('common.next')
 
 	return (
 		<View
@@ -100,17 +105,24 @@ export function TutorialScreen (props: TutorialScreenProps) {
 				>
 					{showClose ? (
 						<Pressable onPress={onSkipped} hitSlop={12}>
-							<Text style={styles.headerAction}>Закрыть</Text>
+							<Text style={styles.headerAction}>
+								{t('tutorial.close')}
+							</Text>
 						</Pressable>
 					) : (
 						<View style={styles.headerSpacer} />
 					)}
 					<Text style={styles.progressLabel}>
-						{tutorial.step.index} / {tutorial.stepCount}
+						{t('common.progress', {
+							current: tutorial.step.index,
+							total: tutorial.stepCount,
+						})}
 					</Text>
 					{showSkip ? (
 						<Pressable onPress={tutorial.handleSkip} hitSlop={12}>
-							<Text style={styles.headerAction}>Пропустить</Text>
+							<Text style={styles.headerAction}>
+								{t('tutorial.skip')}
+							</Text>
 						</Pressable>
 					) : (
 						<View style={styles.headerSpacer} />
@@ -118,12 +130,14 @@ export function TutorialScreen (props: TutorialScreenProps) {
 				</View>
 				<View style={styles.dots}>{progressDots}</View>
 				<View style={styles.coachCard}>
-					<Text style={styles.coachTitle}>{tutorial.step.title}</Text>
-					<Text style={styles.coachBody}>{tutorial.step.body}</Text>
+					<Text style={styles.coachTitle}>
+						{t(tutorial.step.titleKey)}
+					</Text>
+					<Text style={styles.coachBody}>
+						{t(tutorial.step.bodyKey)}
+					</Text>
 					{tutorial.nudgeKey > 0 && !tutorial.step.coachOnly ? (
-						<Text style={styles.nudge}>
-							Нажмите на подсвеченную клетку.
-						</Text>
+						<Text style={styles.nudge}>{t('tutorial.nudge')}</Text>
 					) : null}
 				</View>
 			</View>
@@ -151,14 +165,12 @@ export function TutorialScreen (props: TutorialScreenProps) {
 						style={styles.primary}
 						onPress={tutorial.handleCoachContinue}
 					>
-						<Text style={styles.primaryText}>
-							{tutorial.step.primaryLabel ?? 'Далее'}
-						</Text>
+						<Text style={styles.primaryText}>{primaryLabel}</Text>
 					</Pressable>
 				) : (
 					<View style={styles.footerHint}>
 						<Text style={styles.footerHintText}>
-							Следуйте подсветке на поле
+							{t('tutorial.followHighlight')}
 						</Text>
 					</View>
 				)}
@@ -274,5 +286,7 @@ const styles = StyleSheet.create({
 		color: COLOR_TEXT_MUTED,
 		fontWeight: '600',
 		fontSize: 14,
+		textAlign: 'center',
+		paddingHorizontal: 8,
 	},
 })

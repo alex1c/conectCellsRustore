@@ -23,8 +23,8 @@ import {
 } from '../ads/BannerSlot'
 import { showRewardedUndo } from '../ads/adsService'
 import { trackEvent } from '../analytics/appMetrica'
+import { useTranslation } from '../localization/useTranslation'
 import { pauseGameplayAudio } from './feel/sound'
-import { APP_DISPLAY_NAME } from '../branding'
 import { ChainToast } from './components/ChainToast'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { DevPanel } from './components/DevPanel'
@@ -51,7 +51,6 @@ import {
 import type { GameController } from './hooks/useGameController'
 
 const H_PAD = 16
-const ADS_UNAVAILABLE_MSG = 'Реклама пока недоступна. Попробуйте позже.'
 
 export interface GameScreenProps {
 	game: GameController
@@ -65,6 +64,7 @@ export interface GameScreenProps {
 export function GameScreen (props: GameScreenProps) {
 	const { game, onBackHome, onOpenSettings, onResetOnboarding } = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 	const [viewportWidth, setViewportWidth] = useState(360)
 	const [undoConfirmVisible, setUndoConfirmVisible] = useState(false)
 	const [undoBusy, setUndoBusy] = useState(false)
@@ -194,7 +194,10 @@ export function GameScreen (props: GameScreenProps) {
 					reason: result.status,
 					source,
 				})
-				Alert.alert('Реклама', result.reason || ADS_UNAVAILABLE_MSG)
+				Alert.alert(
+					t('undo.adsAlertTitle'),
+					result.reason || t('ads.unavailable'),
+				)
 			} else {
 				trackEvent('undo_rewarded_failed', {
 					reason: 'dismissed_without_reward',
@@ -206,11 +209,11 @@ export function GameScreen (props: GameScreenProps) {
 				reason: 'exception',
 				source,
 			})
-			Alert.alert('Реклама', ADS_UNAVAILABLE_MSG)
+			Alert.alert(t('undo.adsAlertTitle'), t('ads.unavailable'))
 		} finally {
 			setUndoBusy(false)
 		}
-	}, [game, undoBusy])
+	}, [game, undoBusy, t])
 
 	const handleUndoPress = useCallback(() => {
 		if (!game.canUndoMove || undoBusy) {
@@ -231,7 +234,7 @@ export function GameScreen (props: GameScreenProps) {
 		return (
 			<View style={[styles.loading, { paddingTop: insets.top }]}>
 				<ActivityIndicator size="large" color={COLOR_ACCENT} />
-				<Text style={styles.loadingText}>Загрузка…</Text>
+				<Text style={styles.loadingText}>{t('game.loading')}</Text>
 			</View>
 		)
 	}
@@ -255,18 +258,18 @@ export function GameScreen (props: GameScreenProps) {
 						<Pressable
 							style={styles.homeBtn}
 							onPress={onBackHome}
-							accessibilityLabel="На главную"
+							accessibilityLabel={t('game.homeA11y')}
 						>
 							<Text style={styles.homeBtnText}>←</Text>
 						</Pressable>
 					) : (
 						<View style={styles.homeBtnSpacer} />
 					)}
-					<Text style={styles.brand}>{APP_DISPLAY_NAME}</Text>
+					<Text style={styles.brand}>{t('brand.name')}</Text>
 					<Pressable
 						style={styles.gear}
 						onPress={handleSettingsPress}
-						accessibilityLabel="Настройки"
+						accessibilityLabel={t('game.settingsA11y')}
 					>
 						<Text style={styles.gearText}>⚙</Text>
 					</Pressable>
@@ -281,11 +284,9 @@ export function GameScreen (props: GameScreenProps) {
 				/>
 
 				{game.pathBlockedFlash ? (
-					<Text style={styles.blocked}>Путь закрыт</Text>
+					<Text style={styles.blocked}>{t('game.pathBlocked')}</Text>
 				) : (
-					<Text style={styles.hint}>
-						Выберите клетку, затем пустую цель по свободному пути
-					</Text>
+					<Text style={styles.hint}>{t('game.hint')}</Text>
 				)}
 
 				{/*
@@ -324,7 +325,14 @@ export function GameScreen (props: GameScreenProps) {
 						disabled={!game.canUndoMove || undoBusy}
 						onPress={handleUndoPress}
 					>
-						<Text style={styles.buttonText}>↶ Отменить ход 🎬</Text>
+						<Text
+							style={styles.buttonText}
+							numberOfLines={2}
+							adjustsFontSizeToFit
+							minimumFontScale={0.85}
+						>
+							{t('game.undo')}
+						</Text>
 					</Pressable>
 					<Pressable
 						style={[
@@ -335,7 +343,14 @@ export function GameScreen (props: GameScreenProps) {
 						disabled={game.inputLocked}
 						onPress={game.requestRestart}
 					>
-						<Text style={styles.buttonText}>Заново</Text>
+						<Text
+							style={styles.buttonText}
+							numberOfLines={2}
+							adjustsFontSizeToFit
+							minimumFontScale={0.85}
+						>
+							{t('game.restart')}
+						</Text>
 					</Pressable>
 				</View>
 
@@ -400,9 +415,9 @@ export function GameScreen (props: GameScreenProps) {
 			/>
 			<ConfirmDialog
 				visible={undoConfirmVisible}
-				title="Отменить ход?"
-				body="Чтобы отменить ход, посмотрите короткую рекламу."
-				confirmLabel="Смотреть"
+				title={t('undo.title')}
+				body={t('undo.body')}
+				confirmLabel={t('undo.confirm')}
 				busy={undoBusy}
 				onCancel={() => setUndoConfirmVisible(false)}
 				onConfirm={() => {

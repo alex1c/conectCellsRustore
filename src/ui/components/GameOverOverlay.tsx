@@ -5,6 +5,7 @@
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_ACCENT,
 	COLOR_BUTTON_PRIMARY_TEXT,
@@ -43,18 +44,29 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 		onRewardedUndo,
 		onBackHome,
 	} = props
+	const { t } = useTranslation()
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<View style={styles.backdrop}>
 				<View style={styles.card}>
-					<Text style={styles.title}>Игра окончена</Text>
-					<Text style={styles.line}>Счёт: {score}</Text>
-					<Text style={styles.line}>Уровень: {level}</Text>
+					<Text style={styles.title}>{t('gameOver.title')}</Text>
+					<Text style={styles.line}>
+						{t('gameOver.score', { score })}
+					</Text>
+					<Text style={styles.line}>
+						{t('gameOver.level', { level })}
+					</Text>
 					<Text style={styles.gap} />
-					<Text style={styles.line}>Рекорд: {best}</Text>
-					<Text style={styles.line}>Лучший уровень: {bestLevel}</Text>
+					<Text style={styles.line}>
+						{t('gameOver.best', { best })}
+					</Text>
+					<Text style={styles.line}>
+						{t('gameOver.bestLevel', { bestLevel })}
+					</Text>
 					<Pressable style={styles.primary} onPress={onNewGame}>
-						<Text style={styles.primaryText}>Новая игра</Text>
+						<Text style={styles.primaryText}>
+							{t('gameOver.newGame')}
+						</Text>
 					</Pressable>
 					{canUndo ? (
 						<Pressable
@@ -64,14 +76,16 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 						>
 							<Text style={styles.secondaryText}>
 								{undoBusy
-									? 'Загрузка рекламы…'
-									: '↶ Отменить последний ход 🎬'}
+									? t('gameOver.undoLoading')
+									: t('gameOver.undoRescue')}
 							</Text>
 						</Pressable>
 					) : null}
 					{onBackHome ? (
 						<Pressable style={styles.home} onPress={onBackHome}>
-							<Text style={styles.homeText}>На главную</Text>
+							<Text style={styles.homeText}>
+								{t('gameOver.home')}
+							</Text>
 						</Pressable>
 					) : null}
 				</View>

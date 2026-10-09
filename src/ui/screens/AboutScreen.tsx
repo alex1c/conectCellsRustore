@@ -10,10 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
 import {
-	APP_DISPLAY_NAME,
 	APP_PUBLISHER,
 	APP_VERSION,
 } from '../../branding'
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	FOREST_MUSIC_CONTACT_EMAIL,
 	FOREST_MUSIC_SITE_LABEL,
@@ -37,6 +37,7 @@ export interface AboutScreenProps {
 export function AboutScreen (props: AboutScreenProps) {
 	const { onBack } = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 
 	const handleOpenSite = useCallback(() => {
 		void openForestMusicSite()
@@ -57,30 +58,34 @@ export function AboutScreen (props: AboutScreenProps) {
 			]}
 		>
 			<Pressable onPress={onBack} hitSlop={12}>
-				<Text style={styles.back}>← Назад</Text>
+				<Text style={styles.back}>{t('common.back')}</Text>
 			</Pressable>
 
-			<Text style={styles.screenTitle}>О приложении</Text>
+			<Text style={styles.screenTitle}>{t('about.title')}</Text>
 
 			<View style={styles.card}>
-				<Text style={styles.brand}>{APP_DISPLAY_NAME}</Text>
-				<Text style={styles.version}>Версия {APP_VERSION}</Text>
+				<Text style={styles.brand}>{t('brand.name')}</Text>
+				<Text style={styles.version}>
+					{t('about.version', { version: APP_VERSION })}
+				</Text>
 
 				<View style={styles.divider} />
 
 				{/* Publisher block — kept for store / branding continuity. */}
-				<Text style={styles.sectionLabel}>Разработчик</Text>
+				<Text style={styles.sectionLabel}>{t('about.developer')}</Text>
 				<Text style={styles.sectionValue}>{APP_PUBLISHER}</Text>
 
 				<View style={styles.divider} />
 
 				{/* External website — Linking.openURL, no WebView. */}
-				<Text style={styles.sectionLabel}>Сайт</Text>
+				<Text style={styles.sectionLabel}>{t('about.website')}</Text>
 				<Pressable
 					onPress={handleOpenSite}
 					hitSlop={8}
 					accessibilityRole="link"
-					accessibilityLabel={`Сайт ${FOREST_MUSIC_SITE_LABEL}`}
+					accessibilityLabel={t('about.websiteA11y', {
+						label: FOREST_MUSIC_SITE_LABEL,
+					})}
 				>
 					<Text style={styles.linkValue}>{FOREST_MUSIC_SITE_LABEL}</Text>
 				</Pressable>
@@ -88,12 +93,14 @@ export function AboutScreen (props: AboutScreenProps) {
 				<View style={styles.divider} />
 
 				{/* mailto: contact — opens the system email client. */}
-				<Text style={styles.sectionLabel}>Связаться с разработчиком</Text>
+				<Text style={styles.sectionLabel}>{t('about.contact')}</Text>
 				<Pressable
 					onPress={handleOpenEmail}
 					hitSlop={8}
 					accessibilityRole="link"
-					accessibilityLabel={`Написать на ${FOREST_MUSIC_CONTACT_EMAIL}`}
+					accessibilityLabel={t('about.emailA11y', {
+						email: FOREST_MUSIC_CONTACT_EMAIL,
+					})}
 				>
 					<Text style={styles.linkValue}>{FOREST_MUSIC_CONTACT_EMAIL}</Text>
 				</Pressable>

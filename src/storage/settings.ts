@@ -12,7 +12,19 @@ export const SETTINGS_DEFAULTS = {
 	onboardingDone: false,
 } as const
 
-/** Russian Settings labels (SFX only — never «Музыка»). */
+/**
+ * i18n keys for Settings labels (SFX only — never «Музыка» / Music).
+ * Resolve via `t(SETTINGS_LABEL_KEYS.sound)` in UI.
+ */
+export const SETTINGS_LABEL_KEYS = {
+	sound: 'settings.sound',
+	haptic: 'settings.haptic',
+} as const
+
+/**
+ * @deprecated Prefer SETTINGS_LABEL_KEYS + t(). Kept for older feel-contract tests
+ * that assert Russian defaults after i18n init with lng=ru.
+ */
 export const SETTINGS_LABELS = {
 	sound: 'Звуки',
 	haptic: 'Вибрация',

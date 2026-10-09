@@ -1,10 +1,12 @@
 /**
  * Compact settings sheet: Sounds, Haptic, How to Play.
+ * Orphan relative to AppRoot (SettingsScreen is the live path).
  * Dark theme is the only 1.0 appearance.
  */
 
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_DIVIDER,
 	COLOR_MODAL_SCRIM,
@@ -38,16 +40,17 @@ export function SettingsSheet (props: SettingsSheetProps) {
 		onHowToPlay,
 		onClose,
 	} = props
+	const { t } = useTranslation()
 
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<Pressable style={styles.backdrop} onPress={onClose}>
 				<Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-					<Text style={styles.title}>Настройки</Text>
+					<Text style={styles.title}>{t('settingsSheet.title')}</Text>
 
 					<View style={styles.row}>
-						{/* SFX only — never labeled «Музыка». */}
-						<Text style={styles.label}>Звуки</Text>
+						{/* SFX only — never labeled «Музыка» / Music. */}
+						<Text style={styles.label}>{t('settings.sound')}</Text>
 						<Switch
 							value={soundEnabled}
 							onValueChange={onToggleSound}
@@ -60,7 +63,7 @@ export function SettingsSheet (props: SettingsSheetProps) {
 					</View>
 
 					<View style={styles.row}>
-						<Text style={styles.label}>Вибрация</Text>
+						<Text style={styles.label}>{t('settings.haptic')}</Text>
 						<Switch
 							value={hapticEnabled}
 							onValueChange={onToggleHaptic}
@@ -73,11 +76,15 @@ export function SettingsSheet (props: SettingsSheetProps) {
 					</View>
 
 					<Pressable style={styles.help} onPress={onHowToPlay}>
-						<Text style={styles.helpText}>Как играть</Text>
+						<Text style={styles.helpText}>
+							{t('settingsSheet.howToPlay')}
+						</Text>
 					</Pressable>
 
 					<Pressable style={styles.close} onPress={onClose}>
-						<Text style={styles.closeText}>Закрыть</Text>
+						<Text style={styles.closeText}>
+							{t('settingsSheet.close')}
+						</Text>
 					</Pressable>
 				</Pressable>
 			</Pressable>
@@ -113,11 +120,13 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		borderBottomWidth: StyleSheet.hairlineWidth,
 		borderBottomColor: COLOR_DIVIDER,
+		gap: 12,
 	},
 	label: {
 		fontSize: 16,
 		fontWeight: '600',
 		color: COLOR_TEXT_SECONDARY,
+		flexShrink: 1,
 	},
 	help: {
 		marginTop: 16,

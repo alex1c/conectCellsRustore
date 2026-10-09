@@ -5,6 +5,7 @@
 import { useEffect, useMemo } from 'react'
 import { Animated, StyleSheet, Text } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import { TIMING_CHAIN_TOAST_MS } from '../feel/timings'
 
 export interface ChainToastProps {
@@ -15,6 +16,7 @@ export interface ChainToastProps {
 
 export function ChainToast (props: ChainToastProps) {
 	const { visible, cascadeLevel, onHidden } = props
+	const { t } = useTranslation()
 	const opacity = useMemo(() => new Animated.Value(0), [])
 
 	useEffect(() => {
@@ -51,7 +53,9 @@ export function ChainToast (props: ChainToastProps) {
 
 	return (
 		<Animated.View style={[styles.toast, { opacity }]} pointerEvents="none">
-			<Text style={styles.text}>Цепочка ×{cascadeLevel}</Text>
+			<Text style={styles.text}>
+				{t('chain.toast', { count: cascadeLevel })}
+			</Text>
 		</Animated.View>
 	)
 }

@@ -17,6 +17,8 @@ import {
 } from '../../analytics/appMetrica'
 import {
 	APP_DISPLAY_NAME,
+	APP_DISPLAY_NAME_INTL,
+	APP_DISPLAY_NAME_RU,
 	APP_PUBLISHER,
 	APP_STORE_TITLE,
 	APP_VERSION,
@@ -29,6 +31,8 @@ describe('phase4 production shell', () => {
 	})
 
 	it('exposes Hexonica branding strings', () => {
+		expect(APP_DISPLAY_NAME_RU).toBe('Гексоника')
+		expect(APP_DISPLAY_NAME_INTL).toBe('Hexonica')
 		expect(APP_DISPLAY_NAME).toBe('Гексоника')
 		expect(APP_STORE_TITLE).toBe('Гексоника — числовая головоломка')
 		expect(APP_PUBLISHER).toBe('ForestMusic')
@@ -40,6 +44,7 @@ describe('phase4 production shell', () => {
 		const appJson = require('../../../app.json') as {
 			expo: {
 				name: string
+				locales?: Record<string, string>
 				icon: string
 				plugins: (string | [string, Record<string, unknown>])[]
 				android: {
@@ -53,7 +58,10 @@ describe('phase4 production shell', () => {
 				}
 			}
 		}
-		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME)
+		// Default launcher identity is international Hexonica; ru locale overrides.
+		expect(appJson.expo.name).toBe(APP_DISPLAY_NAME_INTL)
+		expect(appJson.expo.locales?.ru).toBe('./native-locales/ru.json')
+		expect(appJson.expo.locales?.en).toBe('./native-locales/en.json')
 		expect(appJson.expo.icon).toBe('./assets/icon.png')
 		expect(appJson.expo.android.versionCode).toBe(2)
 		// Puzzle SFX only — never ship mic / overlay / legacy storage claims.

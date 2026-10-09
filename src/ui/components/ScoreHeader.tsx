@@ -6,6 +6,7 @@
 
 import { StyleSheet, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_PROGRESS_FILL,
 	COLOR_PROGRESS_TRACK,
@@ -27,13 +28,16 @@ export const SCORE_GAIN_SLOT_HEIGHT = 16
 
 export function ScoreHeader (props: ScoreHeaderProps) {
 	const { score, best, level, levelProgress, gainFlash } = props
+	const { t } = useTranslation()
 	const clamped = Math.min(1, Math.max(0, levelProgress))
 
 	return (
 		<View style={styles.wrap}>
 			<View style={styles.row}>
 				<View style={styles.block}>
-					<Text style={styles.label}>Счёт</Text>
+					<Text style={styles.label} numberOfLines={1}>
+						{t('scoreHeader.score')}
+					</Text>
 					{/* Fixed-height value line — digit growth must not reflow. */}
 					<View style={styles.valueSlot}>
 						<Text
@@ -53,7 +57,9 @@ export function ScoreHeader (props: ScoreHeaderProps) {
 					</View>
 				</View>
 				<View style={[styles.block, styles.alignCenter]}>
-					<Text style={styles.label}>Уровень</Text>
+					<Text style={styles.label} numberOfLines={1}>
+						{t('scoreHeader.level')}
+					</Text>
 					<View style={styles.valueSlot}>
 						<Text style={styles.value} numberOfLines={1}>
 							{level}
@@ -63,7 +69,9 @@ export function ScoreHeader (props: ScoreHeaderProps) {
 					<View style={styles.gainSlot} />
 				</View>
 				<View style={[styles.block, styles.alignEnd]}>
-					<Text style={styles.label}>Рекорд</Text>
+					<Text style={styles.label} numberOfLines={1}>
+						{t('scoreHeader.best')}
+					</Text>
 					<View style={styles.valueSlot}>
 						<Text
 							style={[styles.value, styles.valueEnd]}

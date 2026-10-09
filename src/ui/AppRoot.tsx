@@ -8,6 +8,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 
 import { initAds } from '../ads/adsService'
 import { initAnalytics, trackEvent } from '../analytics/appMetrica'
+import { useTranslation } from '../localization/useTranslation'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { useGameController } from './hooks/useGameController'
 import { GameScreen } from './GameScreen'
@@ -21,6 +22,7 @@ import type { TutorialSource } from './tutorial/tutorialSteps'
 
 export function AppRoot () {
 	const game = useGameController()
+	const { t } = useTranslation()
 	/**
 	 * null = use cold-start default derived from onboardingCompleted.
 	 * Avoids an effect that setStates route on boot (eslint cascading-render).
@@ -134,7 +136,7 @@ export function AppRoot () {
 		return (
 			<View style={styles.loading}>
 				<ActivityIndicator size="large" color={COLOR_ACCENT} />
-				<Text style={styles.loadingText}>Загрузка…</Text>
+				<Text style={styles.loadingText}>{t('common.loading')}</Text>
 			</View>
 		)
 	}
@@ -202,9 +204,9 @@ export function AppRoot () {
 			/>
 			<ConfirmDialog
 				visible={confirmNewVisible}
-				title="Начать новую игру?"
-				body="Текущая партия будет потеряна. Продолжить?"
-				confirmLabel="Новая игра"
+				title={t('restart.title')}
+				body={t('restart.bodyConfirm')}
+				confirmLabel={t('restart.confirm')}
 				onCancel={() => setConfirmNewVisible(false)}
 				onConfirm={beginFreshParty}
 			/>

@@ -1,10 +1,11 @@
 /**
  * Short first-run / help onboarding (4 steps). Visual diagrams, not a playable tutorial.
+ * Orphan relative to AppRoot (interactive TutorialScreen is the live path).
  */
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
-import { APP_DISPLAY_NAME } from '../../branding'
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_ACCENT,
 	COLOR_BUTTON_PRIMARY_TEXT,
@@ -25,66 +26,72 @@ export interface OnboardingModalProps {
 	onFinish: () => void
 }
 
-const STEPS = [
+const STEP_DEFS = [
 	{
-		title: 'Ход',
-		lines: [
-			'Выберите клетку.',
-			'Нажмите на свободное место, чтобы переместить её.',
-			'До клетки должен быть свободный путь.',
+		id: 'move',
+		titleKey: 'onboarding.move.title',
+		lineKeys: [
+			'onboarding.move.line1',
+			'onboarding.move.line2',
+			'onboarding.move.line3',
 		],
 		diagram: '● → ○',
 	},
 	{
-		title: 'Объединение',
-		lines: [
-			'Соедините 4 или больше одинаковых клеток.',
-			'Они превратятся в одну более ценную.',
-			'1+1+1+1 → 4    ·    2+2+2+2 → 8',
+		id: 'merge',
+		titleKey: 'onboarding.merge.title',
+		lineKeys: [
+			'onboarding.merge.line1',
+			'onboarding.merge.line2',
+			'onboarding.merge.line3',
 		],
 		diagram: '1 1 1 1 → 4',
 	},
 	{
-		title: 'Новые клетки',
-		lines: [
-			'После хода на поле появляются новые клетки.',
-			'Большие объединения помогают сдерживать заполнение поля.',
-		],
-		diagram: '★ merge → меньше новых',
+		id: 'spawn',
+		titleKey: 'onboarding.spawn.title',
+		lineKeys: ['onboarding.spawn.line1', 'onboarding.spawn.line2'],
+		diagramKey: 'onboarding.spawn.diagram',
 	},
 	{
-		title: 'Уровни',
-		lines: [
-			'Набирайте очки и повышайте уровень.',
-			'С каждым уровнем поле заполняется быстрее.',
-		],
-		diagram: 'Ур. 1 → Ур. 2 → …',
+		id: 'levels',
+		titleKey: 'onboarding.levels.title',
+		lineKeys: ['onboarding.levels.line1', 'onboarding.levels.line2'],
+		diagramKey: 'onboarding.levels.diagram',
 	},
 ] as const
 
-export const ONBOARDING_STEP_COUNT = STEPS.length
+export const ONBOARDING_STEP_COUNT = STEP_DEFS.length
 
 export function OnboardingModal (props: OnboardingModalProps) {
 	const { visible, step, onNext, onSkip, onFinish } = props
-	const safeStep = Math.min(Math.max(0, step), STEPS.length - 1)
-	const current = STEPS[safeStep]!
-	const isLast = safeStep >= STEPS.length - 1
+	const { t } = useTranslation()
+	const safeStep = Math.min(Math.max(0, step), STEP_DEFS.length - 1)
+	const current = STEP_DEFS[safeStep]!
+	const isLast = safeStep >= STEP_DEFS.length - 1
+	const diagram =
+		'diagram' in current
+			? current.diagram
+			: t(current.diagramKey)
 
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<View style={styles.backdrop}>
 				<View style={styles.card}>
 					<Text style={styles.kicker}>
-						{APP_DISPLAY_NAME} · как играть · {safeStep + 1}/
-						{STEPS.length}
+						{t('onboarding.kicker', {
+							name: t('brand.name'),
+							step: safeStep + 1,
+							total: STEP_DEFS.length,
+						})}
 					</Text>
-					<Text style={styles.title}>{current.title}</Text>
+					<Text style={styles.title}>{t(current.titleKey)}</Text>
 					<View style={styles.diagramBox}>
-						<Text style={styles.diagram}>{current.diagram}</Text>
+						<Text style={styles.diagram}>{diagram}</Text>
 					</View>
-					{current.lines.map((line) => (
-						<Text key={line} style={styles.line}>
-							{line}
+					{current.lineKeys.map((lineKey) => (
+						<Text key={lineKey} style={styles.line}>
+							{t(lineKey)}
 						</Text>
 					))}
 					<Pressable
@@ -92,12 +99,14 @@ export function OnboardingModal (props: OnboardingModalProps) {
 						onPress={isLast ? onFinish : onNext}
 					>
 						<Text style={styles.primaryText}>
-							{isLast ? 'Играть' : 'Далее'}
+							{isLast ? t('common.play') : t('common.next')}
 						</Text>
 					</Pressable>
 					{!isLast ? (
 						<Pressable style={styles.secondary} onPress={onSkip}>
-							<Text style={styles.secondaryText}>Пропустить</Text>
+							<Text style={styles.secondaryText}>
+								{t('common.skip')}
+							</Text>
 						</Pressable>
 					) : null}
 				</View>
@@ -148,6 +157,7 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: '800',
 		color: COLOR_ACCENT,
+		textAlign: 'center',
 	},
 	line: {
 		fontSize: 15,

@@ -5,6 +5,7 @@
 
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import {
 	COLOR_ACCENT,
 	COLOR_BUTTON_PRIMARY_TEXT,
@@ -33,11 +34,13 @@ export function ConfirmDialog (props: ConfirmDialogProps) {
 		title,
 		body,
 		confirmLabel,
-		cancelLabel = 'Отмена',
+		cancelLabel,
 		busy = false,
 		onCancel,
 		onConfirm,
 	} = props
+	const { t } = useTranslation()
+	const resolvedCancel = cancelLabel ?? t('common.cancel')
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<View style={styles.backdrop}>
@@ -50,7 +53,7 @@ export function ConfirmDialog (props: ConfirmDialogProps) {
 							onPress={onCancel}
 							disabled={busy}
 						>
-							<Text style={styles.cancelText}>{cancelLabel}</Text>
+							<Text style={styles.cancelText}>{resolvedCancel}</Text>
 						</Pressable>
 						<Pressable
 							style={[styles.confirm, busy && styles.disabled]}
@@ -58,7 +61,7 @@ export function ConfirmDialog (props: ConfirmDialogProps) {
 							disabled={busy}
 						>
 							<Text style={styles.confirmText}>
-								{busy ? 'Загрузка…' : confirmLabel}
+								{busy ? t('common.loading') : confirmLabel}
 							</Text>
 						</Pressable>
 					</View>
@@ -100,6 +103,7 @@ const styles = StyleSheet.create({
 	actions: {
 		flexDirection: 'row',
 		justifyContent: 'flex-end',
+		flexWrap: 'wrap',
 		gap: 10,
 	},
 	cancel: {
@@ -107,20 +111,26 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		borderRadius: 10,
 		backgroundColor: COLOR_BUTTON_SECONDARY,
+		minWidth: 88,
+		alignItems: 'center',
 	},
 	cancelText: {
 		fontWeight: '600',
 		color: COLOR_TEXT,
+		textAlign: 'center',
 	},
 	confirm: {
 		paddingHorizontal: 14,
 		paddingVertical: 12,
 		borderRadius: 10,
 		backgroundColor: COLOR_ACCENT,
+		minWidth: 88,
+		alignItems: 'center',
 	},
 	confirmText: {
 		fontWeight: '700',
 		color: COLOR_BUTTON_PRIMARY_TEXT,
+		textAlign: 'center',
 	},
 	disabled: {
 		opacity: 0.6,

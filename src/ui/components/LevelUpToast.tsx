@@ -5,6 +5,7 @@
 import { useEffect, useMemo } from 'react'
 import { Animated, StyleSheet, Text } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import { TIMING_LEVEL_UP_MS } from '../feel/timings'
 
 export interface LevelUpToastProps {
@@ -15,6 +16,7 @@ export interface LevelUpToastProps {
 
 export function LevelUpToast (props: LevelUpToastProps) {
 	const { visible, level, onHidden } = props
+	const { t } = useTranslation()
 	// Stable Animated.Value for the lifetime of this toast (same pattern as HexCellView).
 	const opacity = useMemo(() => new Animated.Value(0), [])
 	const scale = useMemo(() => new Animated.Value(0.94), [])
@@ -64,8 +66,10 @@ export function LevelUpToast (props: LevelUpToastProps) {
 			style={[styles.toast, { opacity, transform: [{ scale }] }]}
 			pointerEvents="none"
 		>
-			<Text style={styles.title}>Уровень {level}</Text>
-			<Text style={styles.sub}>Сложность повышена</Text>
+			<Text style={styles.title}>
+				{t('levelUp.title', { level })}
+			</Text>
+			<Text style={styles.sub}>{t('levelUp.subtitle')}</Text>
 		</Animated.View>
 	)
 }

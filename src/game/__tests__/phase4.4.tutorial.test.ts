@@ -72,7 +72,8 @@ describe('Phase 4.4 tutorial steps', () => {
 		expect(TUTORIAL_STEP_COUNT).toBeLessThanOrEqual(12)
 		expect(TUTORIAL_STEPS[0]?.id).toBe('select')
 		expect(TUTORIAL_STEPS[TUTORIAL_STEP_COUNT - 1]?.id).toBe('done')
-		expect(getTutorialStep(0).title).toContain('Выберите')
+		expect(getTutorialStep(0).titleKey).toBe('tutorial.select.title')
+		expect(getTutorialStep(0).bodyKey).toBe('tutorial.select.body')
 		expect(getTutorialStep(3).id).toBe('merge')
 	})
 

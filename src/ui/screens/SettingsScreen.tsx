@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
+import { useTranslation } from '../../localization/useTranslation'
 import { openForestMusicRuStore } from '../links/forestMusicRuStore'
 import {
 	COLOR_ACCENT,
@@ -43,6 +44,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 		onBack,
 	} = props
 	const insets = useSafeAreaInsets()
+	const { t } = useTranslation()
 
 	const handleOpenOtherApps = useCallback(() => {
 		void openForestMusicRuStore()
@@ -57,16 +59,16 @@ export function SettingsScreen (props: SettingsScreenProps) {
 		>
 			<View style={styles.header}>
 				<Pressable onPress={onBack} hitSlop={12}>
-					<Text style={styles.back}>← Назад</Text>
+					<Text style={styles.back}>{t('common.back')}</Text>
 				</Pressable>
-				<Text style={styles.title}>Настройки</Text>
+				<Text style={styles.title}>{t('settings.title')}</Text>
 				<View style={styles.backSpacer} />
 			</View>
 
 			<View style={styles.card}>
 				<View style={styles.row}>
-					{/* SFX only — never labeled «Музыка». */}
-					<Text style={styles.label}>Звуки</Text>
+					{/* SFX only — never labeled «Музыка» / Music. */}
+					<Text style={styles.label}>{t('settings.sound')}</Text>
 					<Switch
 						value={soundEnabled}
 						onValueChange={onToggleSound}
@@ -78,7 +80,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 					/>
 				</View>
 				<View style={styles.row}>
-					<Text style={styles.label}>Вибрация</Text>
+					<Text style={styles.label}>{t('settings.haptic')}</Text>
 					<Switch
 						value={hapticEnabled}
 						onValueChange={onToggleHaptic}
@@ -90,10 +92,10 @@ export function SettingsScreen (props: SettingsScreenProps) {
 					/>
 				</View>
 				<Pressable style={styles.linkRow} onPress={onHowToPlay}>
-					<Text style={styles.linkText}>Как играть</Text>
+					<Text style={styles.linkText}>{t('settings.howToPlay')}</Text>
 				</Pressable>
 				<Pressable style={styles.linkRow} onPress={onAbout}>
-					<Text style={styles.linkText}>О приложении</Text>
+					<Text style={styles.linkText}>{t('settings.about')}</Text>
 				</Pressable>
 				{/*
 				 * ForestMusic cross-promotion — Settings only.
@@ -103,11 +105,11 @@ export function SettingsScreen (props: SettingsScreenProps) {
 					style={[styles.linkRow, styles.linkRowLast]}
 					onPress={handleOpenOtherApps}
 					accessibilityRole="link"
-					accessibilityLabel="Другие наши приложения. Посмотреть приложения ForestMusic в RuStore"
+					accessibilityLabel={t('settings.otherAppsA11y')}
 				>
-					<Text style={styles.linkText}>Другие наши приложения</Text>
+					<Text style={styles.linkText}>{t('settings.otherApps')}</Text>
 					<Text style={styles.linkSubtext}>
-						Посмотреть приложения ForestMusic в RuStore
+						{t('settings.otherAppsSub')}
 					</Text>
 				</Pressable>
 			</View>
@@ -134,15 +136,17 @@ const styles = StyleSheet.create({
 		color: COLOR_ACCENT,
 		fontWeight: '700',
 		fontSize: 15,
-		width: 80,
+		width: 96,
 	},
 	backSpacer: {
-		width: 80,
+		width: 96,
 	},
 	title: {
 		fontSize: 20,
 		fontWeight: '800',
 		color: COLOR_TEXT,
+		flexShrink: 1,
+		textAlign: 'center',
 	},
 	card: {
 		backgroundColor: COLOR_SURFACE_ELEVATED,
@@ -159,11 +163,13 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 		borderBottomWidth: StyleSheet.hairlineWidth,
 		borderBottomColor: COLOR_DIVIDER,
+		gap: 12,
 	},
 	label: {
 		fontSize: 16,
 		fontWeight: '600',
 		color: COLOR_TEXT_SECONDARY,
+		flexShrink: 1,
 	},
 	linkRow: {
 		paddingVertical: 16,

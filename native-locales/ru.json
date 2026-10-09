@@ -1,0 +1,9 @@
+{
+	"ios": {
+		"CFBundleDisplayName": "Гексоника",
+		"CFBundleName": "Гексоника"
+	},
+	"android": {
+		"app_name": "Гексоника"
+	}
+}

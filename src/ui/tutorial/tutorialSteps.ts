@@ -1,6 +1,6 @@
 /**
- * Interactive Hexonica tutorial step model + Russian coach copy.
- * Short 1–2 minute flow; no slideshow of text-only pages.
+ * Interactive Hexonica tutorial step model.
+ * Coach copy lives in locale dictionaries (tutorial.<id>.title/body).
  */
 
 export type TutorialSource = 'first_launch' | 'help'
@@ -20,83 +20,84 @@ export interface TutorialStepDef {
 	id: TutorialStepId
 	/** 1-based progress index for dots / "2 / 9". */
 	index: number
-	title: string
-	body: string
-	/** Show primary Continue / Играть instead of waiting for a board action. */
+	/** i18n key for the coach title. */
+	titleKey: string
+	/** i18n key for the coach body. */
+	bodyKey: string
+	/** Show primary Continue / Play instead of waiting for a board action. */
 	coachOnly: boolean
-	primaryLabel?: string
+	/** Optional i18n key for the primary button (defaults to common.next). */
+	primaryLabelKey?: string
 }
 
 export const TUTORIAL_STEPS: readonly TutorialStepDef[] = [
 	{
 		id: 'select',
 		index: 1,
-		title: 'Выберите клетку',
-		body: 'Нажмите на клетку с числом.',
+		titleKey: 'tutorial.select.title',
+		bodyKey: 'tutorial.select.body',
 		coachOnly: false,
 	},
 	{
 		id: 'move',
 		index: 2,
-		title: 'Переместите клетку',
-		body: 'Нажмите на свободное место.',
+		titleKey: 'tutorial.move.title',
+		bodyKey: 'tutorial.move.body',
 		coachOnly: false,
 	},
 	{
 		id: 'path_tip',
 		index: 3,
-		title: 'Клетке нужен свободный путь',
-		body: 'Другие клетки могут перекрыть путь.',
+		titleKey: 'tutorial.path_tip.title',
+		bodyKey: 'tutorial.path_tip.body',
 		coachOnly: true,
-		primaryLabel: 'Далее',
+		primaryLabelKey: 'common.next',
 	},
 	{
 		id: 'merge',
 		index: 4,
-		title: 'Соберите одинаковые клетки',
-		body: 'Соедините 4 или больше одинаковых клеток.',
+		titleKey: 'tutorial.merge.title',
+		bodyKey: 'tutorial.merge.body',
 		coachOnly: false,
 	},
 	{
 		id: 'merge_tip',
 		index: 5,
-		title: 'Отлично!',
-		body: '4 одинаковых клетки превращаются в одну более ценную.\n1 × 4 → 4    ·    2 × 4 → 8',
+		titleKey: 'tutorial.merge_tip.title',
+		bodyKey: 'tutorial.merge_tip.body',
 		coachOnly: true,
-		primaryLabel: 'Далее',
+		primaryLabelKey: 'common.next',
 	},
 	{
 		id: 'large_group',
 		index: 6,
-		title: 'Собирайте больше!',
-		body:
-			'Группы из 5 и более дают больше очков и лучше сдерживают заполнение поля.',
+		titleKey: 'tutorial.large_group.title',
+		bodyKey: 'tutorial.large_group.body',
 		coachOnly: true,
-		primaryLabel: 'Далее',
+		primaryLabelKey: 'common.next',
 	},
 	{
 		id: 'spawn',
 		index: 7,
-		title: 'После ходов появляются новые клетки',
-		body: 'Сделайте ход. Не дайте полю заполниться.',
+		titleKey: 'tutorial.spawn.title',
+		bodyKey: 'tutorial.spawn.body',
 		coachOnly: false,
 	},
 	{
 		id: 'levels',
 		index: 8,
-		title: 'Набирайте очки и повышайте уровень',
-		body:
-			'С каждым уровнем поле заполняется быстрее.\nБольшие комбинации помогают освобождать поле.',
+		titleKey: 'tutorial.levels.title',
+		bodyKey: 'tutorial.levels.body',
 		coachOnly: true,
-		primaryLabel: 'Далее',
+		primaryLabelKey: 'common.next',
 	},
 	{
 		id: 'done',
 		index: 9,
-		title: 'Готово!',
-		body: 'Стройте комбинации, освобождайте поле и ставьте новый рекорд.',
+		titleKey: 'tutorial.done.title',
+		bodyKey: 'tutorial.done.body',
 		coachOnly: true,
-		primaryLabel: 'Играть',
+		primaryLabelKey: 'common.play',
 	},
 ] as const
 

@@ -9,14 +9,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
 import { trackEvent } from '../analytics/appMetrica'
+import { t } from '../localization/i18n'
 import { resolveAdUnitId, type AdPlacementKey } from './placements'
 
 let sdkReady = false
 let initAttempted = false
 
-/** User-facing copy when ads cannot complete. */
-const ADS_UNAVAILABLE_REASON =
-	'Реклама пока недоступна. Попробуйте позже.'
+/** User-facing copy when ads cannot complete (resolved at call time). */
+function getAdsUnavailableReason (): string {
+	return t('ads.unavailable')
+}
 
 /** Hard timeout only as last-resort protection if SDK never dismisses. */
 const REWARDED_SHOW_HARD_TIMEOUT_MS = 60000
@@ -263,7 +265,7 @@ export async function showRewardedUndo (options?: {
 	if (!ready) {
 		return {
 			status: 'unavailable',
-			reason: ADS_UNAVAILABLE_REASON,
+			reason: getAdsUnavailableReason(),
 		}
 	}
 
@@ -272,7 +274,7 @@ export async function showRewardedUndo (options?: {
 		if (!ad) {
 			return {
 				status: 'failed',
-				reason: ADS_UNAVAILABLE_REASON,
+				reason: getAdsUnavailableReason(),
 			}
 		}
 		// Consume before show so a failed/stale instance cannot be reused,
@@ -293,7 +295,7 @@ export async function showRewardedUndo (options?: {
 		})
 		return {
 			status: 'failed',
-			reason: ADS_UNAVAILABLE_REASON,
+			reason: getAdsUnavailableReason(),
 		}
 	}
 }
@@ -343,7 +345,7 @@ function presentRewardedAd (
 			})
 			finish({
 				status: 'failed',
-				reason: ADS_UNAVAILABLE_REASON,
+				reason: getAdsUnavailableReason(),
 			})
 		}
 
@@ -362,7 +364,7 @@ function presentRewardedAd (
 				})
 				finish({
 					status: 'failed',
-					reason: ADS_UNAVAILABLE_REASON,
+					reason: getAdsUnavailableReason(),
 				})
 			}
 		})()
@@ -370,7 +372,7 @@ function presentRewardedAd (
 		hardTimeoutId = setTimeout(() => {
 			finish({
 				status: 'failed',
-				reason: ADS_UNAVAILABLE_REASON,
+				reason: getAdsUnavailableReason(),
 			})
 		}, REWARDED_SHOW_HARD_TIMEOUT_MS)
 	})

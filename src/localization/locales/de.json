@@ -1,0 +1,201 @@
+{
+	"brand": {
+		"name": "Hexonica",
+		"tagline": "Zahlenpuzzle",
+		"storeTitle": "Hexonica — Zahlenpuzzle"
+	},
+	"common": {
+		"cancel": "Abbrechen",
+		"loading": "Laden…",
+		"back": "← Zurück",
+		"close": "Schließen",
+		"next": "Weiter",
+		"skip": "Überspringen",
+		"play": "Spielen",
+		"progress": "{{current}} / {{total}}"
+	},
+	"home": {
+		"bestScore": "Rekord: {{score}}",
+		"bestLevel": "Bestes Level: {{level}}",
+		"continue": "Weiter",
+		"continueSub": "Level {{level}} · Punkte {{score}}",
+		"continueA11y": "Weiter, Level {{level}} · Punkte {{score}}",
+		"newGame": "Neues Spiel",
+		"howToPlay": "Spielanleitung",
+		"settings": "Einstellungen"
+	},
+	"game": {
+		"loading": "Laden…",
+		"homeA11y": "Zur Startseite",
+		"settingsA11y": "Einstellungen",
+		"score": "Punkte",
+		"level": "Level",
+		"best": "Rekord",
+		"hint": "Zelle wählen, dann leeres Ziel auf freiem Weg",
+		"pathBlocked": "Weg blockiert",
+		"undo": "↶ Rückgängig 🎬",
+		"restart": "Neustart"
+	},
+	"scoreHeader": {
+		"score": "Punkte",
+		"level": "Level",
+		"best": "Rekord"
+	},
+	"levelUp": {
+		"title": "Level {{level}}",
+		"subtitle": "Schwierigkeit erhöht"
+	},
+	"chain": {
+		"toast": "Kette ×{{count}}"
+	},
+	"gameOver": {
+		"title": "Spielende",
+		"score": "Punkte: {{score}}",
+		"level": "Level: {{level}}",
+		"best": "Rekord: {{best}}",
+		"bestLevel": "Bestes Level: {{bestLevel}}",
+		"newGame": "Neues Spiel",
+		"undoRescue": "↶ Letzten Zug rückgängig 🎬",
+		"undoLoading": "Werbung lädt…",
+		"home": "Startseite"
+	},
+	"undo": {
+		"title": "Zug rückgängig?",
+		"body": "Sieh dir eine kurze Werbung an, um den letzten Zug rückgängig zu machen.",
+		"confirm": "Ansehen",
+		"adsAlertTitle": "Werbung"
+	},
+	"restart": {
+		"title": "Neues Spiel starten?",
+		"body": "Die aktuelle Partie geht verloren.",
+		"bodyConfirm": "Die aktuelle Partie geht verloren. Fortfahren?",
+		"confirm": "Neues Spiel"
+	},
+	"ads": {
+		"unavailable": "Werbung ist gerade nicht verfügbar. Bitte später erneut versuchen."
+	},
+	"settings": {
+		"title": "Einstellungen",
+		"sound": "Töne",
+		"haptic": "Vibration",
+		"howToPlay": "Spielanleitung",
+		"about": "Info",
+		"otherApps": "Unsere anderen Apps",
+		"otherAppsSub": "ForestMusic-Apps im RuStore ansehen",
+		"otherAppsA11y": "Unsere anderen Apps. ForestMusic-Apps im RuStore ansehen"
+	},
+	"about": {
+		"title": "Info",
+		"version": "Version {{version}}",
+		"developer": "Entwickler",
+		"website": "Website",
+		"contact": "Entwickler kontaktieren",
+		"websiteA11y": "Website {{label}}",
+		"emailA11y": "E-Mail an {{email}}"
+	},
+	"tutorial": {
+		"close": "Schließen",
+		"skip": "Überspringen",
+		"nudge": "Tippe auf die markierte Zelle.",
+		"followHighlight": "Folge der Markierung auf dem Feld",
+		"select": {
+			"title": "Zelle wählen",
+			"body": "Tippe auf eine Zelle mit einer Zahl."
+		},
+		"move": {
+			"title": "Zelle bewegen",
+			"body": "Tippe auf ein freies Feld."
+		},
+		"path_tip": {
+			"title": "Zellen brauchen einen freien Weg",
+			"body": "Andere Zellen können den Weg blockieren."
+		},
+		"merge": {
+			"title": "Gleiche Zellen verbinden",
+			"body": "Verbinde 4 oder mehr Zellen mit derselben Zahl."
+		},
+		"merge_tip": {
+			"title": "Super!",
+			"body": "4 gleiche Zellen werden zu einer wertvolleren.\n1 × 4 → 4    ·    2 × 4 → 8"
+		},
+		"large_group": {
+			"title": "Größere Gruppen!",
+			"body": "Gruppen ab 5 bringen mehr Punkte und räumen das Feld besser."
+		},
+		"spawn": {
+			"title": "Nach Zügen erscheinen neue Zellen",
+			"body": "Mache einen Zug. Lass das Feld nicht vollaufen."
+		},
+		"levels": {
+			"title": "Punkte sammeln und aufsteigen",
+			"body": "Jedes Level füllt das Feld schneller.\nGroße Combos schaffen Platz."
+		},
+		"done": {
+			"title": "Fertig!",
+			"body": "Baue Combos, schaffe Platz und setze einen neuen Rekord."
+		}
+	},
+	"howToPlay": {
+		"title": "Spielanleitung",
+		"move": {
+			"title": "Zug",
+			"line1": "Wähle eine Zelle.",
+			"line2": "Bewege sie auf eine leere Zelle über einen freien Weg."
+		},
+		"merge": {
+			"title": "Verschmelzen",
+			"line1": "Verbinde 4 oder mehr gleiche Zellen.",
+			"line2": "Sie werden zu einer wertvolleren Zelle."
+		},
+		"largeGroups": {
+			"title": "Große Gruppen",
+			"line1": "Große Gruppen räumen besser auf und bringen mehr Punkte."
+		},
+		"levels": {
+			"title": "Level",
+			"line1": "Mit steigender Punktzahl steigt das Level.",
+			"line2": "Die Schwierigkeit nimmt allmählich zu."
+		}
+	},
+	"onboarding": {
+		"kicker": "{{name}} · Anleitung · {{step}}/{{total}}",
+		"move": {
+			"title": "Zug",
+			"line1": "Wähle eine Zelle.",
+			"line2": "Tippe auf ein freies Feld, um sie zu bewegen.",
+			"line3": "Zum Ziel muss ein freier Weg existieren."
+		},
+		"merge": {
+			"title": "Verschmelzen",
+			"line1": "Verbinde 4 oder mehr gleiche Zellen.",
+			"line2": "Sie werden zu einer wertvolleren Zelle.",
+			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
+		},
+		"spawn": {
+			"title": "Neue Zellen",
+			"line1": "Nach einem Zug erscheinen neue Zellen auf dem Feld.",
+			"line2": "Große Verschmelzungen helfen gegen Überfüllung.",
+			"diagram": "★ Merge → weniger neue"
+		},
+		"levels": {
+			"title": "Level",
+			"line1": "Sammle Punkte und steige auf.",
+			"line2": "Jedes Level füllt das Feld schneller.",
+			"diagram": "Lv. 1 → Lv. 2 → …"
+		}
+	},
+	"settingsSheet": {
+		"title": "Einstellungen",
+		"howToPlay": "Spielanleitung",
+		"close": "Schließen"
+	},
+	"a11y": {
+		"hexBoard": "Hexagonales Spielfeld"
+	},
+	"plurals": {
+		"cells_one": "{{count}} Zelle",
+		"cells_few": "{{count}} Zellen",
+		"cells_many": "{{count}} Zellen",
+		"cells_other": "{{count}} Zellen"
+	}
+}

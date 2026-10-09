@@ -7,6 +7,8 @@
 import { useCallback, useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
+
 import { BOARD_COLS, BOARD_ROWS, type Board, type Position } from '../../game'
 import { hexValueFontSize } from '../theme/cellVisuals'
 import { COLOR_BOARD_PLANE, COLOR_SCORE_GAIN } from '../theme/colors'
@@ -76,6 +78,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 		onTravelerComplete,
 	} = props
 	void _inputLocked
+	const { t } = useTranslation()
 
 	const rows = board.length || BOARD_ROWS
 	const cols = board[0]?.length || BOARD_COLS
@@ -124,7 +127,7 @@ export function HexBoardView (props: HexBoardViewProps) {
 	return (
 		<View
 			style={[styles.board, { width: boardWidth, height: boardHeight }]}
-			accessibilityLabel="Hex game board"
+			accessibilityLabel={t('a11y.hexBoard')}
 		>
 			{/* Soft board plane so empty hexes read as one surface. */}
 			<View style={[styles.plane, { width: boardWidth, height: boardHeight }]} />

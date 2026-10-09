@@ -49,6 +49,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import {
 	SETTINGS_DEFAULTS,
+	SETTINGS_LABEL_KEYS,
 	SETTINGS_LABELS,
 	STORAGE_KEY_HAPTIC_ENABLED,
 	STORAGE_KEY_SOUND_ENABLED,
@@ -77,9 +78,11 @@ import { COLOR_SURFACE, COLOR_BOARD_PLANE, COLOR_APP_BACKGROUND } from '../../ui
 import { getHexCellVisual } from '../../ui/theme/cellVisuals'
 
 describe('Phase 4.2 settings labels + defaults', () => {
-	it('uses Звуки / Вибрация and defaults ON', () => {
+	it('uses Звуки / Вибрация labels (or i18n keys) and defaults ON', () => {
 		expect(SETTINGS_LABELS.sound).toBe('Звуки')
 		expect(SETTINGS_LABELS.haptic).toBe('Вибрация')
+		expect(SETTINGS_LABEL_KEYS.sound).toBe('settings.sound')
+		expect(SETTINGS_LABEL_KEYS.haptic).toBe('settings.haptic')
 		expect(SETTINGS_DEFAULTS.soundEnabled).toBe(true)
 		expect(SETTINGS_DEFAULTS.hapticEnabled).toBe(true)
 		expect(parseBoolSetting(null, true)).toBe(true)

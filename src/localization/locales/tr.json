@@ -1,0 +1,201 @@
+{
+	"brand": {
+		"name": "Hexonica",
+		"tagline": "Sayı bulmacası",
+		"storeTitle": "Hexonica — sayı bulmacası"
+	},
+	"common": {
+		"cancel": "İptal",
+		"loading": "Yükleniyor…",
+		"back": "← Geri",
+		"close": "Kapat",
+		"next": "İleri",
+		"skip": "Atla",
+		"play": "Oyna",
+		"progress": "{{current}} / {{total}}"
+	},
+	"home": {
+		"bestScore": "Rekor: {{score}}",
+		"bestLevel": "En iyi seviye: {{level}}",
+		"continue": "Devam",
+		"continueSub": "Seviye {{level}} · puan {{score}}",
+		"continueA11y": "Devam, seviye {{level}} · puan {{score}}",
+		"newGame": "Yeni oyun",
+		"howToPlay": "Nasıl oynanır",
+		"settings": "Ayarlar"
+	},
+	"game": {
+		"loading": "Yükleniyor…",
+		"homeA11y": "Ana sayfa",
+		"settingsA11y": "Ayarlar",
+		"score": "Puan",
+		"level": "Seviye",
+		"best": "Rekor",
+		"hint": "Bir hücre seçin, sonra boş bir hedefe serbest yoldan gidin",
+		"pathBlocked": "Yol kapalı",
+		"undo": "↶ Geri al 🎬",
+		"restart": "Yeniden"
+	},
+	"scoreHeader": {
+		"score": "Puan",
+		"level": "Seviye",
+		"best": "Rekor"
+	},
+	"levelUp": {
+		"title": "Seviye {{level}}",
+		"subtitle": "Zorluk arttı"
+	},
+	"chain": {
+		"toast": "Zincir ×{{count}}"
+	},
+	"gameOver": {
+		"title": "Oyun bitti",
+		"score": "Puan: {{score}}",
+		"level": "Seviye: {{level}}",
+		"best": "Rekor: {{best}}",
+		"bestLevel": "En iyi seviye: {{bestLevel}}",
+		"newGame": "Yeni oyun",
+		"undoRescue": "↶ Son hamleyi geri al 🎬",
+		"undoLoading": "Reklam yükleniyor…",
+		"home": "Ana sayfa"
+	},
+	"undo": {
+		"title": "Hamle geri alınsın mı?",
+		"body": "Son hamleyi geri almak için kısa bir reklam izleyin.",
+		"confirm": "İzle",
+		"adsAlertTitle": "Reklam"
+	},
+	"restart": {
+		"title": "Yeni oyun başlatılsın mı?",
+		"body": "Mevcut oyun kaybolacak.",
+		"bodyConfirm": "Mevcut oyun kaybolacak. Devam edilsin mi?",
+		"confirm": "Yeni oyun"
+	},
+	"ads": {
+		"unavailable": "Reklamlar şu an kullanılamıyor. Lütfen daha sonra deneyin."
+	},
+	"settings": {
+		"title": "Ayarlar",
+		"sound": "Sesler",
+		"haptic": "Titreşim",
+		"howToPlay": "Nasıl oynanır",
+		"about": "Hakkında",
+		"otherApps": "Diğer uygulamalarımız",
+		"otherAppsSub": "RuStore’da ForestMusic uygulamalarına bakın",
+		"otherAppsA11y": "Diğer uygulamalarımız. RuStore’da ForestMusic uygulamalarına bakın"
+	},
+	"about": {
+		"title": "Hakkında",
+		"version": "Sürüm {{version}}",
+		"developer": "Geliştirici",
+		"website": "Web sitesi",
+		"contact": "Geliştiriciyle iletişim",
+		"websiteA11y": "Web sitesi {{label}}",
+		"emailA11y": "{{email}} adresine yaz"
+	},
+	"tutorial": {
+		"close": "Kapat",
+		"skip": "Atla",
+		"nudge": "Vurgulanan hücreye dokunun.",
+		"followHighlight": "Tahtadaki vurguyu izleyin",
+		"select": {
+			"title": "Bir hücre seçin",
+			"body": "Sayılı bir hücreye dokunun."
+		},
+		"move": {
+			"title": "Hücreyi taşıyın",
+			"body": "Boş bir alana dokunun."
+		},
+		"path_tip": {
+			"title": "Hücrelerin serbest yola ihtiyacı var",
+			"body": "Diğer hücreler yolu kapatabilir."
+		},
+		"merge": {
+			"title": "Aynı hücreleri birleştirin",
+			"body": "Aynı sayılı 4 veya daha fazla hücreyi birleştirin."
+		},
+		"merge_tip": {
+			"title": "Harika!",
+			"body": "4 aynı hücre daha değerli bir hücreye dönüşür.\n1 × 4 → 4    ·    2 × 4 → 8"
+		},
+		"large_group": {
+			"title": "Daha büyük gruplar!",
+			"body": "5 ve üzeri gruplar daha çok puan verir ve tahtayı daha iyi temizler."
+		},
+		"spawn": {
+			"title": "Hamlelerden sonra yeni hücreler gelir",
+			"body": "Bir hamle yapın. Tahtanın dolmasına izin vermeyin."
+		},
+		"levels": {
+			"title": "Puan toplayın ve seviye atlayın",
+			"body": "Her seviyede tahta daha hızlı dolar.\nBüyük kombinasyonlar yer açmaya yardımcı olur."
+		},
+		"done": {
+			"title": "Hazırsınız!",
+			"body": "Kombinasyon kurun, yer açın ve yeni bir rekor kırın."
+		}
+	},
+	"howToPlay": {
+		"title": "Nasıl oynanır",
+		"move": {
+			"title": "Hamle",
+			"line1": "Bir hücre seçin.",
+			"line2": "Serbest yoldan boş bir hücreye taşıyın."
+		},
+		"merge": {
+			"title": "Birleşme",
+			"line1": "4 veya daha fazla aynı hücreyi birleştirin.",
+			"line2": "Daha değerli bir hücreye dönüşürler."
+		},
+		"largeGroups": {
+			"title": "Büyük gruplar",
+			"line1": "Büyük gruplar daha çok yer açar ve daha çok puan verir."
+		},
+		"levels": {
+			"title": "Seviyeler",
+			"line1": "Puan arttıkça seviye yükselir.",
+			"line2": "Zorluk kademeli artar."
+		}
+	},
+	"onboarding": {
+		"kicker": "{{name}} · nasıl oynanır · {{step}}/{{total}}",
+		"move": {
+			"title": "Hamle",
+			"line1": "Bir hücre seçin.",
+			"line2": "Taşımak için boş bir alana dokunun.",
+			"line3": "Hedefe serbest bir yol olmalı."
+		},
+		"merge": {
+			"title": "Birleşme",
+			"line1": "4 veya daha fazla aynı hücreyi birleştirin.",
+			"line2": "Daha değerli bir hücreye dönüşürler.",
+			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
+		},
+		"spawn": {
+			"title": "Yeni hücreler",
+			"line1": "Hamleden sonra tahtada yeni hücreler görünür.",
+			"line2": "Büyük birleşmeler tahtanın dolmasını yavaşlatır.",
+			"diagram": "★ birleşme → daha az yeni"
+		},
+		"levels": {
+			"title": "Seviyeler",
+			"line1": "Puan toplayın ve seviye atlayın.",
+			"line2": "Her seviyede tahta daha hızlı dolar.",
+			"diagram": "Sv. 1 → Sv. 2 → …"
+		}
+	},
+	"settingsSheet": {
+		"title": "Ayarlar",
+		"howToPlay": "Nasıl oynanır",
+		"close": "Kapat"
+	},
+	"a11y": {
+		"hexBoard": "Altıgen oyun tahtası"
+	},
+	"plurals": {
+		"cells_one": "{{count}} hücre",
+		"cells_few": "{{count}} hücre",
+		"cells_many": "{{count}} hücre",
+		"cells_other": "{{count}} hücre"
+	}
+}
