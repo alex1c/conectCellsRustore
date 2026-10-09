@@ -16,7 +16,9 @@
     "test:benchmark:levels": "tsx scripts/level-progression-benchmark.ts",
     "test:watch": "jest --watch --testPathIgnorePatterns=benchmark",
     "doctor": "npx expo-doctor",
-    "start:dev-client": "expo start --dev-client --port 8082"
+    "start:dev-client": "expo start --dev-client --port 8082",
+    "prebuild:android": "expo prebuild --platform android --no-install",
+    "verify:android-locales": "node scripts/verify-android-launcher-locales.mjs"
   },
   "dependencies": {
     "@appmetrica/react-native-analytics": "^4.2.0",
