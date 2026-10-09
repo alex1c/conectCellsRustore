@@ -10,6 +10,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 
+import { useTranslation } from '../../localization/useTranslation'
 import { TIMING_SELECTION_MS, TIMING_SPAWN_MS } from '../feel/timings'
 import { getHexCellVisual, hexValueFontSize } from '../theme/cellVisuals'
 import { COLOR_SELECTION_RING } from '../theme/colors'
@@ -108,7 +109,21 @@ function HexCellViewInner (props: HexCellViewProps) {
 		onCellPress,
 		hitSlop = 6,
 	} = props
+	const { t } = useTranslation()
 	const visual = getHexCellVisual(value)
+	// 1-based positions are clearer for TalkBack than zero-based indices.
+	const displayRow = row + 1
+	const displayCol = col + 1
+	const accessibilityLabel =
+		value === null
+			? t('a11y.cellEmpty', { row: displayRow, col: displayCol })
+			: t('a11y.cellValue', {
+				value,
+				row: displayRow,
+				col: displayCol,
+			})
+	const accessibilityHint =
+		value === null ? t('a11y.hintEmpty') : t('a11y.hintOccupied')
 
 	const scale = useMemo(() => new Animated.Value(1), [])
 	const wobble = useMemo(() => new Animated.Value(0), [])
@@ -331,7 +346,9 @@ function HexCellViewInner (props: HexCellViewProps) {
 			onPressIn={usePressIn ? handlePress : undefined}
 			hitSlop={hitSlop}
 			accessibilityRole="button"
-			accessibilityState={{ disabled }}
+			accessibilityLabel={accessibilityLabel}
+			accessibilityHint={accessibilityHint}
+			accessibilityState={{ disabled, selected }}
 			style={hiddenByTravel ? styles.hidden : undefined}
 		>
 			<Animated.View

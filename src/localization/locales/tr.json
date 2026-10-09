@@ -116,7 +116,7 @@
 		},
 		"merge_tip": {
 			"title": "Harika!",
-			"body": "4 aynı hücre daha değerli bir hücreye dönüşür.\n1 × 4 → 4    ·    2 × 4 → 8"
+			"body": "128’in altında: aynı hücreler ×4 değerli tek hücre olur.\n1 × 4 → 4    ·    2 × 4 → 8\n128 ve üzeri: grup puan verir ve tamamen kaybolur."
 		},
 		"large_group": {
 			"title": "Daha büyük gruplar!",
@@ -145,7 +145,7 @@
 		"merge": {
 			"title": "Birleşme",
 			"line1": "4 veya daha fazla aynı hücreyi birleştirin.",
-			"line2": "Daha değerli bir hücreye dönüşürler."
+			"line2": "128’in altında ×4 değerli tek hücre olur. 128 ve üzeri grup puan verir ve kaybolur."
 		},
 		"largeGroups": {
 			"title": "Büyük gruplar",
@@ -168,7 +168,7 @@
 		"merge": {
 			"title": "Birleşme",
 			"line1": "4 veya daha fazla aynı hücreyi birleştirin.",
-			"line2": "Daha değerli bir hücreye dönüşürler.",
+			"line2": "128’in altında ×4 değerli tek hücre olur. 128 ve üzeri grup puan verir ve kaybolur.",
 			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
 		},
 		"spawn": {
@@ -190,7 +190,11 @@
 		"close": "Kapat"
 	},
 	"a11y": {
-		"hexBoard": "Altıgen oyun tahtası"
+		"hexBoard": "Altıgen oyun tahtası",
+		"cellEmpty": "Boş hücre, satır {{row}}, sütun {{col}}",
+		"cellValue": "Sayı {{value}}, satır {{row}}, sütun {{col}}",
+		"hintOccupied": "Taşımak için bu hücreyi seçin",
+		"hintEmpty": "Yol açıksa seçili hücreyi buraya taşıyın"
 	},
 	"plurals": {
 		"cells_one": "{{count}} hücre",

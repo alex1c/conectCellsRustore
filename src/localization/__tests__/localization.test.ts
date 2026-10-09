@@ -128,6 +128,26 @@ describe('translation dictionaries', () => {
 		expect(tr.home.newGame).toMatch(/Yeni oyun/)
 		expect(tr.settings.title).toBe('Ayarlar')
 	})
+
+	it('documents terminal merge (>=128) in tutorial merge_tip for all locales', () => {
+		for (const locale of SUPPORTED_LOCALES) {
+			const tip = DICTS[locale].tutorial.merge_tip.body
+			expect(tip).toMatch(/128/)
+		}
+		expect(en.tutorial.merge_tip.body.toLowerCase()).toMatch(/clear/)
+		expect(ru.tutorial.merge_tip.body).toMatch(/исчезает/)
+		expect(ru.onboarding.merge.title).toBe('Слияние')
+		expect(ru.onboarding.spawn.diagram).toMatch(/слияние/)
+		expect(es.tutorial.levels.body).toMatch(/combinaciones/)
+		expect(es.tutorial.levels.body).not.toMatch(/Las combos/)
+	})
+
+	it('exposes TalkBack cell label keys', () => {
+		expect(en.a11y.cellEmpty).toContain('{{row}}')
+		expect(en.a11y.cellValue).toContain('{{value}}')
+		expect(en.a11y.hintEmpty.length).toBeGreaterThan(0)
+		expect(en.a11y.hintOccupied.length).toBeGreaterThan(0)
+	})
 })
 
 describe('i18n runtime', () => {

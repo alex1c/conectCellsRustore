@@ -116,7 +116,7 @@
 		},
 		"merge_tip": {
 			"title": "Super!",
-			"body": "4 gleiche Zellen werden zu einer wertvolleren.\n1 × 4 → 4    ·    2 × 4 → 8"
+			"body": "Unter 128: gleiche Zellen werden zu einer wertvolleren (×4).\n1 × 4 → 4    ·    2 × 4 → 8\nAb 128: die Gruppe bringt Punkte und verschwindet vollständig."
 		},
 		"large_group": {
 			"title": "Größere Gruppen!",
@@ -145,7 +145,7 @@
 		"merge": {
 			"title": "Verschmelzen",
 			"line1": "Verbinde 4 oder mehr gleiche Zellen.",
-			"line2": "Sie werden zu einer wertvolleren Zelle."
+			"line2": "Unter 128 werden sie zu einer wertvolleren Zelle (×4). Ab 128 bringt die Gruppe Punkte und verschwindet."
 		},
 		"largeGroups": {
 			"title": "Große Gruppen",
@@ -168,7 +168,7 @@
 		"merge": {
 			"title": "Verschmelzen",
 			"line1": "Verbinde 4 oder mehr gleiche Zellen.",
-			"line2": "Sie werden zu einer wertvolleren Zelle.",
+			"line2": "Unter 128 werden sie zu einer wertvolleren Zelle (×4). Ab 128 bringt die Gruppe Punkte und verschwindet.",
 			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
 		},
 		"spawn": {
@@ -190,7 +190,11 @@
 		"close": "Schließen"
 	},
 	"a11y": {
-		"hexBoard": "Hexagonales Spielfeld"
+		"hexBoard": "Hexagonales Spielfeld",
+		"cellEmpty": "Leere Zelle, Reihe {{row}}, Spalte {{col}}",
+		"cellValue": "Zahl {{value}}, Reihe {{row}}, Spalte {{col}}",
+		"hintOccupied": "Zelle auswählen, um sie zu bewegen",
+		"hintEmpty": "Ausgewählte Zelle hierher bewegen, wenn der Weg frei ist"
 	},
 	"plurals": {
 		"cells_one": "{{count}} Zelle",

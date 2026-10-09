@@ -116,7 +116,7 @@
 		},
 		"merge_tip": {
 			"title": "Nice!",
-			"body": "4 matching cells become one higher-value cell.\n1 × 4 → 4    ·    2 × 4 → 8"
+			"body": "Below 128: matching cells become one higher-value cell (×4).\n1 × 4 → 4    ·    2 × 4 → 8\nFrom 128 up: the group scores and clears — nothing stays."
 		},
 		"large_group": {
 			"title": "Go bigger!",
@@ -145,7 +145,7 @@
 		"merge": {
 			"title": "Merge",
 			"line1": "Connect 4 or more matching cells.",
-			"line2": "They become one higher-value cell."
+			"line2": "Below 128 they become one higher-value cell (×4). From 128 up the group scores and clears."
 		},
 		"largeGroups": {
 			"title": "Large groups",
@@ -168,7 +168,7 @@
 		"merge": {
 			"title": "Merge",
 			"line1": "Connect 4 or more matching cells.",
-			"line2": "They become one higher-value cell.",
+			"line2": "Below 128 they become one higher-value cell (×4). From 128 up the group scores and clears.",
 			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
 		},
 		"spawn": {
@@ -190,7 +190,11 @@
 		"close": "Close"
 	},
 	"a11y": {
-		"hexBoard": "Hex game board"
+		"hexBoard": "Hex game board",
+		"cellEmpty": "Empty cell, row {{row}}, column {{col}}",
+		"cellValue": "Number {{value}}, row {{row}}, column {{col}}",
+		"hintOccupied": "Select this cell to move it",
+		"hintEmpty": "Move the selected cell here if the path is free"
 	},
 	"plurals": {
 		"cells_one": "{{count}} cell",

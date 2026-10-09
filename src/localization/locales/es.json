@@ -116,7 +116,7 @@
 		},
 		"merge_tip": {
 			"title": "¡Bien!",
-			"body": "4 celdas iguales se convierten en una de mayor valor.\n1 × 4 → 4    ·    2 × 4 → 8"
+			"body": "Por debajo de 128: las celdas iguales se convierten en una de mayor valor (×4).\n1 × 4 → 4    ·    2 × 4 → 8\nDesde 128: el grupo suma puntos y desaparece por completo."
 		},
 		"large_group": {
 			"title": "¡Haz grupos mayores!",
@@ -128,11 +128,11 @@
 		},
 		"levels": {
 			"title": "Suma puntos y sube de nivel",
-			"body": "Cada nivel llena el tablero más rápido.\nLas combos grandes ayudan a liberar espacio."
+			"body": "Cada nivel llena el tablero más rápido.\nLas combinaciones grandes ayudan a liberar espacio."
 		},
 		"done": {
 			"title": "¡Listo!",
-			"body": "Crea combos, libera espacio y bate tu récord."
+			"body": "Crea combinaciones, libera espacio y bate tu récord."
 		}
 	},
 	"howToPlay": {
@@ -145,7 +145,7 @@
 		"merge": {
 			"title": "Fusión",
 			"line1": "Conecta 4 o más celdas iguales.",
-			"line2": "Se convierten en una de mayor valor."
+			"line2": "Por debajo de 128 se convierten en una de mayor valor (×4). Desde 128 el grupo suma puntos y desaparece."
 		},
 		"largeGroups": {
 			"title": "Grupos grandes",
@@ -168,7 +168,7 @@
 		"merge": {
 			"title": "Fusión",
 			"line1": "Conecta 4 o más celdas iguales.",
-			"line2": "Se convierten en una de mayor valor.",
+			"line2": "Por debajo de 128 se convierten en una de mayor valor (×4). Desde 128 el grupo suma puntos y desaparece.",
 			"line3": "1+1+1+1 → 4    ·    2+2+2+2 → 8"
 		},
 		"spawn": {
@@ -190,7 +190,11 @@
 		"close": "Cerrar"
 	},
 	"a11y": {
-		"hexBoard": "Tablero hexagonal"
+		"hexBoard": "Tablero hexagonal",
+		"cellEmpty": "Celda vacía, fila {{row}}, columna {{col}}",
+		"cellValue": "Número {{value}}, fila {{row}}, columna {{col}}",
+		"hintOccupied": "Selecciona esta celda para moverla",
+		"hintEmpty": "Mueve aquí la celda seleccionada si el camino está libre"
 	},
 	"plurals": {
 		"cells_one": "{{count}} celda",
