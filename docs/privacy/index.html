@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Privacy Policy — ForestMusic games (Yandex Ads + AppMetrica)</title>
+	<style>
+		:root { color-scheme: light; --text:#1a202c; --muted:#4a5568; --accent:#2b6cb0; --bg:#f7fafc; --card:#fff; }
+		body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.6; color:var(--text); background:var(--bg); }
+		main { max-width:720px; margin:0 auto; padding:24px 20px 48px; }
+		h1,h2 { line-height:1.25; } h1 { font-size:1.75rem; margin-bottom:0.25rem; }
+		.meta { color:var(--muted); margin-bottom:1rem; }
+		.langs { display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:1.5rem; font-size:0.95rem; }
+		.langs a { color:var(--accent); } .langs strong { color:var(--text); }
+		section { background:var(--card); border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+		a { color:var(--accent); } ul { padding-left:1.25rem; }
+		.note { color:var(--muted); font-size:0.95rem; }
+		code { font-size:0.9em; }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Privacy Policy</h1>
+		<p class="meta">
+			ForestMusic games that use Yandex Mobile Ads and AppMetrica<br />
+			Includes <strong>Hexonica</strong> (<code>ru.forestmusic.connectcells</code>)<br />
+			Effective date: 14 October 2026<br />
+			Applies to RuStore and Google Play releases of the listed apps, where published.
+		</p>
+		<p class="langs" aria-label="Language">
+			<strong>EN</strong>
+			<a href="ru.html">RU</a>
+		</p>
+
+		<section>
+			<h2>1. Developer and contact</h2>
+			<p>
+				Publisher: ForestMusic (individual developer Aleksey Ivanov).<br />
+				Website: <a href="https://forest-music.ru">https://forest-music.ru</a><br />
+				Privacy / support / deletion requests:
+				<a href="mailto:rustore-alex1c@yandex.ru">rustore-alex1c@yandex.ru</a>
+			</p>
+			<p class="note">
+				This policy describes how the apps and optional third-party SDKs handle
+				information. It is not legal advice.
+			</p>
+		</section>
+
+		<section>
+			<h2>2. Scope — apps covered</h2>
+			<p>This policy covers ForestMusic Android games that ship the same optional SDK stack:</p>
+			<ul>
+				<li><strong>Hexonica</strong> — package <code>ru.forestmusic.connectcells</code></li>
+			</ul>
+			<p class="note">
+				Other ForestMusic titles may publish their own policies if features differ
+				(for example health diaries). Medical or account-based products are out of scope here.
+			</p>
+		</section>
+
+		<section>
+			<h2>3. Local game data</h2>
+			<p>On your device the game may store, for example:</p>
+			<ul>
+				<li>save progress, scores and level;</li>
+				<li>sound / haptic preferences;</li>
+				<li>tutorial / onboarding completion;</li>
+				<li>privacy purpose choices (analytics / advertising).</li>
+			</ul>
+			<p>
+				There is no user account and no developer-operated cloud sync for game saves.
+				Uninstalling the app removes local app data on the device.
+			</p>
+		</section>
+
+		<section>
+			<h2>4. Optional analytics — AppMetrica</h2>
+			<p>
+				If you allow analytics, the app uses
+				<a href="https://appmetrica.yandex.com/" rel="noopener noreferrer" target="_blank">Yandex AppMetrica</a>
+				for technical usage events (for example app open, game start, merges, level up,
+				tutorial steps, ad lifecycle diagnostics). Location tracking is disabled in the
+				Hexonica configuration. Board contents, free-form text, email and user IDs are
+				not sent as analytics payloads.
+			</p>
+			<p>
+				Vendor documentation describes encryption in transit and categories such as
+				crash / diagnostics / device or advertising identifiers when enabled.
+				See current AppMetrica Data Safety guidance.
+			</p>
+		</section>
+
+		<section>
+			<h2>5. Optional advertising — Yandex Mobile Ads</h2>
+			<p>
+				If you allow advertising, the app uses
+				<a href="https://yandex.ru/dev/mobile-ads/" rel="noopener noreferrer" target="_blank">Yandex Mobile Ads</a>
+				for banners, occasional interstitial ads and rewarded Undo (where enabled).
+				RuStore and Google Play use separate ad unit IDs. Google AdMob is not included.
+			</p>
+			<p>
+				According to Yandex Mobile Ads documentation for Google Play Data Safety, the SDK
+				may process device or other identifiers (including Advertising ID when permission
+				allows) for advertising and marketing, and encrypts listed data in transit.
+				We do not invent vendor retention periods — see Yandex’s current privacy materials.
+			</p>
+			<p>
+				The shipped Yandex Mobile Ads React Native integration does not expose a guaranteed
+				“non-personalized only” mode we can enforce. Allowing ads may include personalized
+				ads; declining ads blocks Yandex ad load/show from the app.
+			</p>
+		</section>
+
+		<section>
+			<h2>6. Consent and choices</h2>
+			<p>
+				On the <strong>Google Play</strong> build, the app asks for independent choices for
+				analytics and advertising before those optional SDKs initialize. Choices are stored
+				on the device and can be revisited in Settings. Declining optional services does not
+				block offline gameplay.
+			</p>
+			<p>
+				On the <strong>RuStore</strong> build, the historical release continues without that
+				in-app purpose dialog; optional SDKs may initialize as in prior RuStore releases.
+			</p>
+			<p>
+				Yandex Mobile Ads receives a user-consent signal via the SDK API when a decision is known.
+			</p>
+		</section>
+
+		<section>
+			<h2>7. Data retention and deletion</h2>
+			<ul>
+				<li>Local saves and preferences remain on the device until you clear app data or uninstall.</li>
+				<li>
+					For data processed by Yandex (AppMetrica / Mobile Ads) after you allowed those
+					purposes, email
+					<a href="mailto:rustore-alex1c@yandex.ru">rustore-alex1c@yandex.ru</a>
+					to request deletion assistance. The developer will respond and point to Yandex
+					channels where needed. The developer cannot independently wipe all Yandex backends.
+				</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>8. Children</h2>
+			<p>
+				Hexonica is a general-audience puzzle game and is not directed at children as a
+				primary audience. Do not use the app if you are not permitted to consent to the
+				optional services under applicable law.
+			</p>
+		</section>
+
+		<section>
+			<h2>9. Changes</h2>
+			<p>
+				We may update this policy when features or SDK practices change. The effective date
+				above will be revised. Continued use after publication constitutes notice of the update
+				for the purposes described here.
+			</p>
+		</section>
+	</main>
+</body>
+</html>

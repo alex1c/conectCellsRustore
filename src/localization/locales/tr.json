@@ -82,7 +82,24 @@
 		"about": "Hakkında",
 		"otherApps": "Diğer uygulamalarımız",
 		"otherAppsSub": "RuStore’da ForestMusic uygulamalarına bakın",
-		"otherAppsA11y": "Diğer uygulamalarımız. RuStore’da ForestMusic uygulamalarına bakın"
+		"otherAppsA11y": "Diğer uygulamalarımız. RuStore’da ForestMusic uygulamalarına bakın",
+		"privacyPolicy": "Gizlilik politikası",
+		"privacyPolicyA11y": "Gizlilik politikasını tarayıcıda aç",
+		"privacyChoices": "Gizlilik tercihleri",
+		"privacyChoicesSub": "Analitik ve reklam"
+	},
+	"privacy": {
+		"title": "Gizlilik tercihleri",
+		"body": "Hexonica isteğe bağlı analitik (AppMetrica) ve reklam (Yandex Mobile Ads) kullanabilir. Oyun ilerlemesi bu cihazda kalır. Tercihleri daha sonra Ayarlar’dan değiştirebilirsiniz.",
+		"policyLink": "Gizlilik politikasını oku",
+		"analytics": "Analitik",
+		"analyticsHint": "Oyunu iyileştirmek için anonim kullanım olayları",
+		"ads": "Reklam",
+		"adsHint": "Reklam gösterimi; reklam kimliği kullanabilir",
+		"save": "Tercihleri kaydet",
+		"retry": "Kaydetmeyi yeniden dene",
+		"declineOptional": "İsteğe bağlı hizmetler olmadan devam et",
+		"persistError": "Tercihler kaydedilemedi. Depolamayı kontrol edip yeniden deneyin."
 	},
 	"about": {
 		"title": "Hakkında",

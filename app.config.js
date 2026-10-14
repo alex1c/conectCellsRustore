@@ -41,9 +41,16 @@ const appStore = resolveAppStore(
 // Keep Metro / EXPO_PUBLIC_* inlining aligned with native extra.appStore.
 process.env.EXPO_PUBLIC_APP_STORE = appStore
 
+const plugins = [
+	...(appJson.expo.plugins || []),
+	// Disable Yandex Ads / AppMetrica auto-init before JS consent gates.
+	'./plugins/withYandexAdsManualInit',
+]
+
 /** @type {import('expo/config').ExpoConfig} */
 const expo = {
 	...appJson.expo,
+	plugins,
 	extra: {
 		...(appJson.expo.extra || {}),
 		appStore,

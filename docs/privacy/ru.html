@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Политика конфиденциальности — игры ForestMusic (Яндекс Реклама + AppMetrica)</title>
+	<style>
+		:root { color-scheme: light; --text:#1a202c; --muted:#4a5568; --accent:#2b6cb0; --bg:#f7fafc; --card:#fff; }
+		body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.6; color:var(--text); background:var(--bg); }
+		main { max-width:720px; margin:0 auto; padding:24px 20px 48px; }
+		h1,h2 { line-height:1.25; } h1 { font-size:1.75rem; margin-bottom:0.25rem; }
+		.meta { color:var(--muted); margin-bottom:1rem; }
+		.langs { display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:1.5rem; font-size:0.95rem; }
+		.langs a { color:var(--accent); } .langs strong { color:var(--text); }
+		section { background:var(--card); border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+		a { color:var(--accent); } ul { padding-left:1.25rem; }
+		.note { color:var(--muted); font-size:0.95rem; }
+		code { font-size:0.9em; }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Политика конфиденциальности</h1>
+		<p class="meta">
+			Игры ForestMusic с Яндекс Mobile Ads и AppMetrica<br />
+			Включая <strong>Гексонику</strong> (<code>ru.forestmusic.connectcells</code>)<br />
+			Дата вступления в силу: 14 октября 2026<br />
+			Применяется к релизам в RuStore и Google Play (где опубликовано).
+		</p>
+		<p class="langs" aria-label="Язык">
+			<a href="index.html">EN</a>
+			<strong>RU</strong>
+		</p>
+
+		<section>
+			<h2>1. Разработчик и контакты</h2>
+			<p>
+				Издатель: ForestMusic (индивидуальный разработчик Алексей Иванов).<br />
+				Сайт: <a href="https://forest-music.ru">https://forest-music.ru</a><br />
+				Вопросы конфиденциальности / поддержка / запросы на удаление:
+				<a href="mailto:rustore-alex1c@yandex.ru">rustore-alex1c@yandex.ru</a>
+			</p>
+			<p class="note">
+				Документ описывает обработку данных приложением и необязательными SDK.
+				Это не юридическая консультация.
+			</p>
+		</section>
+
+		<section>
+			<h2>2. Область действия</h2>
+			<p>Политика покрывает Android-игры ForestMusic с тем же необязательным стеком SDK:</p>
+			<ul>
+				<li><strong>Гексоника (Hexonica)</strong> — пакет <code>ru.forestmusic.connectcells</code></li>
+			</ul>
+			<p class="note">
+				Другие продукты ForestMusic (например, медицинские дневники) могут иметь
+				отдельные политики, если функциональность отличается.
+			</p>
+		</section>
+
+		<section>
+			<h2>3. Локальные игровые данные</h2>
+			<p>На устройстве могут храниться, в частности:</p>
+			<ul>
+				<li>сохранённый прогресс, счёт и уровень;</li>
+				<li>настройки звука и вибрации;</li>
+				<li>факт прохождения обучения;</li>
+				<li>выбор целей конфиденциальности (аналитика / реклама).</li>
+			</ul>
+			<p>
+				Учётная запись не требуется. Облачной синхронизации сохранений у разработчика нет.
+				Удаление приложения удаляет локальные данные приложения на устройстве.
+			</p>
+		</section>
+
+		<section>
+			<h2>4. Необязательная аналитика — AppMetrica</h2>
+			<p>
+				Если вы разрешили аналитику, приложение использует
+				<a href="https://appmetrica.yandex.com/" rel="noopener noreferrer" target="_blank">Яндекс AppMetrica</a>
+				для технических событий использования (открытие, старт партии, слияния, уровень,
+				обучение, диагностика рекламы). Передача геолокации в конфигурации Гексоники
+				отключена. Содержимое поля, свободный текст, e-mail и идентификаторы пользователя
+				в полезную нагрузку событий не отправляются.
+			</p>
+		</section>
+
+		<section>
+			<h2>5. Необязательная реклама — Яндекс Mobile Ads</h2>
+			<p>
+				Если вы разрешили рекламу, приложение использует
+				<a href="https://yandex.ru/dev/mobile-ads/" rel="noopener noreferrer" target="_blank">Яндекс Mobile Ads</a>
+				для баннеров, межстраничной рекламы и вознаграждённого Undo (где включено).
+				Для RuStore и Google Play заданы разные рекламные блоки. Google AdMob не используется.
+			</p>
+			<p>
+				Согласно документации Яндекса для Data Safety, SDK может обрабатывать
+				идентификаторы устройства / рекламы в целях рекламы и маркетинга и шифровать
+				передаваемые данные. Сроки хранения у провайдера мы не выдумываем — см. актуальные
+				материалы Яндекса.
+			</p>
+			<p>
+				В текущей интеграции React Native нет гарантированного режима «только
+				неперсонализированная реклама». Разрешение рекламы может включать персонализацию;
+				отказ блокирует загрузку/показ рекламы Яндекса из приложения.
+			</p>
+		</section>
+
+		<section>
+			<h2>6. Согласие и выбор</h2>
+			<p>
+				В сборке <strong>Google Play</strong> приложение запрашивает независимый выбор для
+				аналитики и рекламы до инициализации этих SDK. Выбор хранится на устройстве и
+				доступен в Настройках. Отказ от необязательных сервисов не блокирует офлайн-игру.
+			</p>
+			<p>
+				В сборке <strong>RuStore</strong> сохраняется прежнее поведение без этого диалога;
+				необязательные SDK могут инициализироваться как в прошлых релизах RuStore.
+			</p>
+		</section>
+
+		<section>
+			<h2>7. Хранение и удаление</h2>
+			<ul>
+				<li>Локальные сохранения и настройки остаются на устройстве до очистки данных или удаления приложения.</li>
+				<li>
+					По данным, обработанным Яндексом после вашего разрешения, напишите на
+					<a href="mailto:rustore-alex1c@yandex.ru">rustore-alex1c@yandex.ru</a>.
+					Разработчик ответит и при необходимости направит к каналам Яндекса.
+					Полностью очистить бэкенды Яндекса самостоятельно разработчик не может.
+				</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>8. Дети</h2>
+			<p>
+				Гексоника — головоломка для широкой аудитории и не ориентирована на детей
+				как на основную аудиторию. Не используйте необязательные сервисы, если вы не
+				вправе давать согласие по применимому праву.
+			</p>
+		</section>
+
+		<section>
+			<h2>9. Изменения</h2>
+			<p>
+				Политика может обновляться при изменении функций или практики SDK.
+				Дата вступления в силу будет изменена.
+			</p>
+		</section>
+	</main>
+</body>
+</html>

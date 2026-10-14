@@ -82,7 +82,24 @@
 		"about": "About",
 		"otherApps": "Our other apps",
 		"otherAppsSub": "Browse ForestMusic apps on RuStore",
-		"otherAppsA11y": "Our other apps. Browse ForestMusic apps on RuStore"
+		"otherAppsA11y": "Our other apps. Browse ForestMusic apps on RuStore",
+		"privacyPolicy": "Privacy policy",
+		"privacyPolicyA11y": "Open the privacy policy in the browser",
+		"privacyChoices": "Privacy choices",
+		"privacyChoicesSub": "Analytics and advertising preferences"
+	},
+	"privacy": {
+		"title": "Privacy choices",
+		"body": "Hexonica can use optional analytics (AppMetrica) and advertising (Yandex Mobile Ads). Game progress stays on this device. You can change these choices later in Settings.",
+		"policyLink": "Read the privacy policy",
+		"analytics": "Analytics",
+		"analyticsHint": "Anonymous usage events to improve the game",
+		"ads": "Advertising",
+		"adsHint": "Show ads; may use an advertising ID",
+		"save": "Save choices",
+		"retry": "Retry save",
+		"declineOptional": "Continue without optional services",
+		"persistError": "Could not save your choices. Check storage and try again."
 	},
 	"about": {
 		"title": "About",

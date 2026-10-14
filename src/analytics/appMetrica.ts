@@ -1,6 +1,10 @@
 /**
  * AppMetrica analytics adapter.
  * Production key is wired here; Jest / Node tests use a no-op sink.
+ *
+ * Google Play: activate only after analytics purpose is granted
+ * (see privacy/optionalSdkBootstrap). RuStore activates without a gate.
+ * locationTracking stays false — Hexonica does not need geodata.
  */
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
@@ -80,6 +84,12 @@ export function disableAnalyticsForTests (): void {
 	sinkDisabled = true
 }
 
+/** Test helper — clears activation flags. */
+export function __resetAnalyticsForTests (): void {
+	activated = false
+	sinkDisabled = false
+}
+
 function scrub (params?: AnalyticsParams): Record<string, string | number | boolean> {
 	const out: Record<string, string | number | boolean> = {}
 	if (!params) {
@@ -100,6 +110,7 @@ function scrub (params?: AnalyticsParams): Record<string, string | number | bool
 
 /**
  * Activate AppMetrica once. Safe to call multiple times.
+ * Callers must gate on analytics consent for Google Play.
  * Failures never throw — offline / missing native module is fine.
  */
 export async function initAnalytics (): Promise<void> {
@@ -116,6 +127,11 @@ export async function initAnalytics (): Promise<void> {
 			sessionTimeout: 120,
 			logs: typeof __DEV__ !== 'undefined' && __DEV__,
 			appVersion: APP_VERSION,
+			// Hexonica does not use geodata — keep location off.
+			locationTracking: false,
+			// Adv ID tracking only after analytics purpose granted (this path).
+			trackAdvIdentifiersEnabled: true,
+			statisticsSending: true,
 		})
 		activated = true
 		// Same AppMetrica app for both stores — tag sessions with build flavor.
@@ -165,4 +181,9 @@ export function maskedAppMetricaKey (): string {
 		return '****'
 	}
 	return `${key.slice(0, 8)}…${key.slice(-5)}`
+}
+
+/** True after a successful activate in this process. */
+export function isAnalyticsActivated (): boolean {
+	return activated
 }

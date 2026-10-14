@@ -9,7 +9,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
 import { useTranslation } from '../../localization/useTranslation'
+import { PRIVACY_POLICY_URL } from '../../privacy/privacyUrls'
 import { getStoreConfig, openOtherApps } from '../../store/storeConfig'
+import { openExternalUrl } from '../links/openExternalUrl'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -30,6 +32,8 @@ export interface SettingsScreenProps {
 	onToggleHaptic: (value: boolean) => void
 	onHowToPlay: () => void
 	onAbout: () => void
+	/** Google Play: reopen analytics / ads purpose editor. */
+	onPrivacyChoices?: () => void
 	onBack: () => void
 }
 
@@ -41,6 +45,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 		onToggleHaptic,
 		onHowToPlay,
 		onAbout,
+		onPrivacyChoices,
 		onBack,
 	} = props
 	const insets = useSafeAreaInsets()
@@ -49,6 +54,10 @@ export function SettingsScreen (props: SettingsScreenProps) {
 
 	const handleOpenOtherApps = useCallback(() => {
 		void openOtherApps()
+	}, [])
+
+	const handleOpenPrivacyPolicy = useCallback(() => {
+		void openExternalUrl(PRIVACY_POLICY_URL)
 	}, [])
 
 	return (
@@ -95,19 +104,43 @@ export function SettingsScreen (props: SettingsScreenProps) {
 				<Pressable style={styles.linkRow} onPress={onHowToPlay}>
 					<Text style={styles.linkText}>{t('settings.howToPlay')}</Text>
 				</Pressable>
+				<Pressable style={styles.linkRow} onPress={onAbout}>
+					<Text style={styles.linkText}>{t('settings.about')}</Text>
+				</Pressable>
 				{/*
-				 * About is last when Google Play has no catalog URL yet.
-				 * RuStore keeps Other apps below About.
+				 * Privacy policy is last unless Privacy choices or Other apps follow.
 				 */}
 				<Pressable
 					style={[
 						styles.linkRow,
-						!storeConfig.otherAppsAvailable && styles.linkRowLast,
+						!onPrivacyChoices &&
+							!storeConfig.otherAppsAvailable &&
+							styles.linkRowLast,
 					]}
-					onPress={onAbout}
+					onPress={handleOpenPrivacyPolicy}
+					accessibilityRole="link"
+					accessibilityLabel={t('settings.privacyPolicyA11y')}
 				>
-					<Text style={styles.linkText}>{t('settings.about')}</Text>
+					<Text style={styles.linkText}>
+						{t('settings.privacyPolicy')}
+					</Text>
 				</Pressable>
+				{onPrivacyChoices ? (
+					<Pressable
+						style={[
+							styles.linkRow,
+							!storeConfig.otherAppsAvailable && styles.linkRowLast,
+						]}
+						onPress={onPrivacyChoices}
+					>
+						<Text style={styles.linkText}>
+							{t('settings.privacyChoices')}
+						</Text>
+						<Text style={styles.linkSubtext}>
+							{t('settings.privacyChoicesSub')}
+						</Text>
+					</Pressable>
+				) : null}
 				{/*
 				 * ForestMusic cross-promotion — Settings only.
 				 * Hidden when the active store has no published catalog URL

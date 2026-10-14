@@ -1,15 +1,20 @@
 /**
  * Production app shell — routes Home / Game / Settings / Tutorial / About.
  * First launch opens interactive tutorial before Home.
+ *
+ * Optional SDKs (AppMetrica / Yandex Ads) start via privacy bootstrap —
+ * never from an ungated cold-start effect.
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native'
 
-import { initAds } from '../ads/adsService'
-import { initAnalytics, trackEvent } from '../analytics/appMetrica'
+import { trackEvent } from '../analytics/appMetrica'
 import { useTranslation } from '../localization/useTranslation'
-import { getAppStore } from '../store/appStore'
+import { ConsentModal } from '../privacy/ConsentModal'
+import { bootstrapOptionalSdks } from '../privacy/optionalSdkBootstrap'
+import { applyYandexUserConsent } from '../privacy/sdkConsentBridge'
+import { usePrivacyConsent } from '../privacy/usePrivacyConsent'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { useGameController } from './hooks/useGameController'
 import { GameScreen } from './GameScreen'
@@ -24,6 +29,7 @@ import type { TutorialSource } from './tutorial/tutorialSteps'
 export function AppRoot () {
 	const game = useGameController()
 	const { t } = useTranslation()
+	const consent = usePrivacyConsent()
 	/**
 	 * null = use cold-start default derived from onboardingCompleted.
 	 * Avoids an effect that setStates route on boot (eslint cascading-render).
@@ -39,21 +45,33 @@ export function AppRoot () {
 		? 'boot'
 		: route ?? (game.onboardingCompleted ? 'home' : 'tutorial')
 
+	// Re-apply Yandex consent signal when returning to foreground (docs: every launch).
 	useEffect(() => {
-		let cancelled = false
-		;(async () => {
-			await initAnalytics()
-			if (cancelled) {
+		const sub = AppState.addEventListener('change', (next) => {
+			if (next !== 'active' || !consent.ready) {
 				return
 			}
-			// Tag open with build-time store flavor (no PII).
-			trackEvent('app_open', { store: getAppStore() })
-			void initAds()
-		})()
+			if (!consent.requirement.requiresExplicitConsent) {
+				applyYandexUserConsent('granted')
+				return
+			}
+			if (consent.ads !== null) {
+				applyYandexUserConsent(consent.ads)
+				void bootstrapOptionalSdks({
+					analytics: consent.analytics,
+					ads: consent.ads,
+				})
+			}
+		})
 		return () => {
-			cancelled = true
+			sub.remove()
 		}
-	}, [])
+	}, [
+		consent.ready,
+		consent.requirement.requiresExplicitConsent,
+		consent.analytics,
+		consent.ads,
+	])
 
 	const handleContinue = useCallback(() => {
 		trackEvent('home_continue')
@@ -143,75 +161,90 @@ export function AppRoot () {
 		)
 	}
 
-	if (resolvedRoute === 'tutorial') {
-		return (
-			<TutorialScreen
-				source={tutorialSource}
-				onFinished={finishTutorial}
-				onSkipped={skipTutorial}
-			/>
-		)
-	}
+	const shell = (() => {
+		if (resolvedRoute === 'tutorial') {
+			return (
+				<TutorialScreen
+					source={tutorialSource}
+					onFinished={finishTutorial}
+					onSkipped={skipTutorial}
+				/>
+			)
+		}
 
-	if (resolvedRoute === 'settings') {
-		return (
-			<SettingsScreen
-				soundEnabled={game.soundEnabled}
-				hapticEnabled={game.hapticEnabled}
-				onToggleSound={game.setSoundPref}
-				onToggleHaptic={game.setHapticPref}
-				onHowToPlay={openHowToPlay}
-				onAbout={openAbout}
-				onBack={goBackFromSecondary}
-			/>
-		)
-	}
+		if (resolvedRoute === 'settings') {
+			return (
+				<SettingsScreen
+					soundEnabled={game.soundEnabled}
+					hapticEnabled={game.hapticEnabled}
+					onToggleSound={game.setSoundPref}
+					onToggleHaptic={game.setHapticPref}
+					onHowToPlay={openHowToPlay}
+					onAbout={openAbout}
+					onPrivacyChoices={
+						consent.requirement.requiresExplicitConsent
+							? consent.openEditor
+							: undefined
+					}
+					onBack={goBackFromSecondary}
+				/>
+			)
+		}
 
-	if (resolvedRoute === 'about') {
-		return <AboutScreen onBack={goBackFromSecondary} />
-	}
+		if (resolvedRoute === 'about') {
+			return <AboutScreen onBack={goBackFromSecondary} />
+		}
 
-	if (resolvedRoute === 'game') {
+		if (resolvedRoute === 'game') {
+			return (
+				<GameScreen
+					game={game}
+					onBackHome={goHome}
+					onOpenSettings={openSettings}
+					onOpenHowToPlay={openHowToPlay}
+					onResetOnboarding={
+						typeof __DEV__ !== 'undefined' && __DEV__
+							? () => {
+								game.resetOnboardingForDev()
+								setTutorialSource('first_launch')
+								setRoute('tutorial')
+							}
+							: undefined
+					}
+				/>
+			)
+		}
+
 		return (
-			<GameScreen
-				game={game}
-				onBackHome={goHome}
-				onOpenSettings={openSettings}
-				onOpenHowToPlay={openHowToPlay}
-				onResetOnboarding={
-					typeof __DEV__ !== 'undefined' && __DEV__
-						? () => {
-							game.resetOnboardingForDev()
-							setTutorialSource('first_launch')
-							setRoute('tutorial')
-						}
-						: undefined
-				}
-			/>
+			<>
+				<HomeScreen
+					hasActiveGame={game.hasActiveGame}
+					activeScore={game.displayScore}
+					activeLevel={game.level}
+					bestScore={game.bestScore}
+					bestLevel={game.bestLevel}
+					onContinue={handleContinue}
+					onNewGame={handleNewGamePress}
+					onHowToPlay={openHowToPlay}
+					onSettings={openSettings}
+				/>
+				<ConfirmDialog
+					visible={confirmNewVisible}
+					title={t('restart.title')}
+					body={t('restart.bodyConfirm')}
+					confirmLabel={t('restart.confirm')}
+					onCancel={() => setConfirmNewVisible(false)}
+					onConfirm={beginFreshParty}
+				/>
+			</>
 		)
-	}
+	})()
 
 	return (
 		<>
-			<HomeScreen
-				hasActiveGame={game.hasActiveGame}
-				activeScore={game.displayScore}
-				activeLevel={game.level}
-				bestScore={game.bestScore}
-				bestLevel={game.bestLevel}
-				onContinue={handleContinue}
-				onNewGame={handleNewGamePress}
-				onHowToPlay={openHowToPlay}
-				onSettings={openSettings}
-			/>
-			<ConfirmDialog
-				visible={confirmNewVisible}
-				title={t('restart.title')}
-				body={t('restart.bodyConfirm')}
-				confirmLabel={t('restart.confirm')}
-				onCancel={() => setConfirmNewVisible(false)}
-				onConfirm={beginFreshParty}
-			/>
+			{shell}
+			{/* Consent overlays gameplay — never a blank blocked boot screen. */}
+			<ConsentModal consent={consent} />
 		</>
 	)
 }

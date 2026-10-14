@@ -38,6 +38,7 @@ export async function initAds (): Promise<boolean> {
 	}
 	try {
 		const { MobileAds } = require('yandex-mobile-ads')
+		// Callers (privacy bootstrap) must apply setUserConsent before this.
 		await MobileAds.initialize()
 		sdkReady = true
 		return true
