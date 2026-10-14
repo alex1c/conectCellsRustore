@@ -140,8 +140,8 @@
 			"body": "Gruppen ab 5 bringen mehr Punkte und räumen das Feld besser."
 		},
 		"spawn": {
-			"title": "Nach Zügen erscheinen neue Zellen",
-			"body": "Mache einen Zug. Lass das Feld nicht vollaufen."
+			"title": "Neue Zellen hängen von Merges ab",
+			"body": "Ohne Merge kommen 2 Zellen. Gruppe aus 4 → 1. Gruppen ab 5 → keine. Halte Platz frei."
 		},
 		"levels": {
 			"title": "Punkte sammeln und aufsteigen",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "Neue Zellen",
-			"line1": "Nach einem Zug erscheinen neue Zellen auf dem Feld.",
-			"line2": "Große Verschmelzungen helfen gegen Überfüllung.",
-			"diagram": "★ Merge → weniger neue"
+			"line1": "Nach einem Zug ohne Merge erscheinen zwei neue Zellen.",
+			"line2": "Ein Merge aus 4 fügt eine hinzu; Gruppen ab 5 fügen keine hinzu.",
+			"diagram": "ohne Merge → 2 · 4 → 1 · 5+ → 0"
 		},
 		"levels": {
 			"title": "Level",

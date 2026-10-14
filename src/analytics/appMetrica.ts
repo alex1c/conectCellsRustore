@@ -5,11 +5,22 @@
  * Google Play: activate only after analytics purpose is granted
  * (see privacy/optionalSdkBootstrap). RuStore activates without a gate.
  * locationTracking stays false — Hexonica does not need geodata.
+ *
+ * Consent revoke limitations (@appmetrica/react-native-analytics 4.2.0):
+ * - The native SDK cannot be fully de-initialized after activate().
+ * - We immediately stop JS trackEvent via the runtime analytics gate and
+ *   call AppMetrica.setDataSendingEnabled(false) when activated.
+ * - Native process-local state may remain until process death; no further
+ *   custom events are reported while analytics purpose is denied.
+ * - Re-grant calls setDataSendingEnabled(true); activate() is still once.
  */
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
 import { APP_VERSION } from '../branding'
+import {
+	isRuntimeAnalyticsAllowed,
+} from '../privacy/runtimeConsentGate'
 import { getAppStore } from '../store/appStore'
 
 /** Production AppMetrica API key (masked in reports). */
@@ -71,12 +82,22 @@ export type AnalyticsEventName =
 
 let activated = false
 let sinkDisabled = false
+/** When true, Jest may exercise reportEvent against the mocked SDK. */
+let testAllowReporting = false
 
 function isTestEnv (): boolean {
 	return (
 		typeof process !== 'undefined' &&
 		process.env.NODE_ENV === 'test'
 	)
+}
+
+function getAppMetrica (): {
+	activate: (config: Record<string, unknown>) => void
+	reportEvent: (name: string, attrs?: Record<string, unknown>) => void
+	setDataSendingEnabled: (enabled: boolean) => void
+} {
+	return require('@appmetrica/react-native-analytics').default
 }
 
 /** Disable native reporting (Jest / unit tests). */
@@ -88,6 +109,35 @@ export function disableAnalyticsForTests (): void {
 export function __resetAnalyticsForTests (): void {
 	activated = false
 	sinkDisabled = false
+	testAllowReporting = false
+}
+
+/**
+ * Test helper — marks analytics as activated without native activate().
+ * Used to exercise setDataSendingEnabled + trackEvent revoke paths.
+ */
+export function __forceAnalyticsActivatedForTests (): void {
+	activated = true
+	sinkDisabled = false
+	testAllowReporting = true
+}
+
+/**
+ * Push analytics purpose into the native SDK when already activated.
+ * Always safe to call — JS trackEvent already reads the runtime gate.
+ */
+export function applyAnalyticsSendingEnabled (enabled: boolean): void {
+	if (!activated || sinkDisabled) {
+		return
+	}
+	if (isTestEnv() && !testAllowReporting) {
+		return
+	}
+	try {
+		getAppMetrica().setDataSendingEnabled(enabled)
+	} catch {
+		// Native bridge missing — JS gate still blocks reportEvent.
+	}
 }
 
 function scrub (params?: AnalyticsParams): Record<string, string | number | boolean> {
@@ -120,8 +170,12 @@ export async function initAnalytics (): Promise<void> {
 		}
 		return
 	}
+	// Google Play deny / pending — never activate until purpose granted.
+	if (!isRuntimeAnalyticsAllowed()) {
+		return
+	}
 	try {
-		const AppMetrica = require('@appmetrica/react-native-analytics').default
+		const AppMetrica = getAppMetrica()
 		AppMetrica.activate({
 			apiKey: APPMETRICA_API_KEY,
 			sessionTimeout: 120,
@@ -134,14 +188,22 @@ export async function initAnalytics (): Promise<void> {
 			statisticsSending: true,
 		})
 		activated = true
+		// Align native sending with the current gate (handles revoke races).
+		try {
+			AppMetrica.setDataSendingEnabled(isRuntimeAnalyticsAllowed())
+		} catch {
+			// Optional on older bridges — JS gate remains authoritative.
+		}
 		// Same AppMetrica app for both stores — tag sessions with build flavor.
 		// No PII; store id is a build constant (rustore | googleplay).
-		try {
-			AppMetrica.reportEvent('app_store_flavor', {
-				store: getAppStore(),
-			})
-		} catch {
-			// Flavor tag is best-effort.
+		if (isRuntimeAnalyticsAllowed()) {
+			try {
+				AppMetrica.reportEvent('app_store_flavor', {
+					store: getAppStore(),
+				})
+			} catch {
+				// Flavor tag is best-effort.
+			}
 		}
 	} catch {
 		// Native module missing or activate failed — keep gameplay running.
@@ -149,13 +211,17 @@ export async function initAnalytics (): Promise<void> {
 	}
 }
 
-/** Report a custom event. Never throws. */
+/** Report a custom event. Never throws. Stops immediately on analytics revoke. */
 export function trackEvent (
 	name: AnalyticsEventName,
 	params?: AnalyticsParams,
 ): void {
-	// Never touch the native module in Jest / Node unit tests.
-	if (sinkDisabled || isTestEnv()) {
+	// Never touch the native module in Jest unless a consent test opts in.
+	if (sinkDisabled || (isTestEnv() && !testAllowReporting)) {
+		return
+	}
+	// Runtime gate — revoke must stop events even if SDK stays activated.
+	if (!isRuntimeAnalyticsAllowed()) {
 		return
 	}
 	const payload = scrub(params)
@@ -163,7 +229,7 @@ export function trackEvent (
 		if (!activated) {
 			return
 		}
-		const AppMetrica = require('@appmetrica/react-native-analytics').default
+		const AppMetrica = getAppMetrica()
 		if (Object.keys(payload).length > 0) {
 			AppMetrica.reportEvent(name, payload)
 		} else {

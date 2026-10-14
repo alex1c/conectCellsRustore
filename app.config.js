@@ -6,9 +6,12 @@
  *
  * Missing/empty → rustore (never silently googleplay).
  * Invalid values throw at config evaluation (blocks the build).
+ *
+ * Android app_name locales require a fresh expo prebuild (values-b+*).
+ * Stale ./android skips AndroidConfig.Locales.withLocales — run
+ * npm run prebuild:android && npm run verify:android-locales after
+ * locale changes.
  */
-
-const appJson = require('./app.json')
 
 const APP_STORE_IDS = ['rustore', 'googleplay']
 
@@ -34,27 +37,30 @@ function resolveAppStore (raw) {
 	)
 }
 
-const appStore = resolveAppStore(
-	process.env.APP_STORE ?? process.env.EXPO_PUBLIC_APP_STORE,
-)
+/**
+ * @param {{ config: import('expo/config').ExpoConfig }} param0
+ * @returns {import('expo/config').ExpoConfig}
+ */
+module.exports = ({ config }) => {
+	const appStore = resolveAppStore(
+		process.env.APP_STORE ?? process.env.EXPO_PUBLIC_APP_STORE,
+	)
 
-// Keep Metro / EXPO_PUBLIC_* inlining aligned with native extra.appStore.
-process.env.EXPO_PUBLIC_APP_STORE = appStore
+	// Keep Metro / EXPO_PUBLIC_* inlining aligned with native extra.appStore.
+	process.env.EXPO_PUBLIC_APP_STORE = appStore
 
-const plugins = [
-	...(appJson.expo.plugins || []),
-	// Disable Yandex Ads / AppMetrica auto-init before JS consent gates.
-	'./plugins/withYandexAdsManualInit',
-]
+	const plugins = [
+		...(config.plugins || []),
+		// Disable Yandex Ads / AppMetrica auto-init before JS consent gates.
+		'./plugins/withYandexAdsManualInit',
+	]
 
-/** @type {import('expo/config').ExpoConfig} */
-const expo = {
-	...appJson.expo,
-	plugins,
-	extra: {
-		...(appJson.expo.extra || {}),
-		appStore,
-	},
+	return {
+		...config,
+		plugins,
+		extra: {
+			...(config.extra || {}),
+			appStore,
+		},
+	}
 }
-
-module.exports = { expo }

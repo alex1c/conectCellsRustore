@@ -36,6 +36,7 @@ jest.mock('@appmetrica/react-native-analytics', () => ({
 	default: {
 		activate: jest.fn(),
 		reportEvent: jest.fn(),
+		setDataSendingEnabled: jest.fn(),
 	},
 }))
 

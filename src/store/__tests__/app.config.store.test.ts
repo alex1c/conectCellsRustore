@@ -37,15 +37,19 @@ function evalAppConfig (env: Record<string, string | undefined>): {
 			else process.env[k] = v;
 		}
 		try {
-			const c = require('./app.config.js');
+			const appJson = require('./app.json');
+			const resolve = require('./app.config.js');
+			const expo = typeof resolve === 'function'
+				? resolve({ config: appJson.expo })
+				: resolve.expo;
 			process.stdout.write(JSON.stringify({
 				ok: true,
-				extra: c.expo.extra,
+				extra: expo.extra,
 				android: {
-					package: c.expo.android && c.expo.android.package,
-					versionCode: c.expo.android && c.expo.android.versionCode,
+					package: expo.android && expo.android.package,
+					versionCode: expo.android && expo.android.versionCode,
 				},
-				version: c.expo.version,
+				version: expo.version,
 			}));
 		} catch (e) {
 			process.stdout.write(JSON.stringify({

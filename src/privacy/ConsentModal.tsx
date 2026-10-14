@@ -7,7 +7,6 @@
 import { useCallback, useState } from 'react'
 import {
 	ActivityIndicator,
-	Linking,
 	Modal,
 	Pressable,
 	ScrollView,
@@ -19,6 +18,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTranslation } from '../localization/useTranslation'
+import { openExternalUrl } from '../ui/links/openExternalUrl'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -80,7 +80,8 @@ function ConsentDraftForm (props: {
 	)
 
 	const handleOpenPolicy = useCallback(() => {
-		void Linking.openURL(resolvePrivacyPolicyUrl(i18n.language))
+		// Same safe opener as Settings — swallow Linking failures.
+		void openExternalUrl(resolvePrivacyPolicyUrl(i18n.language))
 	}, [i18n.language])
 
 	return (

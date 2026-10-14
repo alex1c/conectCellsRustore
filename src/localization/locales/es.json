@@ -140,8 +140,8 @@
 			"body": "Los grupos de 5 o más dan más puntos y liberan mejor el tablero."
 		},
 		"spawn": {
-			"title": "Tras cada movimiento aparecen celdas nuevas",
-			"body": "Haz un movimiento. No dejes que el tablero se llene."
+			"title": "Las celdas nuevas dependen de las fusiones",
+			"body": "Sin fusión llegan 2. Un grupo de 4 añade 1. Grupos de 5+ no añaden ninguna: mantén espacio libre."
 		},
 		"levels": {
 			"title": "Suma puntos y sube de nivel",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "Celdas nuevas",
-			"line1": "Tras un movimiento aparecen celdas nuevas en el tablero.",
-			"line2": "Las fusiones grandes ayudan a que el tablero no se llene.",
-			"diagram": "★ fusión → menos celdas nuevas"
+			"line1": "Tras un movimiento sin fusión aparecen dos celdas nuevas.",
+			"line2": "Una fusión de 4 añade una; grupos de 5 o más no añaden ninguna.",
+			"diagram": "sin fusión → 2 · 4 → 1 · 5+ → 0"
 		},
 		"levels": {
 			"title": "Niveles",

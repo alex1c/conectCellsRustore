@@ -140,8 +140,8 @@
 			"body": "Groups of 5 or more score more and clear the board better."
 		},
 		"spawn": {
-			"title": "New cells appear after moves",
-			"body": "Make a move. Do not let the board fill up."
+			"title": "New cells depend on merges",
+			"body": "No merge adds 2 cells. A group of 4 adds 1. Groups of 5+ add none — keep space open."
 		},
 		"levels": {
 			"title": "Score points and level up",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "New cells",
-			"line1": "After a move, new cells appear on the board.",
-			"line2": "Larger merges help keep the board from filling up.",
-			"diagram": "★ merge → fewer new cells"
+			"line1": "After a move without a merge, two new cells appear.",
+			"line2": "A merge of 4 adds one cell; groups of 5 or more add none.",
+			"diagram": "no merge → 2 · 4 → 1 · 5+ → 0"
 		},
 		"levels": {
 			"title": "Levels",

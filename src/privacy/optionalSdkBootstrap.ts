@@ -1,10 +1,18 @@
 /**
  * Starts optional AppMetrica / Yandex Ads after consent decisions.
  * Idempotent — safe on cold start, Settings revisit, and app foreground.
+ *
+ * Runtime gates are synced on every call (before the idempotent key) so
+ * revoke immediately stops ads loads and analytics events even when the
+ * bootstrap key would otherwise short-circuit init work.
  */
 
-import { initAds } from '../ads/adsService'
-import { initAnalytics, trackEvent } from '../analytics/appMetrica'
+import { initAds, syncAdsConsent } from '../ads/adsService'
+import {
+	applyAnalyticsSendingEnabled,
+	initAnalytics,
+	trackEvent,
+} from '../analytics/appMetrica'
 import { getAppStore } from '../store/appStore'
 import {
 	canEnableAds,
@@ -12,6 +20,11 @@ import {
 	resolveConsentRequirement,
 } from './consentPolicy'
 import type { PurposeDecision } from './consentPersistence'
+import {
+	isRuntimeAnalyticsAllowed,
+	setRuntimeAdsAllowed,
+	setRuntimeAnalyticsAllowed,
+} from './runtimeConsentGate'
 import {
 	applyYandexUserConsent,
 	mayInitializeAds,
@@ -42,6 +55,12 @@ export async function bootstrapOptionalSdks (
 	)
 	const adsAllowed = canEnableAds(input.ads, requirement)
 
+	// Sync JS/runtime gates first — revoke must stop traffic immediately.
+	setRuntimeAnalyticsAllowed(analyticsAllowed)
+	applyAnalyticsSendingEnabled(analyticsAllowed)
+	setRuntimeAdsAllowed(adsAllowed)
+	syncAdsConsent(adsAllowed)
+
 	// RuStore has no gate — still pass setUserConsent(true) so Yandex gets a signal.
 	if (!requirement.requiresExplicitConsent) {
 		applyYandexUserConsent('granted')
@@ -59,7 +78,8 @@ export async function bootstrapOptionalSdks (
 		mayInitializeAnalytics(input.analytics, requirement.requiresExplicitConsent)
 	) {
 		await initAnalytics()
-		if (!appOpenSent) {
+		// Re-check after await — revoke during activate must skip app_open.
+		if (!appOpenSent && isRuntimeAnalyticsAllowed()) {
 			trackEvent('app_open', { store: getAppStore() })
 			appOpenSent = true
 		}

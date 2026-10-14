@@ -9,6 +9,7 @@ import {
 	showRewardedUndo,
 } from '../adsService'
 import { trackEvent } from '../../analytics/appMetrica'
+import { __resetRuntimeConsentGateForTests } from '../../privacy/runtimeConsentGate'
 import { RewardedAdLoader } from 'yandex-mobile-ads'
 
 jest.mock('../../analytics/appMetrica', () => ({
@@ -88,6 +89,7 @@ async function flushMicrotasks (times = 5): Promise<void> {
 describe('rewarded undo lifecycle', () => {
 	beforeEach(() => {
 		jest.clearAllMocks()
+		__resetRuntimeConsentGateForTests({ ads: true, analytics: true })
 		__resetAdsServiceForTests({ sdkReady: true })
 		createLoaderMock.mockResolvedValue({
 			loadAd: loadAdMock,
@@ -96,6 +98,7 @@ describe('rewarded undo lifecycle', () => {
 
 	afterEach(() => {
 		__resetAdsServiceForTests()
+		__resetRuntimeConsentGateForTests()
 	})
 
 	it('reuses an existing preload without a second loadAd', async () => {

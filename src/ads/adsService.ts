@@ -2,6 +2,10 @@
  * Yandex Mobile Ads bootstrap + fullscreen helpers.
  * All public functions catch errors so offline / missing native never crashes.
  *
+ * Consent: Google Play deny blocks init / load / show inside this module
+ * (not only UI). RuStore leaves the runtime gate open. Revoke clears preloads
+ * and bumps a generation so in-flight loadAd results are discarded.
+ *
  * Rewarded Undo uses a single-flight loader: at most one loadAd in flight,
  * one preloaded RewardedAd, and await ad.show() so Promise rejections settle.
  */
@@ -10,10 +14,16 @@
 
 import { trackEvent } from '../analytics/appMetrica'
 import { t } from '../localization/i18n'
+import {
+	getAdsConsentGeneration,
+	isRuntimeAdsAllowed,
+} from '../privacy/runtimeConsentGate'
 import { resolveAdUnitId, type AdPlacementKey } from './placements'
 
 let sdkReady = false
 let initAttempted = false
+/** Single-flight native initialize — concurrent callers await the same promise. */
+let initPromise: Promise<boolean> | null = null
 
 /** User-facing copy when ads cannot complete (resolved at call time). */
 function getAdsUnavailableReason (): string {
@@ -25,65 +35,98 @@ const REWARDED_SHOW_HARD_TIMEOUT_MS = 60000
 
 export type RewardedTelemetrySource = 'game' | 'game_over'
 
+/**
+ * Initialize Yandex Mobile Ads when the runtime ads gate allows it.
+ * Re-checks consent after await so revoke mid-init does not enable serving.
+ */
 export async function initAds (): Promise<boolean> {
+	if (!isRuntimeAdsAllowed()) {
+		return false
+	}
 	if (sdkReady) {
-		return true
+		return isRuntimeAdsAllowed()
+	}
+	if (initPromise) {
+		const ok = await initPromise
+		return ok && isRuntimeAdsAllowed()
 	}
 	if (initAttempted) {
-		return sdkReady
+		return sdkReady && isRuntimeAdsAllowed()
 	}
+
 	initAttempted = true
-	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-		return false
-	}
-	try {
-		const { MobileAds } = require('yandex-mobile-ads')
-		// Callers (privacy bootstrap) must apply setUserConsent before this.
-		await MobileAds.initialize()
-		sdkReady = true
-		return true
-	} catch {
-		sdkReady = false
-		return false
-	}
+	initPromise = (async (): Promise<boolean> => {
+		if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+			return false
+		}
+		try {
+			if (!isRuntimeAdsAllowed()) {
+				return false
+			}
+			const { MobileAds } = require('yandex-mobile-ads')
+			// Callers (privacy bootstrap) must apply setUserConsent before this.
+			await MobileAds.initialize()
+			sdkReady = true
+			// Revoke during initialize() — SDK may be up, but do not serve.
+			return isRuntimeAdsAllowed()
+		} catch {
+			sdkReady = false
+			return false
+		} finally {
+			initPromise = null
+		}
+	})()
+
+	return initPromise
 }
 
+/** True after native initialize succeeded (ignores consent). */
 export function isAdsSdkReady (): boolean {
 	return sdkReady
 }
 
 /**
- * Reset rewarded + SDK flags for Jest. Production callers must not use this.
- * When sdkReady is forced true, initAds short-circuits without native work.
+ * True when the SDK is ready and ads purpose still allows serving.
+ * BannerSlot and show paths use this so revoke hides creatives immediately.
  */
-export function __resetAdsServiceForTests (options?: {
-	sdkReady?: boolean
-}): void {
-	sdkReady = options?.sdkReady ?? false
-	initAttempted = options?.sdkReady === true
-	rewardedPreload = null
-	rewardedLoadPromise = null
+export function canServeAds (): boolean {
+	return sdkReady && isRuntimeAdsAllowed()
 }
 
 export type InterstitialResult = 'shown' | 'failed' | 'unavailable'
 
 /**
  * Load + show a single interstitial. Never throws.
+ * Consent deny / revoke → unavailable (Game Over must continue).
  */
 export async function showInterstitial (
 	placement: AdPlacementKey = 'gameOverInterstitial',
 ): Promise<InterstitialResult> {
-	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+	// Consent gate first — deny must win even in Jest.
+	if (!isRuntimeAdsAllowed()) {
 		return 'unavailable'
 	}
+	// Jest without a forced sdkReady stays offline; lifecycle suites set sdkReady.
+	if (
+		typeof process !== 'undefined' &&
+		process.env.NODE_ENV === 'test' &&
+		!sdkReady
+	) {
+		return 'unavailable'
+	}
+	const generation = getAdsConsentGeneration()
 	const ready = await initAds()
-	if (!ready) {
+	if (!ready || !isRuntimeAdsAllowed() || generation !== getAdsConsentGeneration()) {
 		return 'unavailable'
 	}
 	try {
 		const { InterstitialAdLoader } = require('yandex-mobile-ads')
 		const loader = await InterstitialAdLoader.create()
-		if (!loader) {
+		if (
+			!loader ||
+			!isRuntimeAdsAllowed() ||
+			generation !== getAdsConsentGeneration()
+		) {
 			return 'failed'
 		}
 		// Hard cap load — Game Over must never spin forever offline / on bad fill.
@@ -95,7 +138,11 @@ export async function showInterstitial (
 				setTimeout(() => resolve(null), 10000)
 			}),
 		])
-		if (!ad) {
+		if (
+			!ad ||
+			!isRuntimeAdsAllowed() ||
+			generation !== getAdsConsentGeneration()
+		) {
 			return 'failed'
 		}
 		await new Promise<void>((resolve) => {
@@ -110,6 +157,14 @@ export async function showInterstitial (
 			ad.onAdDismissed = done
 			ad.onAdFailedToShow = done
 			try {
+				// Final gate immediately before show().
+				if (
+					!isRuntimeAdsAllowed() ||
+					generation !== getAdsConsentGeneration()
+				) {
+					done()
+					return
+				}
 				ad.show()
 			} catch {
 				done()
@@ -137,6 +192,33 @@ let rewardedPreload: { ad: any; placement: AdPlacementKey } | null = null
  * await this same promise — never start a second RewardedAdLoader/loadAd.
  */
 let rewardedLoadPromise: Promise<any | null> | null = null
+
+/**
+ * Sync ads purpose into this service. Revoke drops preloads so no stale show.
+ * Called from optional SDK bootstrap on every decision change.
+ */
+export function syncAdsConsent (allowed: boolean): void {
+	if (!allowed) {
+		rewardedPreload = null
+		// Abandon in-flight load result via generation bump in the gate;
+		// clear the promise handle so a later grant starts a fresh load.
+		rewardedLoadPromise = null
+	}
+}
+
+/**
+ * Reset rewarded + SDK flags for Jest. Production callers must not use this.
+ * When sdkReady is forced true, initAds short-circuits without native work.
+ */
+export function __resetAdsServiceForTests (options?: {
+	sdkReady?: boolean
+}): void {
+	sdkReady = options?.sdkReady ?? false
+	initAttempted = options?.sdkReady === true
+	initPromise = null
+	rewardedPreload = null
+	rewardedLoadPromise = null
+}
 
 /** Short sanitized error code for telemetry (no dumps / PII). */
 function sanitizeErrorType (error: unknown): string {
@@ -170,10 +252,15 @@ function rewardedTelemetryBase (source: RewardedTelemetrySource) {
  * - Valid preload → return it (do not load again).
  * - In-flight load → await/reuse the same promise.
  * - Otherwise → exactly one loader.loadAd, then store preload on success.
+ * Revoke mid-load discards the result (no store / no show).
  */
 async function ensureRewardedLoaded (
 	source: RewardedTelemetrySource,
 ): Promise<any | null> {
+	if (!isRuntimeAdsAllowed()) {
+		rewardedPreload = null
+		return null
+	}
 	if (rewardedPreload?.ad) {
 		return rewardedPreload.ad
 	}
@@ -181,29 +268,44 @@ async function ensureRewardedLoaded (
 		return rewardedLoadPromise
 	}
 
+	const generation = getAdsConsentGeneration()
 	let loadPromise!: Promise<any | null>
 	loadPromise = (async (): Promise<any | null> => {
 		try {
+			if (
+				!isRuntimeAdsAllowed() ||
+				generation !== getAdsConsentGeneration()
+			) {
+				return null
+			}
 			trackEvent(
 				'rewarded_load_requested',
 				rewardedTelemetryBase(source),
 			)
 			const { RewardedAdLoader } = require('yandex-mobile-ads')
 			const loader = await RewardedAdLoader.create()
-			if (!loader) {
+			if (
+				!loader ||
+				!isRuntimeAdsAllowed() ||
+				generation !== getAdsConsentGeneration()
+			) {
 				trackEvent('rewarded_load_failed', {
 					...rewardedTelemetryBase(source),
-					error_type: 'no_loader',
+					error_type: 'no_loader_or_consent',
 				})
 				return null
 			}
 			const ad = await loader.loadAd({
 				adUnitId: resolveAdUnitId('rewardedUndo'),
 			})
-			if (!ad) {
+			if (
+				!ad ||
+				!isRuntimeAdsAllowed() ||
+				generation !== getAdsConsentGeneration()
+			) {
 				trackEvent('rewarded_load_failed', {
 					...rewardedTelemetryBase(source),
-					error_type: 'empty_ad',
+					error_type: !ad ? 'empty_ad' : 'consent_revoked',
 				})
 				return null
 			}
@@ -241,8 +343,11 @@ export async function preloadRewardedUndo (
 	source: RewardedTelemetrySource = 'game',
 ): Promise<void> {
 	try {
+		if (!isRuntimeAdsAllowed()) {
+			return
+		}
 		const ready = await initAds()
-		if (!ready) {
+		if (!ready || !isRuntimeAdsAllowed()) {
 			return
 		}
 		await ensureRewardedLoaded(source)
@@ -257,13 +362,21 @@ export async function preloadRewardedUndo (
  *
  * Undo is granted only after genuine onRewarded + closed/completed flow;
  * open / impression / dismiss alone never grant Undo.
+ * Consent deny → unavailable (Undo offer UI stays usable without a show).
  */
 export async function showRewardedUndo (options?: {
 	source?: RewardedTelemetrySource
 }): Promise<RewardedResult> {
 	const source = options?.source ?? 'game'
+	if (!isRuntimeAdsAllowed()) {
+		return {
+			status: 'unavailable',
+			reason: getAdsUnavailableReason(),
+		}
+	}
+	const generation = getAdsConsentGeneration()
 	const ready = await initAds()
-	if (!ready) {
+	if (!ready || !isRuntimeAdsAllowed() || generation !== getAdsConsentGeneration()) {
 		return {
 			status: 'unavailable',
 			reason: getAdsUnavailableReason(),
@@ -272,7 +385,11 @@ export async function showRewardedUndo (options?: {
 
 	try {
 		const ad = await ensureRewardedLoaded(source)
-		if (!ad) {
+		if (
+			!ad ||
+			!isRuntimeAdsAllowed() ||
+			generation !== getAdsConsentGeneration()
+		) {
 			return {
 				status: 'failed',
 				reason: getAdsUnavailableReason(),
@@ -282,10 +399,22 @@ export async function showRewardedUndo (options?: {
 		// and the next preload starts a clean loadAd.
 		consumeRewardedPreload(ad)
 
+		if (
+			!isRuntimeAdsAllowed() ||
+			generation !== getAdsConsentGeneration()
+		) {
+			return {
+				status: 'unavailable',
+				reason: getAdsUnavailableReason(),
+			}
+		}
+
 		const result = await presentRewardedAd(ad, source)
 
-		// Next preload always goes through single-flight ensure.
-		void preloadRewardedUndo(source)
+		// Next preload always goes through single-flight ensure — only if still allowed.
+		if (isRuntimeAdsAllowed()) {
+			void preloadRewardedUndo(source)
+		}
 		return result
 	} catch (error) {
 		rewardedPreload = null
@@ -352,6 +481,13 @@ function presentRewardedAd (
 
 		void (async () => {
 			try {
+				if (!isRuntimeAdsAllowed()) {
+					finish({
+						status: 'unavailable',
+						reason: getAdsUnavailableReason(),
+					})
+					return
+				}
 				trackEvent(
 					'rewarded_show_requested',
 					rewardedTelemetryBase(source),

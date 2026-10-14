@@ -18,11 +18,22 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
-import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+	Component,
+	useEffect,
+	useMemo,
+	useState,
+	useSyncExternalStore,
+	type ReactNode,
+} from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 
+import {
+	isRuntimeAdsAllowed,
+	subscribeRuntimeConsent,
+} from '../privacy/runtimeConsentGate'
 import { COLOR_APP_BACKGROUND } from '../ui/theme/colors'
-import { initAds, isAdsSdkReady } from './adsService'
+import { canServeAds, initAds } from './adsService'
 import {
 	GAME_BANNER_RESERVED_HEIGHT,
 	resolveAdUnitId,
@@ -71,6 +82,12 @@ export function BannerSlot (props: BannerSlotProps) {
 	const [adSize, setAdSize] = useState<unknown>(null)
 	const [failed, setFailed] = useState(false)
 	const [BannerView, setBannerView] = useState<any>(null)
+	// Re-render + re-run load effect when ads purpose is revoked or re-granted.
+	const adsAllowed = useSyncExternalStore(
+		subscribeRuntimeConsent,
+		isRuntimeAdsAllowed,
+		isRuntimeAdsAllowed,
+	)
 
 	// Plain params object — BannerView constructs AdRequest itself.
 	// Placement-only dependency: ordinary GameScreen re-renders must not
@@ -86,8 +103,17 @@ export function BannerSlot (props: BannerSlotProps) {
 			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 				return
 			}
+			// Consent deny: keep fixed dock, tear down creative state.
+			if (!adsAllowed) {
+				setFailed(true)
+				setBannerView(null)
+				setAdSize(null)
+				return
+			}
+			setFailed(false)
+			// initAds enforces the same gate (defense in depth).
 			const ready = await initAds()
-			if (!ready || cancelled) {
+			if (!ready || cancelled || !isRuntimeAdsAllowed()) {
 				setFailed(true)
 				return
 			}
@@ -96,7 +122,7 @@ export function BannerSlot (props: BannerSlotProps) {
 				const size = await ads.BannerAdSize.stickySize(
 					Dimensions.get('window').width,
 				)
-				if (cancelled) {
+				if (cancelled || !isRuntimeAdsAllowed()) {
 					return
 				}
 				// Store the component type (updater form avoids calling it as a function).
@@ -111,14 +137,15 @@ export function BannerSlot (props: BannerSlotProps) {
 		return () => {
 			cancelled = true
 		}
-	}, [placement])
+	}, [placement, adsAllowed])
 
 	const showAd =
+		adsAllowed &&
 		!failed &&
 		!!adSize &&
 		!!BannerView &&
 		!!adRequestParams.adUnitId &&
-		isAdsSdkReady()
+		canServeAds()
 
 	if (isFixed) {
 		return (
