@@ -1,28 +1,21 @@
-# Privacy policy — deployment (ForestMusic website)
+# Privacy policy — ForestMusic Privacy Policy Center
 
-**Do not publish from this game repository without owner approval.**
+**Status: PUBLISHED** on Timeweb (GitHub Actions deploy verified in browser).
 
-## Draft files (this repo)
+## Live URLs (canonical for the app)
 
-| File | Language | Intended public path |
-|------|----------|----------------------|
-| `docs/privacy/index.html` | EN | `https://forest-music.ru/privacy/` |
-| `docs/privacy/ru.html` | RU | `https://forest-music.ru/privacy/ru.html` |
+| Language | URL |
+|----------|-----|
+| EN (primary in-app) | https://forest-music.ru/privacy/hexonica/ |
+| RU | https://forest-music.ru/privacy/hexonica/ru.html |
+| Catalog | https://forest-music.ru/privacy/ |
 
-In-app link: `https://forest-music.ru/privacy/` (`src/privacy/privacyUrls.ts`).
+In-app constants: `src/privacy/privacyUrls.ts`
+(`PRIVACY_POLICY_URL`, `PRIVACY_POLICY_URL_RU`, `resolvePrivacyPolicyUrl`).
 
-## Target repository
+## Website repository
 
-Website: **alex1c/ForestMusicLanding** (https://forest-music.ru).
+Policies are maintained in **alex1c/ForestMusicLanding** (`public/privacy/`),
+not deployed from this game repository.
 
-Suggested copy:
-
-1. Add `public/privacy/index.html` from `docs/privacy/index.html`.
-2. Add `public/privacy/ru.html` from `docs/privacy/ru.html`.
-3. Deploy the landing site as usual.
-4. Verify both URLs return **HTTP 200** before marking the policy READY in Play Console.
-
-## Status
-
-Until the owner publishes and HTTP 200 is confirmed, the policy is **DRAFT / PENDING PUBLICATION**.
-The game repo must not claim a live policy URL is ready.
+Historical drafts in `docs/privacy/*.html` are reference copies only.

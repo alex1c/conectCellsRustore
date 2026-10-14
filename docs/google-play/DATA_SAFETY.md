@@ -3,8 +3,9 @@
 **Package:** `ru.forestmusic.connectcells`  
 **Prepared:** 2026-10-14 (PHASE 2B)  
 **SDK versions (declared):** `yandex-mobile-ads@8.4.0`, `@appmetrica/react-native-analytics@4.2.0`  
-**Privacy policy URL (target):** https://forest-music.ru/privacy/  
-**Publication status:** Draft until website owner publishes (HTTP 200) — see `docs/privacy/DEPLOY.md`
+**Privacy policy URL (Play Console):** https://forest-music.ru/privacy/hexonica/  
+**RU page:** https://forest-music.ru/privacy/hexonica/ru.html  
+**Publication status:** PUBLISHED (Timeweb; HTTP 200 verified) — see `docs/privacy/DEPLOY.md`
 
 **Principle:** Declare off-device collection/sharing by the app and embedded SDKs after the user allows optional purposes on the Google Play build. Local game saves that never leave the device under developer/SDK control are **not** marked as collected gameplay content.
 

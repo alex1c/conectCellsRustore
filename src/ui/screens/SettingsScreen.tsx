@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
 import { useTranslation } from '../../localization/useTranslation'
-import { PRIVACY_POLICY_URL } from '../../privacy/privacyUrls'
+import { resolvePrivacyPolicyUrl } from '../../privacy/privacyUrls'
 import { getStoreConfig, openOtherApps } from '../../store/storeConfig'
 import { openExternalUrl } from '../links/openExternalUrl'
 import {
@@ -49,7 +49,7 @@ export function SettingsScreen (props: SettingsScreenProps) {
 		onBack,
 	} = props
 	const insets = useSafeAreaInsets()
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const storeConfig = getStoreConfig()
 
 	const handleOpenOtherApps = useCallback(() => {
@@ -57,8 +57,8 @@ export function SettingsScreen (props: SettingsScreenProps) {
 	}, [])
 
 	const handleOpenPrivacyPolicy = useCallback(() => {
-		void openExternalUrl(PRIVACY_POLICY_URL)
-	}, [])
+		void openExternalUrl(resolvePrivacyPolicyUrl(i18n.language))
+	}, [i18n.language])
 
 	return (
 		<View

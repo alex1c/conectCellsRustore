@@ -31,7 +31,7 @@ import {
 	COLOR_TEXT_SECONDARY,
 } from '../ui/theme/colors'
 import type { PurposeDecision } from './consentPersistence'
-import { PRIVACY_POLICY_URL } from './privacyUrls'
+import { resolvePrivacyPolicyUrl } from './privacyUrls'
 import type { PrivacyConsentState } from './usePrivacyConsent'
 
 export type ConsentModalProps = {
@@ -58,7 +58,7 @@ function ConsentDraftForm (props: {
 		onBusy,
 		onSave,
 	} = props
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const [analyticsOn, setAnalyticsOn] = useState(initialAnalyticsOn)
 	const [adsOn, setAdsOn] = useState(initialAdsOn)
 
@@ -80,8 +80,8 @@ function ConsentDraftForm (props: {
 	)
 
 	const handleOpenPolicy = useCallback(() => {
-		void Linking.openURL(PRIVACY_POLICY_URL)
-	}, [])
+		void Linking.openURL(resolvePrivacyPolicyUrl(i18n.language))
+	}, [i18n.language])
 
 	return (
 		<>
