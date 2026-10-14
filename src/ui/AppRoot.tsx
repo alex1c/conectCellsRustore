@@ -9,6 +9,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { initAds } from '../ads/adsService'
 import { initAnalytics, trackEvent } from '../analytics/appMetrica'
 import { useTranslation } from '../localization/useTranslation'
+import { getAppStore } from '../store/appStore'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { useGameController } from './hooks/useGameController'
 import { GameScreen } from './GameScreen'
@@ -45,7 +46,8 @@ export function AppRoot () {
 			if (cancelled) {
 				return
 			}
-			trackEvent('app_open')
+			// Tag open with build-time store flavor (no PII).
+			trackEvent('app_open', { store: getAppStore() })
 			void initAds()
 		})()
 		return () => {

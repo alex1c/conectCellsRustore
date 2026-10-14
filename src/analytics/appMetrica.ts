@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
 import { APP_VERSION } from '../branding'
+import { getAppStore } from '../store/appStore'
 
 /** Production AppMetrica API key (masked in reports). */
 export const APPMETRICA_API_KEY = '96143264-a11a-44d0-875d-c960d4f8111e'
@@ -117,6 +118,15 @@ export async function initAnalytics (): Promise<void> {
 			appVersion: APP_VERSION,
 		})
 		activated = true
+		// Same AppMetrica app for both stores — tag sessions with build flavor.
+		// No PII; store id is a build constant (rustore | googleplay).
+		try {
+			AppMetrica.reportEvent('app_store_flavor', {
+				store: getAppStore(),
+			})
+		} catch {
+			// Flavor tag is best-effort.
+		}
 	} catch {
 		// Native module missing or activate failed — keep gameplay running.
 		activated = false

@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BannerSlot } from '../../ads/BannerSlot'
 import { useTranslation } from '../../localization/useTranslation'
-import { openForestMusicRuStore } from '../links/forestMusicRuStore'
+import { getStoreConfig, openOtherApps } from '../../store/storeConfig'
 import {
 	COLOR_ACCENT,
 	COLOR_APP_BACKGROUND,
@@ -45,9 +45,10 @@ export function SettingsScreen (props: SettingsScreenProps) {
 	} = props
 	const insets = useSafeAreaInsets()
 	const { t } = useTranslation()
+	const storeConfig = getStoreConfig()
 
 	const handleOpenOtherApps = useCallback(() => {
-		void openForestMusicRuStore()
+		void openOtherApps()
 	}, [])
 
 	return (
@@ -94,24 +95,39 @@ export function SettingsScreen (props: SettingsScreenProps) {
 				<Pressable style={styles.linkRow} onPress={onHowToPlay}>
 					<Text style={styles.linkText}>{t('settings.howToPlay')}</Text>
 				</Pressable>
-				<Pressable style={styles.linkRow} onPress={onAbout}>
+				{/*
+				 * About is last when Google Play has no catalog URL yet.
+				 * RuStore keeps Other apps below About.
+				 */}
+				<Pressable
+					style={[
+						styles.linkRow,
+						!storeConfig.otherAppsAvailable && styles.linkRowLast,
+					]}
+					onPress={onAbout}
+				>
 					<Text style={styles.linkText}>{t('settings.about')}</Text>
 				</Pressable>
 				{/*
 				 * ForestMusic cross-promotion — Settings only.
-				 * Not shown on the game screen / startup; opens externally.
+				 * Hidden when the active store has no published catalog URL
+				 * (Google Play listing pending). RuStore keeps the RuStore link.
 				 */}
-				<Pressable
-					style={[styles.linkRow, styles.linkRowLast]}
-					onPress={handleOpenOtherApps}
-					accessibilityRole="link"
-					accessibilityLabel={t('settings.otherAppsA11y')}
-				>
-					<Text style={styles.linkText}>{t('settings.otherApps')}</Text>
-					<Text style={styles.linkSubtext}>
-						{t('settings.otherAppsSub')}
-					</Text>
-				</Pressable>
+				{storeConfig.otherAppsAvailable ? (
+					<Pressable
+						style={[styles.linkRow, styles.linkRowLast]}
+						onPress={handleOpenOtherApps}
+						accessibilityRole="link"
+						accessibilityLabel={t('settings.otherAppsA11y')}
+					>
+						<Text style={styles.linkText}>
+							{t('settings.otherApps')}
+						</Text>
+						<Text style={styles.linkSubtext}>
+							{t('settings.otherAppsSub')}
+						</Text>
+					</Pressable>
+				) : null}
 			</View>
 
 			<View style={styles.flex} />
