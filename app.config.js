@@ -51,7 +51,9 @@ module.exports = ({ config }) => {
 
 	const plugins = [
 		...(config.plugins || []),
-		// Disable Yandex Ads / AppMetrica auto-init before JS consent gates.
+		// Disable Yandex Ads ContentProvider auto-init + Ads→AppMetrica adapter
+		// before JS consent gates. Must re-run via expo prebuild — ./android is
+		// gitignored and a stale tree silently drops these <meta-data> flags.
 		'./plugins/withYandexAdsManualInit',
 	]
 
