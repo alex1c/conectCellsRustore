@@ -7,13 +7,10 @@
  * bootstrap key would otherwise short-circuit init work.
  */
 
-import { initAds, syncAdsConsent } from '../ads/adsService'
-import {
-	applyAnalyticsSendingEnabled,
-	initAnalytics,
-	trackEvent,
-} from '../analytics/appMetrica'
+import { initAds } from '../ads/adsService'
+import { initAnalytics, trackEvent } from '../analytics/appMetrica'
 import { getAppStore } from '../store/appStore'
+import { applyConsentGatesSync } from './applyConsentGates'
 import {
 	canEnableAds,
 	canEnableAnalytics,
@@ -21,12 +18,10 @@ import {
 } from './consentPolicy'
 import type { PurposeDecision } from './consentPersistence'
 import {
+	isRuntimeAdsAllowed,
 	isRuntimeAnalyticsAllowed,
-	setRuntimeAdsAllowed,
-	setRuntimeAnalyticsAllowed,
 } from './runtimeConsentGate'
 import {
-	applyYandexUserConsent,
 	mayInitializeAds,
 	mayInitializeAnalytics,
 } from './sdkConsentBridge'
@@ -55,18 +50,12 @@ export async function bootstrapOptionalSdks (
 	)
 	const adsAllowed = canEnableAds(input.ads, requirement)
 
-	// Sync JS/runtime gates first — revoke must stop traffic immediately.
-	setRuntimeAnalyticsAllowed(analyticsAllowed)
-	applyAnalyticsSendingEnabled(analyticsAllowed)
-	setRuntimeAdsAllowed(adsAllowed)
-	syncAdsConsent(adsAllowed)
-
-	// RuStore has no gate — still pass setUserConsent(true) so Yandex gets a signal.
-	if (!requirement.requiresExplicitConsent) {
-		applyYandexUserConsent('granted')
-	} else if (input.ads !== null) {
-		applyYandexUserConsent(input.ads)
-	}
+	// Sync JS/runtime gates first (open grants — caller already persisted).
+	applyConsentGatesSync({
+		analytics: input.analytics,
+		ads: input.ads,
+		openGrants: true,
+	})
 
 	const key = `${analyticsAllowed ? 'a1' : 'a0'}:${adsAllowed ? 'd1' : 'd0'}`
 	if (lastBootstrapKey === key) {
@@ -89,7 +78,10 @@ export async function bootstrapOptionalSdks (
 		adsAllowed &&
 		mayInitializeAds(input.ads, requirement.requiresExplicitConsent)
 	) {
-		await initAds()
+		// Re-check after analytics await — revoke mid-bootstrap must skip init.
+		if (isRuntimeAdsAllowed()) {
+			await initAds()
+		}
 	}
 
 	lastBootstrapKey = key

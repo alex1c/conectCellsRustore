@@ -141,7 +141,7 @@
 		},
 		"spawn": {
 			"title": "New cells depend on merges",
-			"body": "No merge adds 2 cells. A group of 4 adds 1. Groups of 5+ add none — keep space open."
+			"body": "Moves without merges fill the board faster. Larger merges add fewer cells — or none. Higher levels can add extra pressure."
 		},
 		"levels": {
 			"title": "Score points and level up",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "New cells",
-			"line1": "After a move without a merge, two new cells appear.",
-			"line2": "A merge of 4 adds one cell; groups of 5 or more add none.",
-			"diagram": "no merge → 2 · 4 → 1 · 5+ → 0"
+			"line1": "After a move, new cells may appear — how many depends on your merges.",
+			"line2": "Bigger merges ease pressure; higher levels can add an extra cell.",
+			"diagram": "★ big merge → fewer new cells"
 		},
 		"levels": {
 			"title": "Levels",

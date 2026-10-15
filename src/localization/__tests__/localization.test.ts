@@ -137,9 +137,9 @@ describe('translation dictionaries', () => {
 		expect(en.tutorial.merge_tip.body.toLowerCase()).toMatch(/clear/)
 		expect(ru.tutorial.merge_tip.body).toMatch(/исчезает/)
 		expect(ru.onboarding.merge.title).toBe('Слияние')
-		// observedPressure spawn diagram: no-merge / merge-4 / large-merge counts
-		expect(ru.onboarding.spawn.diagram).toMatch(/2/)
+		// Spawn copy: merge-dependent, no fixed cell counts in the diagram.
 		expect(ru.onboarding.spawn.diagram).toMatch(/слиян/)
+		expect(ru.onboarding.spawn.line2.toLowerCase()).toMatch(/уровн/)
 		expect(es.tutorial.levels.body).toMatch(/combinaciones/)
 		expect(es.tutorial.levels.body).not.toMatch(/Las combos/)
 	})

@@ -21,7 +21,11 @@ import {
 	BannerSlot,
 	GAME_BANNER_RESERVED_HEIGHT,
 } from '../ads/BannerSlot'
-import { showRewardedUndo } from '../ads/adsService'
+import {
+	captureAdsConsentGeneration,
+	mayApplyRewardedUndo,
+	showRewardedUndo,
+} from '../ads/adsService'
 import { trackEvent } from '../analytics/appMetrica'
 import { useTranslation } from '../localization/useTranslation'
 import { pauseGameplayAudio } from './feel/sound'
@@ -181,11 +185,26 @@ export function GameScreen (props: GameScreenProps) {
 		try {
 			// Stop SFX so rewarded ad audio is not mixed with gameplay.
 			pauseGameplayAudio()
+			// Capture epoch before await — revoke during show voids Undo.
+			const consentGeneration = captureAdsConsentGeneration()
 			const result = await showRewardedUndo({ source })
-			if (result.status === 'rewarded') {
+			if (
+				result.status === 'rewarded' &&
+				mayApplyRewardedUndo(consentGeneration)
+			) {
 				trackEvent('undo_rewarded_completed', { source })
 				game.applyUndo()
 				game.dismissGameOver()
+			} else if (result.status === 'rewarded') {
+				// SDK reported reward but ads purpose was revoked mid-show.
+				trackEvent('undo_rewarded_failed', {
+					reason: 'consent_revoked',
+					source,
+				})
+				Alert.alert(
+					t('undo.adsAlertTitle'),
+					t('ads.unavailable'),
+				)
 			} else if (
 				result.status === 'failed' ||
 				result.status === 'unavailable'

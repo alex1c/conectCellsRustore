@@ -141,7 +141,7 @@
 		},
 		"spawn": {
 			"title": "Yeni hücreler birleşmeye bağlıdır",
-			"body": "Birleşme yoksa 2 hücre gelir. 4’lük grup 1 ekler. 5+ grup hiç eklemez — yer açın."
+			"body": "Birleşme olmayan hamleler tahtayı daha çabuk doldurur. Büyük birleşmeler daha az hücre ekler — ya da hiç. Yüksek seviyelerde baskı artar."
 		},
 		"levels": {
 			"title": "Puan toplayın ve seviye atlayın",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "Yeni hücreler",
-			"line1": "Birleşme olmadan hamleden sonra iki yeni hücre gelir.",
-			"line2": "4’lük birleşme bir ekler; 5 ve üzeri hiç eklemez.",
-			"diagram": "birleşme yok → 2 · 4 → 1 · 5+ → 0"
+			"line1": "Hamleden sonra yeni hücreler gelebilir — kaç tane olduğu birleşmelere bağlıdır.",
+			"line2": "Büyük birleşmeler baskıyı azaltır; yüksek seviyelerde fazladan bir hücre gelebilir.",
+			"diagram": "★ büyük birleşme → daha az yeni"
 		},
 		"levels": {
 			"title": "Seviyeler",

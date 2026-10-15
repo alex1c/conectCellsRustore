@@ -141,7 +141,7 @@
 		},
 		"spawn": {
 			"title": "Las celdas nuevas dependen de las fusiones",
-			"body": "Sin fusión llegan 2. Un grupo de 4 añade 1. Grupos de 5+ no añaden ninguna: mantén espacio libre."
+			"body": "Sin fusiones el tablero se llena antes. Las fusiones grandes añaden menos celdas — o ninguna. En niveles altos hay más presión."
 		},
 		"levels": {
 			"title": "Suma puntos y sube de nivel",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "Celdas nuevas",
-			"line1": "Tras un movimiento sin fusión aparecen dos celdas nuevas.",
-			"line2": "Una fusión de 4 añade una; grupos de 5 o más no añaden ninguna.",
-			"diagram": "sin fusión → 2 · 4 → 1 · 5+ → 0"
+			"line1": "Tras un movimiento pueden aparecer celdas nuevas: cuántas depende de tus fusiones.",
+			"line2": "Las fusiones grandes alivian la presión; en niveles altos puede sumarse una celda extra.",
+			"diagram": "★ fusión grande → menos celdas nuevas"
 		},
 		"levels": {
 			"title": "Niveles",

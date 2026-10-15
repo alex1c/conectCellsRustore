@@ -46,6 +46,9 @@ describe('gameplay banner contracts', () => {
 		expect(src).toContain("t('game.restart')")
 		expect(src).toContain('handleUndoPress')
 		expect(src).toContain('requestRestart')
+		// Consent revoke mid-show must not apply Undo.
+		expect(src).toContain('mayApplyRewardedUndo')
+		expect(src).toContain('captureAdsConsentGeneration')
 	})
 
 	it('interactive tutorial does not mount gameBanner or BannerSlot', () => {

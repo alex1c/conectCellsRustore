@@ -1,5 +1,8 @@
 /**
  * Loads / saves privacy purpose choices and drives optional SDK bootstrap.
+ *
+ * Saves go through savePrivacyPurposes so revoke closes runtime gates
+ * before AsyncStorage awaits, and grants open only after a successful write.
  */
 
 import { useCallback, useEffect, useState } from 'react'
@@ -12,11 +15,11 @@ import {
 } from './consentPolicy'
 import {
 	readPersistedPrivacyConsent,
-	writePersistedPrivacyConsent,
 	type PersistedPrivacyConsent,
 	type PurposeDecision,
 } from './consentPersistence'
 import { bootstrapOptionalSdks } from './optionalSdkBootstrap'
+import { savePrivacyPurposes } from './savePrivacyPurposes'
 
 export type PrivacyConsentState = {
 	ready: boolean
@@ -88,20 +91,20 @@ export function usePrivacyConsent (): PrivacyConsentState {
 			ads: PurposeDecision
 		}) => {
 			setPersistError(false)
-			try {
-				const saved = await writePersistedPrivacyConsent(input)
-				setAnalytics(saved.analytics)
-				setAds(saved.ads)
-				setStorageStatus(saved.storageStatus)
-				await bootstrapOptionalSdks({
-					analytics: saved.analytics,
-					ads: saved.ads,
-				})
-				setEditorVisible(false)
-			} catch {
+			const result = await savePrivacyPurposes(input)
+			if (result.status === 'superseded') {
+				// A newer save owns UI + gates — do not flip persistError.
+				return
+			}
+			if (result.status === 'failed') {
+				// Fail-closed: revokes already applied; do not restore grants.
 				setPersistError(true)
 				throw new Error('privacy_consent_persist_failed')
 			}
+			setAnalytics(result.saved.analytics)
+			setAds(result.saved.ads)
+			setStorageStatus(result.saved.storageStatus)
+			setEditorVisible(false)
 		},
 		[],
 	)

@@ -141,7 +141,7 @@
 		},
 		"spawn": {
 			"title": "Neue Zellen hängen von Merges ab",
-			"body": "Ohne Merge kommen 2 Zellen. Gruppe aus 4 → 1. Gruppen ab 5 → keine. Halte Platz frei."
+			"body": "Züge ohne Merge füllen das Feld schneller. Große Merges bringen weniger Zellen — oder keine. Höhere Level erhöhen den Druck."
 		},
 		"levels": {
 			"title": "Punkte sammeln und aufsteigen",
@@ -190,9 +190,9 @@
 		},
 		"spawn": {
 			"title": "Neue Zellen",
-			"line1": "Nach einem Zug ohne Merge erscheinen zwei neue Zellen.",
-			"line2": "Ein Merge aus 4 fügt eine hinzu; Gruppen ab 5 fügen keine hinzu.",
-			"diagram": "ohne Merge → 2 · 4 → 1 · 5+ → 0"
+			"line1": "Nach einem Zug können neue Zellen erscheinen — wie viele, hängt von deinen Merges ab.",
+			"line2": "Große Merges entlasten; höhere Level können eine Extra-Zelle bringen.",
+			"diagram": "★ großer Merge → weniger neue"
 		},
 		"levels": {
 			"title": "Level",

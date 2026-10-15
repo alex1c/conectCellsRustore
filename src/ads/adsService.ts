@@ -409,7 +409,19 @@ export async function showRewardedUndo (options?: {
 			}
 		}
 
-		const result = await presentRewardedAd(ad, source)
+		const result = await presentRewardedAd(ad, source, generation)
+
+		// Consent revoke during/after show — never return rewarded.
+		if (
+			result.status === 'rewarded' &&
+			(!isRuntimeAdsAllowed() ||
+				generation !== getAdsConsentGeneration())
+		) {
+			return {
+				status: 'unavailable',
+				reason: getAdsUnavailableReason(),
+			}
+		}
 
 		// Next preload always goes through single-flight ensure — only if still allowed.
 		if (isRuntimeAdsAllowed()) {
@@ -431,11 +443,36 @@ export async function showRewardedUndo (options?: {
 }
 
 /**
+ * True when ads purpose is still the same epoch captured at show start.
+ */
+function isAdsConsentEpochCurrent (generation: number): boolean {
+	return (
+		isRuntimeAdsAllowed() &&
+		generation === getAdsConsentGeneration()
+	)
+}
+
+/**
+ * GameScreen must re-check this immediately before applyUndo() so a revoke
+ * during show cannot grant Undo even if status was rewarded.
+ */
+export function mayApplyRewardedUndo (generation: number): boolean {
+	return isAdsConsentEpochCurrent(generation)
+}
+
+/** Snapshot ads consent epoch before starting a rewarded Undo attempt. */
+export function captureAdsConsentGeneration (): number {
+	return getAdsConsentGeneration()
+}
+
+/**
  * Wire SDK callbacks, await show() Promise, settle exactly once.
+ * Captured generation must still match at reward/dismiss or reward is void.
  */
 function presentRewardedAd (
 	ad: any,
 	source: RewardedTelemetrySource,
+	generation: number,
 ): Promise<RewardedResult> {
 	return new Promise<RewardedResult>((resolve) => {
 		let rewarded = false
@@ -454,14 +491,32 @@ function presentRewardedAd (
 		}
 
 		ad.onRewarded = () => {
+			// Late / duplicate callbacks after settle or revoke never grant Undo.
+			if (settled || !isAdsConsentEpochCurrent(generation)) {
+				return
+			}
 			rewarded = true
 			trackEvent('rewarded_reward', rewardedTelemetryBase(source))
 		}
 		ad.onAdImpression = () => {
+			if (settled || !isAdsConsentEpochCurrent(generation)) {
+				return
+			}
 			trackEvent('rewarded_impression', rewardedTelemetryBase(source))
 		}
 		ad.onAdDismissed = () => {
+			if (settled) {
+				return
+			}
 			trackEvent('rewarded_closed', rewardedTelemetryBase(source))
+			if (!isAdsConsentEpochCurrent(generation)) {
+				// Do not force-close native creative — just refuse the reward.
+				finish({
+					status: 'unavailable',
+					reason: getAdsUnavailableReason(),
+				})
+				return
+			}
 			finish(
 				rewarded
 					? { status: 'rewarded' }
@@ -469,6 +524,9 @@ function presentRewardedAd (
 			)
 		}
 		ad.onAdFailedToShow = (error?: unknown) => {
+			if (settled) {
+				return
+			}
 			trackEvent('rewarded_show_failed', {
 				...rewardedTelemetryBase(source),
 				error_type: sanitizeErrorType(error ?? 'failed_to_show'),
@@ -481,7 +539,7 @@ function presentRewardedAd (
 
 		void (async () => {
 			try {
-				if (!isRuntimeAdsAllowed()) {
+				if (!isAdsConsentEpochCurrent(generation)) {
 					finish({
 						status: 'unavailable',
 						reason: getAdsUnavailableReason(),
@@ -494,6 +552,15 @@ function presentRewardedAd (
 				)
 				// show() returns Promise<void> — must await for async rejection.
 				await ad.show()
+				// Revoke during show(): wait for dismiss/fail/timeout to settle.
+				// Do not return rewarded if consent flipped (checked in callbacks).
+				if (
+					!settled &&
+					!isAdsConsentEpochCurrent(generation)
+				) {
+					// Keep waiting for onAdDismissed / timeout so UI does not hang;
+					// callbacks will finish with unavailable.
+				}
 			} catch (error) {
 				trackEvent('rewarded_show_failed', {
 					...rewardedTelemetryBase(source),
@@ -507,6 +574,13 @@ function presentRewardedAd (
 		})()
 
 		hardTimeoutId = setTimeout(() => {
+			if (!isAdsConsentEpochCurrent(generation)) {
+				finish({
+					status: 'unavailable',
+					reason: getAdsUnavailableReason(),
+				})
+				return
+			}
 			finish({
 				status: 'failed',
 				reason: getAdsUnavailableReason(),

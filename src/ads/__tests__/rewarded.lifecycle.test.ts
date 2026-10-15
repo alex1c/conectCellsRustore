@@ -5,11 +5,17 @@
 
 import {
 	__resetAdsServiceForTests,
+	mayApplyRewardedUndo,
 	preloadRewardedUndo,
 	showRewardedUndo,
+	syncAdsConsent,
 } from '../adsService'
 import { trackEvent } from '../../analytics/appMetrica'
-import { __resetRuntimeConsentGateForTests } from '../../privacy/runtimeConsentGate'
+import {
+	__resetRuntimeConsentGateForTests,
+	getAdsConsentGeneration,
+	setRuntimeAdsAllowed,
+} from '../../privacy/runtimeConsentGate'
 import { RewardedAdLoader } from 'yandex-mobile-ads'
 
 jest.mock('../../analytics/appMetrica', () => ({
@@ -288,5 +294,89 @@ describe('rewarded undo lifecycle', () => {
 			'rewarded_load_requested',
 			expect.objectContaining({ placement: 'undo', source: 'game' }),
 		)
+	})
+
+	it('revoke during ad.show() never returns rewarded', async () => {
+		let resolveShow!: () => void
+		const showGate = new Promise<void>((resolve) => {
+			resolveShow = resolve
+		})
+		const { ad, callbacks } = makeAd(async () => {
+			await showGate
+		})
+		loadAdMock.mockResolvedValueOnce(ad)
+		const generation = getAdsConsentGeneration()
+
+		const showPromise = showRewardedUndo({ source: 'game' })
+		await flushMicrotasks()
+		expect(ad.show).toHaveBeenCalled()
+
+		setRuntimeAdsAllowed(false)
+		syncAdsConsent(false)
+		expect(mayApplyRewardedUndo(generation)).toBe(false)
+
+		resolveShow()
+		callbacks.onRewarded?.()
+		callbacks.onAdDismissed?.()
+		expect(await showPromise).toEqual({
+			status: 'unavailable',
+			reason: expect.any(String),
+		})
+	})
+
+	it('late onRewarded after revoke does not grant reward', async () => {
+		const { ad, callbacks } = makeAd()
+		loadAdMock.mockResolvedValueOnce(ad)
+
+		const showPromise = showRewardedUndo({ source: 'game' })
+		await flushMicrotasks()
+
+		setRuntimeAdsAllowed(false)
+		syncAdsConsent(false)
+		callbacks.onRewarded?.()
+		callbacks.onAdDismissed?.()
+		expect(await showPromise).toEqual({
+			status: 'unavailable',
+			reason: expect.any(String),
+		})
+		expect(eventNames()).not.toContain('rewarded_reward')
+	})
+
+	it('late onAdDismissed after settle is ignored (no double reward)', async () => {
+		const { ad, callbacks } = makeAd()
+		loadAdMock.mockResolvedValueOnce(ad)
+
+		const showPromise = showRewardedUndo({ source: 'game' })
+		await flushMicrotasks()
+
+		callbacks.onRewarded?.()
+		callbacks.onAdDismissed?.()
+		expect(await showPromise).toEqual({ status: 'rewarded' })
+
+		// Duplicate late callbacks must not re-enter rewarded path.
+		callbacks.onRewarded?.()
+		callbacks.onAdDismissed?.()
+		expect(eventNames().filter((n) => n === 'rewarded_reward')).toHaveLength(
+			1,
+		)
+	})
+
+	it('re-grant after revoke allows a fresh rewarded show', async () => {
+		setRuntimeAdsAllowed(false)
+		syncAdsConsent(false)
+		__resetAdsServiceForTests({ sdkReady: true })
+		expect(await showRewardedUndo({ source: 'game' })).toMatchObject({
+			status: 'unavailable',
+		})
+
+		setRuntimeAdsAllowed(true)
+		__resetAdsServiceForTests({ sdkReady: true })
+		const { ad, callbacks } = makeAd()
+		loadAdMock.mockResolvedValueOnce(ad)
+		const showPromise = showRewardedUndo({ source: 'game' })
+		await flushMicrotasks()
+		callbacks.onRewarded?.()
+		callbacks.onAdDismissed?.()
+		expect(await showPromise).toEqual({ status: 'rewarded' })
 	})
 })
