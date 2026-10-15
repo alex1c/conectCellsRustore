@@ -97,7 +97,15 @@ export function usePrivacyConsent (): PrivacyConsentState {
 				return
 			}
 			if (result.status === 'failed') {
-				// Fail-closed: revokes already applied; do not restore grants.
+				// Fail-closed UI: reflect denials so Settings does not keep showing
+				// granted while runtime gates are already closed. Grants are never
+				// applied on a failed write (retry required).
+				if (input.analytics === 'denied') {
+					setAnalytics('denied')
+				}
+				if (input.ads === 'denied') {
+					setAds('denied')
+				}
 				setPersistError(true)
 				throw new Error('privacy_consent_persist_failed')
 			}

@@ -26,8 +26,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import {
 	clearPersistedPrivacyConsentForTests,
+	mergeConsentWithDenyLedger,
 	readPersistedPrivacyConsent,
 	STORAGE_KEY_PRIVACY_CONSENT,
+	STORAGE_KEY_PRIVACY_DENY_LEDGER,
 	writePersistedPrivacyConsent,
 } from '../consentPersistence'
 
@@ -96,5 +98,44 @@ describe('consentPersistence', () => {
 				ads: 'granted',
 			}),
 		).rejects.toThrow()
+	})
+
+	it('mergeConsentWithDenyLedger forces deny over stale grant', () => {
+		const merged = mergeConsentWithDenyLedger(
+			{
+				analytics: 'granted',
+				ads: 'granted',
+				updatedAtIso: '2020-01-01T00:00:00.000Z',
+				storageStatus: 'ok',
+			},
+			{
+				analytics: 'denied',
+				ads: 'denied',
+				updatedAtIso: '2020-01-02T00:00:00.000Z',
+			},
+		)
+		expect(merged.analytics).toBe('denied')
+		expect(merged.ads).toBe('denied')
+	})
+
+	it('deny ledger overrides stale main granted on read', async () => {
+		mockStorage.set(
+			STORAGE_KEY_PRIVACY_CONSENT,
+			JSON.stringify({
+				analytics: 'granted',
+				ads: 'granted',
+				updatedAtIso: '2020-01-01T00:00:00.000Z',
+			}),
+		)
+		mockStorage.set(
+			STORAGE_KEY_PRIVACY_DENY_LEDGER,
+			JSON.stringify({
+				ads: 'denied',
+				updatedAtIso: '2020-01-02T00:00:00.000Z',
+			}),
+		)
+		const loaded = await readPersistedPrivacyConsent()
+		expect(loaded.ads).toBe('denied')
+		expect(loaded.analytics).toBe('granted')
 	})
 })

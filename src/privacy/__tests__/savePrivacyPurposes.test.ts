@@ -56,6 +56,7 @@ import {
 	isRuntimeAnalyticsAllowed,
 } from '../runtimeConsentGate'
 import { resetSdkConsentBridgeForTests } from '../sdkConsentBridge'
+import { readPersistedPrivacyConsent } from '../consentPersistence'
 import {
 	__resetConsentSaveEpochForTests,
 	savePrivacyPurposes,
@@ -191,14 +192,10 @@ describe('savePrivacyPurposes races', () => {
 		expect(secondResult.status).toBe('applied')
 		expect(isRuntimeAdsAllowed()).toBe(false)
 		expect(isRuntimeAnalyticsAllowed()).toBe(false)
-		// Final persisted payload must be the newer deny decision.
-		expect(mockStorage.size).toBe(1)
-		const stored = JSON.parse([...mockStorage.values()][0] as string) as {
-			ads: string
-			analytics: string
-		}
-		expect(stored.ads).toBe('denied')
-		expect(stored.analytics).toBe('denied')
+		// Final persisted decision (main and/or deny ledger) must be deny.
+		const loaded = await readPersistedPrivacyConsent()
+		expect(loaded.ads).toBe('denied')
+		expect(loaded.analytics).toBe('denied')
 	})
 
 	it('keeps analytics and ads independent across sequential saves', async () => {
