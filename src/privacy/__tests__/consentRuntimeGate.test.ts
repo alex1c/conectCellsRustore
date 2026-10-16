@@ -48,6 +48,7 @@ import { resetSdkConsentBridgeForTests } from '../sdkConsentBridge'
 jest.mock('yandex-mobile-ads', () => ({
 	MobileAds: {
 		setUserConsent: jest.fn(),
+		setAppAdAnalyticsReporting: jest.fn(),
 		initialize: jest.fn(async () => undefined),
 	},
 	InterstitialAdLoader: {
@@ -77,6 +78,7 @@ const { MobileAds, InterstitialAdLoader, RewardedAdLoader } =
 	require('yandex-mobile-ads') as {
 		MobileAds: {
 			setUserConsent: jest.Mock
+			setAppAdAnalyticsReporting: jest.Mock
 			initialize: jest.Mock
 		}
 		InterstitialAdLoader: { create: jest.Mock }

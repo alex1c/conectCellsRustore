@@ -12,13 +12,18 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional at runtime */
 
-import { trackEvent } from '../analytics/appMetrica'
+import {
+	forceNativeDataSendingEnabled,
+	trackEvent,
+} from '../analytics/appMetrica'
 import { t } from '../localization/i18n'
 import {
 	getAdsConsentGeneration,
 	isRuntimeAdsAllowed,
+	isRuntimeAnalyticsAllowed,
 } from '../privacy/runtimeConsentGate'
 import { resolveAdUnitId, type AdPlacementKey } from './placements'
+import { applyYandexAppAdAnalyticsReporting } from './yandexAdsPrivacy'
 
 let sdkReady = false
 let initAttempted = false
@@ -56,17 +61,27 @@ export async function initAds (): Promise<boolean> {
 
 	initAttempted = true
 	initPromise = (async (): Promise<boolean> => {
-		if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-			return false
-		}
 		try {
 			if (!isRuntimeAdsAllowed()) {
+				return false
+			}
+			// BEFORE initialize: disable Ads→AppMetrica auto ad-event reporting
+			// when analytics purpose is denied (must precede YandexAds.initialize).
+			const analyticsAllowed = isRuntimeAnalyticsAllowed()
+			applyYandexAppAdAnalyticsReporting(analyticsAllowed)
+
+			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 				return false
 			}
 			const { MobileAds } = require('yandex-mobile-ads')
 			// Callers (privacy bootstrap) must apply setUserConsent before this.
 			await MobileAds.initialize()
 			sdkReady = true
+			// Ads may anonymously activate AppMetrica despite manifest flags —
+			// immediately suppress sending when analytics is still denied.
+			if (!isRuntimeAnalyticsAllowed()) {
+				forceNativeDataSendingEnabled(false)
+			}
 			// Revoke during initialize() — SDK may be up, but do not serve.
 			return isRuntimeAdsAllowed()
 		} catch {

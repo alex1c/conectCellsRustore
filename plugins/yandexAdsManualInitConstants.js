@@ -21,6 +21,12 @@ const META_AUTOMATIC_SDK_INITIALIZATION =
 /**
  * Disable Ads SDK AppMetrica library-adapter analytics bootstrapping.
  * Distinct from the standalone @appmetrica/react-native-analytics activate().
+ *
+ * Bytecode (mobileads-8.4.0 yads.ag.a): reads this Boolean from ApplicationInfo
+ * metaData; when null defaults to TRUE (activate + reportEvent allowed).
+ * When false, yads.be skips AppMetricaLibraryAdapter.activate and yads.ee/ce
+ * skip ad-event reporting. Does NOT replace setAppAdAnalyticsReporting(false)
+ * or AppMetrica.setDataSendingEnabled(false) — those are runtime defenses.
  */
 const META_APPMETRICA_ANALYTICS_ENABLED =
 	`${META_PREFIX}APPMETRICA_ANALYTICS_ENABLED`

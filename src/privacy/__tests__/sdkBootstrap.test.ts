@@ -27,6 +27,7 @@ import {
 jest.mock('yandex-mobile-ads', () => ({
 	MobileAds: {
 		setUserConsent: jest.fn(),
+		setAppAdAnalyticsReporting: jest.fn(),
 		initialize: jest.fn(async () => undefined),
 	},
 }))

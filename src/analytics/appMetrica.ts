@@ -123,14 +123,24 @@ export function __forceAnalyticsActivatedForTests (): void {
 }
 
 /**
- * Push analytics purpose into the native SDK when already activated.
- * Always safe to call — JS trackEvent already reads the runtime gate.
+ * Push dataSendingEnabled into the native AppMetrica SDK.
+ *
+ * Disable path does NOT require our JS activate(): Yandex Ads may have
+ * anonymously activated AppMetricaLibraryAdapter (log: "Activate AppMetrica
+ * in anonymous mode", default data_sending_enabled=true). Revoke / Ads-only
+ * must still call setDataSendingEnabled(false) on that instance.
+ *
+ * Enable path only applies after our (or Ads') activation is meaningful —
+ * still gated by sink / Jest guards.
  */
-export function applyAnalyticsSendingEnabled (enabled: boolean): void {
-	if (!activated || sinkDisabled) {
+export function forceNativeDataSendingEnabled (enabled: boolean): void {
+	if (sinkDisabled) {
 		return
 	}
-	if (isTestEnv() && !testAllowReporting) {
+	// Disable must reach native even in Jest without activate opt-in —
+	// Ads-only anonymous activate still needs sending suppressed.
+	// Enable stays behind testAllowReporting to avoid accidental report noise.
+	if (enabled && isTestEnv() && !testAllowReporting) {
 		return
 	}
 	try {
@@ -138,6 +148,25 @@ export function applyAnalyticsSendingEnabled (enabled: boolean): void {
 	} catch {
 		// Native bridge missing — JS gate still blocks reportEvent.
 	}
+}
+
+/**
+ * Push analytics purpose into the native SDK.
+ * Always safe to call — JS trackEvent already reads the runtime gate.
+ * Deny works even when only Ads triggered anonymous AppMetrica activate.
+ */
+export function applyAnalyticsSendingEnabled (enabled: boolean): void {
+	if (!enabled) {
+		forceNativeDataSendingEnabled(false)
+		return
+	}
+	if (!activated || sinkDisabled) {
+		return
+	}
+	if (isTestEnv() && !testAllowReporting) {
+		return
+	}
+	forceNativeDataSendingEnabled(true)
 }
 
 function scrub (params?: AnalyticsParams): Record<string, string | number | boolean> {

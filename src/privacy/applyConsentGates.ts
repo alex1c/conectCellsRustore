@@ -6,6 +6,7 @@
  */
 
 import { syncAdsConsent } from '../ads/adsService'
+import { applyYandexAppAdAnalyticsReporting } from '../ads/yandexAdsPrivacy'
 import { applyAnalyticsSendingEnabled } from '../analytics/appMetrica'
 import { getAppStore } from '../store/appStore'
 import {
@@ -43,6 +44,7 @@ export function applyConsentGatesSync (input: ApplyConsentGatesInput): void {
 	if (!requirement.requiresExplicitConsent) {
 		setRuntimeAnalyticsAllowed(true)
 		applyAnalyticsSendingEnabled(true)
+		applyYandexAppAdAnalyticsReporting(true)
 		setRuntimeAdsAllowed(true)
 		syncAdsConsent(true)
 		applyYandexUserConsent('granted')
@@ -58,9 +60,12 @@ export function applyConsentGatesSync (input: ApplyConsentGatesInput): void {
 	if (!analyticsWanted) {
 		setRuntimeAnalyticsAllowed(false)
 		applyAnalyticsSendingEnabled(false)
+		// Keep Ads serving, but stop Ads→AppMetrica auto reporting.
+		applyYandexAppAdAnalyticsReporting(false)
 	} else if (input.openGrants) {
 		setRuntimeAnalyticsAllowed(true)
 		applyAnalyticsSendingEnabled(true)
+		applyYandexAppAdAnalyticsReporting(true)
 	}
 
 	if (!adsWanted) {

@@ -114,6 +114,37 @@ if (!pluginSrc.includes('AUTOMATIC_SDK_INITIALIZATION')) {
 } else {
 	ok('plugin references AUTOMATIC_SDK_INITIALIZATION')
 }
+if (!pluginSrc.includes('ensure-yandex-ads-app-ad-analytics-bridge')) {
+	fail('plugin must run ensure-yandex-ads-app-ad-analytics-bridge on prebuild')
+} else {
+	ok('plugin runs setAppAdAnalyticsReporting bridge ensure')
+}
+
+// Bridge patch must be present in installed yandex-mobile-ads (postinstall / prebuild).
+const ktBridge = path.join(
+	root,
+	'node_modules',
+	'yandex-mobile-ads',
+	'android',
+	'src',
+	'main',
+	'java',
+	'com',
+	'yandexmobileads',
+	'YandexMobileAdsModule.kt',
+)
+if (fs.existsSync(ktBridge)) {
+	const kt = fs.readFileSync(ktBridge, 'utf8')
+	if (!kt.includes('setAppAdAnalyticsReporting')) {
+		fail(
+			'YandexMobileAdsModule.kt missing setAppAdAnalyticsReporting — run: node scripts/ensure-yandex-ads-app-ad-analytics-bridge.mjs',
+		)
+	} else {
+		ok('YandexMobileAdsModule.kt exposes setAppAdAnalyticsReporting')
+	}
+} else {
+	ok('yandex-mobile-ads not installed — skip Kotlin bridge check')
+}
 
 const androidRoot = path.join(root, 'android')
 const mainManifest = path.join(

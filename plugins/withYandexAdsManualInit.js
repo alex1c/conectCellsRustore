@@ -24,6 +24,34 @@ const {
 	META_APPMETRICA_ANALYTICS_ENABLED,
 	REQUIRED_META_VALUE,
 } = require('./yandexAdsManualInitConstants')
+const { withDangerousMod } = require('@expo/config-plugins')
+const path = require('path')
+const { spawnSync } = require('child_process')
+
+/**
+ * Ensure yandex-mobile-ads RN bridge exposes setAppAdAnalyticsReporting
+ * (missing in 8.4.0). Idempotent patch of node_modules sources used by Gradle.
+ */
+function ensureAppAdAnalyticsBridge (projectRoot) {
+	const script = path.join(
+		projectRoot,
+		'scripts',
+		'ensure-yandex-ads-app-ad-analytics-bridge.mjs',
+	)
+	const result = spawnSync(process.execPath, [script], {
+		cwd: projectRoot,
+		encoding: 'utf8',
+	})
+	if (result.stdout) {
+		console.log(result.stdout.trimEnd())
+	}
+	if (result.status !== 0) {
+		const detail = (result.stderr || result.stdout || '').trim()
+		throw new Error(
+			`ensure-yandex-ads-app-ad-analytics-bridge failed: ${detail}`,
+		)
+	}
+}
 
 /**
  * Upserts an <meta-data> entry under <application>.
@@ -138,6 +166,14 @@ afterEvaluate {
  * @param {import('@expo/config-plugins').ExportedConfig} config
  */
 module.exports = function withYandexAdsManualInit (config) {
+	config = withDangerousMod(config, [
+		'android',
+		async (cfg) => {
+			ensureAppAdAnalyticsBridge(cfg.modRequest.projectRoot)
+			return cfg
+		},
+	])
+
 	config = withAndroidManifest(config, (cfg) => {
 		applyYandexAdsManualInitMetadata(cfg.modResults)
 		return cfg
