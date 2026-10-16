@@ -22,6 +22,7 @@ import {
 	isRuntimeAdsAllowed,
 	isRuntimeAnalyticsAllowed,
 } from '../privacy/runtimeConsentGate'
+import { isStoreMonetizationEnabled } from '../store/monetization'
 import { resolveAdUnitId, type AdPlacementKey } from './placements'
 import { applyYandexAppAdAnalyticsReporting } from './yandexAdsPrivacy'
 
@@ -45,6 +46,10 @@ export type RewardedTelemetrySource = 'game' | 'game_over'
  * Re-checks consent after await so revoke mid-init does not enable serving.
  */
 export async function initAds (): Promise<boolean> {
+	// Google Play flavor excludes the Ads native module entirely.
+	if (!isStoreMonetizationEnabled()) {
+		return false
+	}
 	if (!isRuntimeAdsAllowed()) {
 		return false
 	}
@@ -117,6 +122,9 @@ export type InterstitialResult = 'shown' | 'failed' | 'unavailable'
 export async function showInterstitial (
 	placement: AdPlacementKey = 'gameOverInterstitial',
 ): Promise<InterstitialResult> {
+	if (!isStoreMonetizationEnabled()) {
+		return 'unavailable'
+	}
 	// Consent gate first — deny must win even in Jest.
 	if (!isRuntimeAdsAllowed()) {
 		return 'unavailable'
@@ -358,7 +366,7 @@ export async function preloadRewardedUndo (
 	source: RewardedTelemetrySource = 'game',
 ): Promise<void> {
 	try {
-		if (!isRuntimeAdsAllowed()) {
+		if (!isStoreMonetizationEnabled() || !isRuntimeAdsAllowed()) {
 			return
 		}
 		const ready = await initAds()
@@ -383,7 +391,7 @@ export async function showRewardedUndo (options?: {
 	source?: RewardedTelemetrySource
 }): Promise<RewardedResult> {
 	const source = options?.source ?? 'game'
-	if (!isRuntimeAdsAllowed()) {
+	if (!isStoreMonetizationEnabled() || !isRuntimeAdsAllowed()) {
 		return {
 			status: 'unavailable',
 			reason: getAdsUnavailableReason(),

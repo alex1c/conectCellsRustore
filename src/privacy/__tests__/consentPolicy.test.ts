@@ -15,11 +15,11 @@ describe('consentPolicy', () => {
 		__setAppStoreForTests(null)
 	})
 
-	it('requires explicit consent only for Google Play', () => {
-		expect(
-			resolveConsentRequirement({ storeId: 'googleplay' })
-				.requiresExplicitConsent,
-		).toBe(true)
+	it('Google Play closed-testing: no optional SDKs, no consent UI', () => {
+		const play = resolveConsentRequirement({ storeId: 'googleplay' })
+		expect(play.requiresExplicitConsent).toBe(false)
+		expect(play.optionalSdksAvailable).toBe(false)
+		expect(play.reason).toBe('googleplay_no_optional_sdks')
 		expect(
 			resolveConsentRequirement({ storeId: 'rustore' })
 				.requiresExplicitConsent,
@@ -28,6 +28,7 @@ describe('consentPolicy', () => {
 
 	it('RuStore enables analytics and ads without decisions', () => {
 		const req = resolveConsentRequirement({ storeId: 'rustore' })
+		expect(req.optionalSdksAvailable).toBe(true)
 		expect(canEnableAnalytics(null, req)).toBe(true)
 		expect(canEnableAds(null, req)).toBe(true)
 		expect(isConsentPending({ analytics: null, ads: null }, req)).toBe(
@@ -35,33 +36,22 @@ describe('consentPolicy', () => {
 		)
 	})
 
-	it('Google Play stays pending until both purposes decided', () => {
+	it('Google Play is never pending and never enables optional SDKs', () => {
 		const req = resolveConsentRequirement({ storeId: 'googleplay' })
 		expect(isConsentPending({ analytics: null, ads: null }, req)).toBe(
-			true,
+			false,
 		)
-		expect(
-			isConsentPending({ analytics: 'granted', ads: null }, req),
-		).toBe(true)
-		expect(
-			isConsentPending(
-				{ analytics: 'granted', ads: 'denied' },
-				req,
-			),
-		).toBe(false)
-	})
-
-	it('Google Play rejection disables optional SDKs', () => {
-		const req = resolveConsentRequirement({ storeId: 'googleplay' })
-		expect(canEnableAnalytics('denied', req)).toBe(false)
-		expect(canEnableAds('denied', req)).toBe(false)
-		expect(canEnableAnalytics('granted', req)).toBe(true)
-		expect(canEnableAds('granted', req)).toBe(true)
+		expect(canEnableAnalytics('granted', req)).toBe(false)
+		expect(canEnableAds('granted', req)).toBe(false)
 	})
 
 	it('ads personalization is not separable for Yandex stack', () => {
 		expect(
 			resolveConsentRequirement({ storeId: 'googleplay' })
+				.adsPersonalizationSeparable,
+		).toBe(false)
+		expect(
+			resolveConsentRequirement({ storeId: 'rustore' })
 				.adsPersonalizationSeparable,
 		).toBe(false)
 	})

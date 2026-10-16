@@ -49,13 +49,13 @@ module.exports = ({ config }) => {
 	// Keep Metro / EXPO_PUBLIC_* inlining aligned with native extra.appStore.
 	process.env.EXPO_PUBLIC_APP_STORE = appStore
 
-	const plugins = [
-		...(config.plugins || []),
-		// Disable Yandex Ads ContentProvider auto-init + Ads→AppMetrica adapter
-		// before JS consent gates. Must re-run via expo prebuild — ./android is
-		// gitignored and a stale tree silently drops these <meta-data> flags.
-		'./plugins/withYandexAdsManualInit',
-	]
+	const plugins = [...(config.plugins || [])]
+
+	// RuStore only: Yandex Ads manual-init meta-data. Google Play builds exclude
+	// Yandex Ads / AppMetrica entirely (see react-native.config.js).
+	if (appStore === 'rustore') {
+		plugins.push('./plugins/withYandexAdsManualInit')
+	}
 
 	return {
 		...config,
@@ -63,6 +63,8 @@ module.exports = ({ config }) => {
 		extra: {
 			...(config.extra || {}),
 			appStore,
+			/** Mirrors src/store/monetization.ts for native/docs consumers. */
+			storeMonetizationEnabled: appStore === 'rustore',
 		},
 	}
 }

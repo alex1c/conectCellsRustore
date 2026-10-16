@@ -15,13 +15,18 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional */
 
+import { isStoreMonetizationEnabled } from '../store/monetization'
+
 /**
  * Mirror analytics purpose into Ads→AppMetrica automatic ad-event reporting.
- * Safe no-op when the native bridge / method is missing.
+ * Safe no-op when the native bridge / method is missing or Play excludes Ads.
  */
 export function applyYandexAppAdAnalyticsReporting (
 	analyticsAllowed: boolean,
 ): void {
+	if (!isStoreMonetizationEnabled()) {
+		return
+	}
 	try {
 		const { MobileAds } = require('yandex-mobile-ads')
 		if (

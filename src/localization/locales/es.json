@@ -34,6 +34,7 @@
 		"hint": "Elige una celda y luego un destino vacío por un camino libre",
 		"pathBlocked": "Camino bloqueado",
 		"undo": "↶ Deshacer 🎬",
+		"undoFree": "↶ Deshacer",
 		"restart": "Reiniciar"
 	},
 	"scoreHeader": {
@@ -56,13 +57,16 @@
 		"bestLevel": "Mejor nivel: {{bestLevel}}",
 		"newGame": "Nueva partida",
 		"undoRescue": "↶ Deshacer el último movimiento 🎬",
+		"undoRescueFree": "↶ Deshacer el último movimiento",
 		"undoLoading": "Cargando anuncio…",
 		"home": "Inicio"
 	},
 	"undo": {
 		"title": "¿Deshacer movimiento?",
 		"body": "Mira un anuncio corto para deshacer el último movimiento.",
+		"freeBody": "¿Deshacer el último movimiento?",
 		"confirm": "Ver",
+		"freeConfirm": "Deshacer",
 		"adsAlertTitle": "Anuncios"
 	},
 	"restart": {

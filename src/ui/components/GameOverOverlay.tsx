@@ -26,6 +26,8 @@ export interface GameOverOverlayProps {
 	bestLevel: number
 	canUndo: boolean
 	undoBusy?: boolean
+	/** RuStore rewarded path shows ad copy; Google Play free Undo does not. */
+	undoRequiresAd?: boolean
 	onNewGame: () => void
 	onRewardedUndo: () => void
 	onBackHome?: () => void
@@ -40,11 +42,17 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 		bestLevel,
 		canUndo,
 		undoBusy = false,
+		undoRequiresAd = true,
 		onNewGame,
 		onRewardedUndo,
 		onBackHome,
 	} = props
 	const { t } = useTranslation()
+	const undoLabel = undoBusy
+		? t('gameOver.undoLoading')
+		: undoRequiresAd
+			? t('gameOver.undoRescue')
+			: t('gameOver.undoRescueFree')
 	return (
 		<Modal visible={visible} transparent animationType="fade">
 			<View style={styles.backdrop}>
@@ -75,9 +83,7 @@ export function GameOverOverlay (props: GameOverOverlayProps) {
 							disabled={undoBusy}
 						>
 							<Text style={styles.secondaryText}>
-								{undoBusy
-									? t('gameOver.undoLoading')
-									: t('gameOver.undoRescue')}
+								{undoLabel}
 							</Text>
 						</Pressable>
 					) : null}

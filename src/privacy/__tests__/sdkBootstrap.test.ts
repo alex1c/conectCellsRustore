@@ -15,6 +15,7 @@ import {
 	isAnalyticsActivated,
 } from '../../analytics/appMetrica'
 import { __setAppStoreForTests } from '../../store/appStore'
+import { __setStoreMonetizationForTests } from '../../store/monetization'
 import {
 	__resetOptionalSdkBootstrapForTests,
 	bootstrapOptionalSdks,
@@ -23,6 +24,11 @@ import {
 	applyYandexUserConsent,
 	resetSdkConsentBridgeForTests,
 } from '../sdkConsentBridge'
+import {
+	isRuntimeAdsAllowed,
+	isRuntimeAnalyticsAllowed,
+	__resetRuntimeConsentGateForTests,
+} from '../runtimeConsentGate'
 
 jest.mock('yandex-mobile-ads', () => ({
 	MobileAds: {
@@ -57,6 +63,8 @@ describe('optional SDK bootstrap', () => {
 		__resetAdsServiceForTests()
 		resetSdkConsentBridgeForTests()
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
+		__resetRuntimeConsentGateForTests()
 		MobileAds.setUserConsent.mockClear()
 		MobileAds.initialize.mockClear()
 		// Allow native paths in this suite (override test short-circuit carefully).
@@ -66,6 +74,7 @@ describe('optional SDK bootstrap', () => {
 
 	afterEach(() => {
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
 	})
 
 	it('applies setUserConsent(true) for RuStore without a dialog gate', async () => {
@@ -74,8 +83,24 @@ describe('optional SDK bootstrap', () => {
 		expect(MobileAds.setUserConsent).toHaveBeenCalledWith(true)
 	})
 
-	it('Google Play rejection does not call setUserConsent(true)', async () => {
+	it('Google Play (no optional SDKs) never touches Yandex MobileAds', async () => {
 		__setAppStoreForTests('googleplay')
+		__resetRuntimeConsentGateForTests({ ads: true, analytics: true })
+		await bootstrapOptionalSdks({
+			analytics: 'granted',
+			ads: 'granted',
+		})
+		expect(MobileAds.setUserConsent).not.toHaveBeenCalled()
+		expect(MobileAds.initialize).not.toHaveBeenCalled()
+		expect(isRuntimeAdsAllowed()).toBe(false)
+		expect(isRuntimeAnalyticsAllowed()).toBe(false)
+		expect(await initAds()).toBe(false)
+	})
+
+	it('gated Play-with-SDKs rejection does not call setUserConsent(true)', async () => {
+		// Regression for the reserved googleplay_first_party_gate path.
+		__setAppStoreForTests('googleplay')
+		__setStoreMonetizationForTests(true)
 		await bootstrapOptionalSdks({
 			analytics: 'denied',
 			ads: 'denied',
@@ -84,8 +109,9 @@ describe('optional SDK bootstrap', () => {
 		expect(MobileAds.setUserConsent).not.toHaveBeenCalledWith(true)
 	})
 
-	it('Google Play grant applies setUserConsent(true) before ads path', async () => {
+	it('gated Play-with-SDKs grant applies setUserConsent(true)', async () => {
 		__setAppStoreForTests('googleplay')
+		__setStoreMonetizationForTests(true)
 		await bootstrapOptionalSdks({
 			analytics: 'granted',
 			ads: 'granted',
@@ -94,22 +120,21 @@ describe('optional SDK bootstrap', () => {
 	})
 
 	it('does not duplicate bootstrap work for the same decisions', async () => {
-		__setAppStoreForTests('googleplay')
+		__setAppStoreForTests('rustore')
 		await bootstrapOptionalSdks({
-			analytics: 'granted',
-			ads: 'granted',
+			analytics: null,
+			ads: null,
 		})
 		MobileAds.setUserConsent.mockClear()
 		await bootstrapOptionalSdks({
-			analytics: 'granted',
-			ads: 'granted',
+			analytics: null,
+			ads: null,
 		})
-		// Idempotent key short-circuits before re-applying when lastApplied matches;
-		// either way initialize must not be forced twice via bootstrap key.
 		expect(MobileAds.setUserConsent).not.toHaveBeenCalled()
 	})
 
-	it('applyYandexUserConsent is idempotent', () => {
+	it('applyYandexUserConsent is idempotent on RuStore', () => {
+		__setAppStoreForTests('rustore')
 		applyYandexUserConsent('granted')
 		applyYandexUserConsent('granted')
 		expect(MobileAds.setUserConsent).toHaveBeenCalledTimes(1)
@@ -131,7 +156,8 @@ describe('optional SDK bootstrap', () => {
 		)
 	})
 
-	it('initAds remains single-flight after success in production-like reset', async () => {
+	it('initAds remains single-flight after success when monetization is on', async () => {
+		__setAppStoreForTests('rustore')
 		__resetAdsServiceForTests({ sdkReady: true })
 		const first = await initAds()
 		const second = await initAds()

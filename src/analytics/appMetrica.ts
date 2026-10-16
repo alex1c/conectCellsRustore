@@ -22,6 +22,7 @@ import {
 	isRuntimeAnalyticsAllowed,
 } from '../privacy/runtimeConsentGate'
 import { getAppStore } from '../store/appStore'
+import { isStoreMonetizationEnabled } from '../store/monetization'
 
 /** Production AppMetrica API key (masked in reports). */
 export const APPMETRICA_API_KEY = '96143264-a11a-44d0-875d-c960d4f8111e'
@@ -137,6 +138,10 @@ export function forceNativeDataSendingEnabled (enabled: boolean): void {
 	if (sinkDisabled) {
 		return
 	}
+	// Play builds have no AppMetrica native module — never require() it.
+	if (!isStoreMonetizationEnabled()) {
+		return
+	}
 	// Disable must reach native even in Jest without activate opt-in —
 	// Ads-only anonymous activate still needs sending suppressed.
 	// Enable stays behind testAllowReporting to avoid accidental report noise.
@@ -197,6 +202,10 @@ export async function initAnalytics (): Promise<void> {
 		if (isTestEnv()) {
 			sinkDisabled = true
 		}
+		return
+	}
+	// Google Play flavor excludes the AppMetrica native module entirely.
+	if (!isStoreMonetizationEnabled()) {
 		return
 	}
 	// Google Play deny / pending — never activate until purpose granted.

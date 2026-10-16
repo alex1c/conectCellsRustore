@@ -34,6 +34,7 @@
 		"hint": "Zelle wählen, dann leeres Ziel auf freiem Weg",
 		"pathBlocked": "Weg blockiert",
 		"undo": "↶ Rückgängig 🎬",
+		"undoFree": "↶ Rückgängig",
 		"restart": "Neustart"
 	},
 	"scoreHeader": {
@@ -56,13 +57,16 @@
 		"bestLevel": "Bestes Level: {{bestLevel}}",
 		"newGame": "Neues Spiel",
 		"undoRescue": "↶ Letzten Zug rückgängig 🎬",
+		"undoRescueFree": "↶ Letzten Zug rückgängig",
 		"undoLoading": "Werbung lädt…",
 		"home": "Startseite"
 	},
 	"undo": {
 		"title": "Zug rückgängig?",
 		"body": "Sieh dir eine kurze Werbung an, um den letzten Zug rückgängig zu machen.",
+		"freeBody": "Letzten Zug rückgängig machen?",
 		"confirm": "Ansehen",
+		"freeConfirm": "Rückgängig",
 		"adsAlertTitle": "Werbung"
 	},
 	"restart": {

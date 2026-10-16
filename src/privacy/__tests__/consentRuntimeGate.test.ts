@@ -26,6 +26,7 @@ import {
 } from '../../analytics/appMetrica'
 import { openExternalUrl } from '../../ui/links/openExternalUrl'
 import { __setAppStoreForTests } from '../../store/appStore'
+import { __setStoreMonetizationForTests } from '../../store/monetization'
 import {
 	__resetOptionalSdkBootstrapForTests,
 	bootstrapOptionalSdks,
@@ -105,6 +106,9 @@ describe('consent runtime gates', () => {
 		__resetAdsServiceForTests()
 		resetSdkConsentBridgeForTests()
 		__setAppStoreForTests('googleplay')
+		// Closed-testing Play ships without SDKs; force monetization on to
+		// exercise the reserved first-party consent gate paths.
+		__setStoreMonetizationForTests(true)
 		__resetRuntimeConsentGateForTests({
 			ads: false,
 			analytics: false,
@@ -124,6 +128,7 @@ describe('consent runtime gates', () => {
 
 	afterEach(() => {
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
 		__resetRuntimeConsentGateForTests()
 	})
 

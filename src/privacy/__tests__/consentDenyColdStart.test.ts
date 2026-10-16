@@ -52,6 +52,7 @@ jest.mock('@appmetrica/react-native-analytics', () => ({
 
 import { __resetAnalyticsForTests } from '../../analytics/appMetrica'
 import { __setAppStoreForTests } from '../../store/appStore'
+import { __setStoreMonetizationForTests } from '../../store/monetization'
 import {
 	clearPersistedPrivacyConsentForTests,
 	readPersistedPrivacyConsent,
@@ -96,12 +97,14 @@ describe('consent deny cold start fail-closed', () => {
 		__resetAnalyticsForTests()
 		resetSdkConsentBridgeForTests()
 		__setAppStoreForTests('googleplay')
+		__setStoreMonetizationForTests(true)
 		__resetRuntimeConsentGateForTests({ ads: false, analytics: false })
 		await clearPersistedPrivacyConsentForTests()
 	})
 
 	afterEach(() => {
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
 		__resetRuntimeConsentGateForTests()
 	})
 

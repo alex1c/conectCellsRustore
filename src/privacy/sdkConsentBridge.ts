@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports -- native SDK optional */
 
+import { isStoreMonetizationEnabled } from '../store/monetization'
 import type { PurposeDecision } from './consentPersistence'
 
 let lastAppliedAdsConsent: boolean | null = null
@@ -17,9 +18,10 @@ export function resetSdkConsentBridgeForTests (): void {
 /**
  * Pushes the GDPR-style userConsent flag into Yandex Mobile Ads.
  * Call on every launch once ads purpose is known (Yandex docs).
+ * No-op when the store flavor excludes the Ads SDK (Google Play).
  */
 export function applyYandexUserConsent (ads: PurposeDecision | null): void {
-	if (ads === null) {
+	if (!isStoreMonetizationEnabled() || ads === null) {
 		return
 	}
 	const enabled = ads === 'granted'
@@ -33,7 +35,7 @@ export function applyYandexUserConsent (ads: PurposeDecision | null): void {
 		MobileAds.setUserConsent(enabled)
 		lastAppliedAdsConsent = enabled
 	} catch {
-		// Native module missing in Jest / web — ignore.
+		// Native module missing in Jest / web / Play builds — ignore.
 	}
 }
 

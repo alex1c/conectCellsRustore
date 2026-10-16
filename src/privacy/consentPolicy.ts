@@ -1,16 +1,15 @@
 /**
  * First-party consent policy for optional AppMetrica + Yandex Mobile Ads.
  *
- * Adapted from ForestMusic bloodPressureDiaryRuStore (Google Play adaptation),
- * stripped of medical / session-only restore rules.
- *
- * - RuStore: no in-app consent gate (preserve existing release behavior).
- * - Google Play: explicit analytics + ads choices before optional SDK init.
- * - Yandex-only stack (no AdMob) → no Google-certified CMP in this release.
+ * - RuStore: no in-app consent gate; optional SDKs allowed (existing release).
+ * - Google Play (closed testing): optional SDKs are not shipped — no consent
+ *   UI for ads/analytics, and canEnable* always false.
+ * - Yandex-only stack on RuStore (no AdMob) → no Google-certified CMP.
  * - Ads personalization is not separable in the shipped Yandex SDK.
  */
 
 import type { AppStoreId } from '../store/appStore'
+import { isStoreMonetizationEnabled } from '../store/monetization'
 import type { PurposeDecision } from './consentPersistence'
 
 export type ConsentRequirement = {
@@ -19,6 +18,8 @@ export type ConsentRequirement = {
 	reason: string
 	/** Personalization cannot be toggled independently of ads for Yandex. */
 	adsPersonalizationSeparable: boolean
+	/** False when the store flavor excludes Ads/AppMetrica from the binary. */
+	optionalSdksAvailable: boolean
 }
 
 /**
@@ -27,17 +28,28 @@ export type ConsentRequirement = {
 export function resolveConsentRequirement (input: {
 	storeId: AppStoreId
 }): ConsentRequirement {
+	if (!isStoreMonetizationEnabled(input.storeId)) {
+		return {
+			requiresExplicitConsent: false,
+			reason: 'googleplay_no_optional_sdks',
+			adsPersonalizationSeparable: false,
+			optionalSdksAvailable: false,
+		}
+	}
 	if (input.storeId === 'googleplay') {
+		// Reserved if Play later re-enables optional SDKs with a gate.
 		return {
 			requiresExplicitConsent: true,
 			reason: 'googleplay_first_party_gate',
 			adsPersonalizationSeparable: false,
+			optionalSdksAvailable: true,
 		}
 	}
 	return {
 		requiresExplicitConsent: false,
 		reason: 'rustore_no_gate',
 		adsPersonalizationSeparable: false,
+		optionalSdksAvailable: true,
 	}
 }
 
@@ -56,6 +68,9 @@ export function canEnableAnalytics (
 	analytics: PurposeDecision | null,
 	requirement: ConsentRequirement,
 ): boolean {
+	if (!requirement.optionalSdksAvailable) {
+		return false
+	}
 	if (!requirement.requiresExplicitConsent) {
 		return true
 	}
@@ -66,6 +81,9 @@ export function canEnableAds (
 	ads: PurposeDecision | null,
 	requirement: ConsentRequirement,
 ): boolean {
+	if (!requirement.optionalSdksAvailable) {
+		return false
+	}
 	if (!requirement.requiresExplicitConsent) {
 		return true
 	}

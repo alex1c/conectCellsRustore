@@ -28,6 +28,7 @@ import {
 } from '../ads/adsService'
 import { trackEvent } from '../analytics/appMetrica'
 import { useTranslation } from '../localization/useTranslation'
+import { isStoreMonetizationEnabled } from '../store/monetization'
 import { pauseGameplayAudio } from './feel/sound'
 import { ChainToast } from './components/ChainToast'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -69,6 +70,7 @@ export function GameScreen (props: GameScreenProps) {
 	const { game, onBackHome, onOpenSettings, onResetOnboarding } = props
 	const insets = useSafeAreaInsets()
 	const { t } = useTranslation()
+	const monetizationEnabled = isStoreMonetizationEnabled()
 	const [viewportWidth, setViewportWidth] = useState(360)
 	const [undoConfirmVisible, setUndoConfirmVisible] = useState(false)
 	const [undoBusy, setUndoBusy] = useState(false)
@@ -169,7 +171,20 @@ export function GameScreen (props: GameScreenProps) {
 	}, [maybeLogBannerGeom])
 
 	/**
-	 * Shared rewarded undo path for in-game button and Game Over rescue.
+	 * Google Play: free Undo (no Ads SDK). Applies immediately after confirm.
+	 */
+	const runFreeUndo = useCallback((source: 'game' | 'game_over') => {
+		if (undoBusy || !game.canUndoMove) {
+			return
+		}
+		setUndoConfirmVisible(false)
+		trackEvent('undo_offer', { source, mode: 'free' })
+		game.applyUndo()
+		game.dismissGameOver()
+	}, [game, undoBusy])
+
+	/**
+	 * RuStore: rewarded undo path for in-game button and Game Over rescue.
 	 * undo_rewarded_started = user confirmed attempt (not proof of impression).
 	 */
 	const runRewardedUndo = useCallback(async (
@@ -240,6 +255,22 @@ export function GameScreen (props: GameScreenProps) {
 		}
 		setUndoConfirmVisible(true)
 	}, [game.canUndoMove, undoBusy])
+
+	const handleUndoConfirm = useCallback(() => {
+		if (!monetizationEnabled) {
+			runFreeUndo('game')
+			return
+		}
+		void runRewardedUndo('game')
+	}, [monetizationEnabled, runFreeUndo, runRewardedUndo])
+
+	const handleGameOverUndo = useCallback(() => {
+		if (!monetizationEnabled) {
+			runFreeUndo('game_over')
+			return
+		}
+		void runRewardedUndo('game_over')
+	}, [monetizationEnabled, runFreeUndo, runRewardedUndo])
 
 	const handleSettingsPress = useCallback(() => {
 		if (onOpenSettings) {
@@ -350,7 +381,9 @@ export function GameScreen (props: GameScreenProps) {
 							adjustsFontSizeToFit
 							minimumFontScale={0.85}
 						>
-							{t('game.undo')}
+							{monetizationEnabled
+								? t('game.undo')
+								: t('game.undoFree')}
 						</Text>
 					</Pressable>
 					<Pressable
@@ -389,15 +422,17 @@ export function GameScreen (props: GameScreenProps) {
 			</View>
 
 			{/*
-			 * Fixed bottom dock — full-bleed under the padded play column.
-			 * Mounts once with GameScreen; not tied to move/score state.
+			 * RuStore: fixed bottom ad dock. Google Play: omitted entirely
+			 * (no reserved space, no empty containers).
 			 */}
-			<View onLayout={handleBannerLayout} style={styles.bannerDock}>
-				<BannerSlot
-					placement="gameBanner"
-					reservedHeight={GAME_BANNER_RESERVED_HEIGHT}
-				/>
-			</View>
+			{monetizationEnabled ? (
+				<View onLayout={handleBannerLayout} style={styles.bannerDock}>
+					<BannerSlot
+						placement="gameBanner"
+						reservedHeight={GAME_BANNER_RESERVED_HEIGHT}
+					/>
+				</View>
+			) : null}
 
 			{__DEV__ ? (
 				<ScreenshotCaptureBar onLoadFixture={game.handleLoadFixture} />
@@ -411,10 +446,9 @@ export function GameScreen (props: GameScreenProps) {
 				bestLevel={game.bestLevel}
 				canUndo={game.canUndoMove}
 				undoBusy={undoBusy}
+				undoRequiresAd={monetizationEnabled}
 				onNewGame={game.handleNewGameFromOver}
-				onRewardedUndo={() => {
-					void runRewardedUndo('game_over')
-				}}
+				onRewardedUndo={handleGameOverUndo}
 				onBackHome={onBackHome}
 			/>
 			<LevelUpToast
@@ -435,13 +469,19 @@ export function GameScreen (props: GameScreenProps) {
 			<ConfirmDialog
 				visible={undoConfirmVisible}
 				title={t('undo.title')}
-				body={t('undo.body')}
-				confirmLabel={t('undo.confirm')}
+				body={
+					monetizationEnabled
+						? t('undo.body')
+						: t('undo.freeBody')
+				}
+				confirmLabel={
+					monetizationEnabled
+						? t('undo.confirm')
+						: t('undo.freeConfirm')
+				}
 				busy={undoBusy}
 				onCancel={() => setUndoConfirmVisible(false)}
-				onConfirm={() => {
-					void runRewardedUndo('game')
-				}}
+				onConfirm={handleUndoConfirm}
 			/>
 		</View>
 	)

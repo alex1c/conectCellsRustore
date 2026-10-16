@@ -49,6 +49,7 @@ import {
 	trackEvent,
 } from '../../analytics/appMetrica'
 import { __setAppStoreForTests } from '../../store/appStore'
+import { __setStoreMonetizationForTests } from '../../store/monetization'
 import { __resetOptionalSdkBootstrapForTests } from '../optionalSdkBootstrap'
 import {
 	__resetRuntimeConsentGateForTests,
@@ -73,6 +74,7 @@ describe('savePrivacyPurposes races', () => {
 		__resetAnalyticsForTests()
 		resetSdkConsentBridgeForTests()
 		__setAppStoreForTests('googleplay')
+		__setStoreMonetizationForTests(true)
 		__resetRuntimeConsentGateForTests({
 			ads: true,
 			analytics: true,
@@ -82,6 +84,7 @@ describe('savePrivacyPurposes races', () => {
 
 	afterEach(() => {
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
 		__resetRuntimeConsentGateForTests()
 		__resetAnalyticsForTests()
 	})

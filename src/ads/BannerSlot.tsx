@@ -32,6 +32,7 @@ import {
 	isRuntimeAdsAllowed,
 	subscribeRuntimeConsent,
 } from '../privacy/runtimeConsentGate'
+import { isStoreMonetizationEnabled } from '../store/monetization'
 import { COLOR_APP_BACKGROUND } from '../ui/theme/colors'
 import { canServeAds, initAds } from './adsService'
 import {
@@ -78,6 +79,7 @@ class BannerErrorBoundary extends Component<
 
 export function BannerSlot (props: BannerSlotProps) {
 	const { placement, reservedHeight } = props
+	const monetizationEnabled = isStoreMonetizationEnabled()
 	const isFixed = typeof reservedHeight === 'number' && reservedHeight > 0
 	const [adSize, setAdSize] = useState<unknown>(null)
 	const [failed, setFailed] = useState(false)
@@ -100,6 +102,10 @@ export function BannerSlot (props: BannerSlotProps) {
 	useEffect(() => {
 		let cancelled = false
 		;(async () => {
+			// Google Play: no Ads SDK — never require native modules.
+			if (!monetizationEnabled) {
+				return
+			}
 			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 				return
 			}
@@ -137,7 +143,12 @@ export function BannerSlot (props: BannerSlotProps) {
 		return () => {
 			cancelled = true
 		}
-	}, [placement, adsAllowed])
+	}, [placement, adsAllowed, monetizationEnabled])
+
+	// Google Play: collapse completely (no reserved dock / empty containers).
+	if (!monetizationEnabled) {
+		return null
+	}
 
 	const showAd =
 		adsAllowed &&

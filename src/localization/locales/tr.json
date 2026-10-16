@@ -34,6 +34,7 @@
 		"hint": "Bir hücre seçin, sonra boş bir hedefe serbest yoldan gidin",
 		"pathBlocked": "Yol kapalı",
 		"undo": "↶ Geri al 🎬",
+		"undoFree": "↶ Geri al",
 		"restart": "Yeniden"
 	},
 	"scoreHeader": {
@@ -56,13 +57,16 @@
 		"bestLevel": "En iyi seviye: {{bestLevel}}",
 		"newGame": "Yeni oyun",
 		"undoRescue": "↶ Son hamleyi geri al 🎬",
+		"undoRescueFree": "↶ Son hamleyi geri al",
 		"undoLoading": "Reklam yükleniyor…",
 		"home": "Ana sayfa"
 	},
 	"undo": {
 		"title": "Hamle geri alınsın mı?",
 		"body": "Son hamleyi geri almak için kısa bir reklam izleyin.",
+		"freeBody": "Son hamle geri alınsın mı?",
 		"confirm": "İzle",
+		"freeConfirm": "Geri al",
 		"adsAlertTitle": "Reklam"
 	},
 	"restart": {

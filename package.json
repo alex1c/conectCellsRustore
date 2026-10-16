@@ -20,6 +20,7 @@
     "prebuild:android": "expo prebuild --platform android --no-install",
     "verify:android-locales": "node scripts/verify-android-launcher-locales.mjs",
     "verify:android-yandex-ads-init": "node scripts/verify-android-yandex-ads-manual-init.mjs",
+    "verify:android-googleplay-sdks": "node scripts/verify-googleplay-no-monetization-sdks.mjs",
     "verify:android": "npm run verify:android-locales && npm run verify:android-yandex-ads-init",
     "postinstall": "node scripts/ensure-yandex-ads-app-ad-analytics-bridge.mjs"
   },

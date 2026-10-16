@@ -34,6 +34,7 @@
 		"hint": "Select a cell, then an empty target along a free path",
 		"pathBlocked": "Path blocked",
 		"undo": "↶ Undo 🎬",
+		"undoFree": "↶ Undo",
 		"restart": "Restart"
 	},
 	"scoreHeader": {
@@ -56,13 +57,16 @@
 		"bestLevel": "Best level: {{bestLevel}}",
 		"newGame": "New Game",
 		"undoRescue": "↶ Undo last move 🎬",
+		"undoRescueFree": "↶ Undo last move",
 		"undoLoading": "Loading ad…",
 		"home": "Home"
 	},
 	"undo": {
 		"title": "Undo move?",
 		"body": "Watch a short ad to undo your last move.",
+		"freeBody": "Undo your last move?",
 		"confirm": "Watch",
+		"freeConfirm": "Undo",
 		"adsAlertTitle": "Ads"
 	},
 	"restart": {

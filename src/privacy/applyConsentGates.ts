@@ -40,8 +40,15 @@ export function applyConsentGatesSync (input: ApplyConsentGatesInput): void {
 		storeId: getAppStore(),
 	})
 
-	// RuStore: no gate — keep optional SDKs allowed.
+	// No explicit gate: either RuStore (SDKs on) or Play without optional SDKs.
 	if (!requirement.requiresExplicitConsent) {
+		if (!requirement.optionalSdksAvailable) {
+			setRuntimeAnalyticsAllowed(false)
+			applyAnalyticsSendingEnabled(false)
+			setRuntimeAdsAllowed(false)
+			syncAdsConsent(false)
+			return
+		}
 		setRuntimeAnalyticsAllowed(true)
 		applyAnalyticsSendingEnabled(true)
 		applyYandexAppAdAnalyticsReporting(true)

@@ -29,6 +29,7 @@ import {
 	trackEvent,
 } from '../../analytics/appMetrica'
 import { __setAppStoreForTests } from '../../store/appStore'
+import { __setStoreMonetizationForTests } from '../../store/monetization'
 import { applyConsentGatesSync } from '../applyConsentGates'
 import {
 	__resetOptionalSdkBootstrapForTests,
@@ -80,6 +81,8 @@ function resetAll (): void {
 	__resetAdsServiceForTests()
 	resetSdkConsentBridgeForTests()
 	__setAppStoreForTests('googleplay')
+	// Historical Ads-only gate regressions (Play closed testing ships without SDKs).
+	__setStoreMonetizationForTests(true)
 	__resetRuntimeConsentGateForTests({
 		ads: false,
 		analytics: false,
@@ -93,6 +96,7 @@ describe('Ads-only AppMetrica privacy gates', () => {
 
 	afterEach(() => {
 		__setAppStoreForTests(null)
+		__setStoreMonetizationForTests(null)
 		__resetRuntimeConsentGateForTests()
 	})
 

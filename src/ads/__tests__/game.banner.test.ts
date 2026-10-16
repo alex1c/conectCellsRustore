@@ -31,11 +31,13 @@ function readSrc (relativeFromSrc: string): string {
 }
 
 describe('gameplay banner contracts', () => {
-	it('production GameScreen mounts gameBanner with fixed reserved dock', () => {
+	it('production GameScreen mounts gameBanner dock only when monetization is on', () => {
 		const src = readSrc('ui/GameScreen.tsx')
 		expect(src).toContain('placement="gameBanner"')
 		expect(src).toContain('reservedHeight={GAME_BANNER_RESERVED_HEIGHT}')
 		expect(src).toContain('BannerSlot')
+		expect(src).toContain('monetizationEnabled')
+		expect(src).toContain('isStoreMonetizationEnabled')
 		// Vertical order: actions then banner dock (not above board).
 		const actionsIdx = src.indexOf('styles.actions')
 		const bannerIdx = src.indexOf('placement="gameBanner"')
@@ -43,10 +45,12 @@ describe('gameplay banner contracts', () => {
 		expect(bannerIdx).toBeGreaterThan(actionsIdx)
 		// Undo / Restart structure preserved (copy via i18n keys).
 		expect(src).toContain("t('game.undo')")
+		expect(src).toContain("t('game.undoFree')")
 		expect(src).toContain("t('game.restart')")
 		expect(src).toContain('handleUndoPress')
+		expect(src).toContain('runFreeUndo')
 		expect(src).toContain('requestRestart')
-		// Consent revoke mid-show must not apply Undo.
+		// Consent revoke mid-show must not apply Undo (RuStore rewarded path).
 		expect(src).toContain('mayApplyRewardedUndo')
 		expect(src).toContain('captureAdsConsentGeneration')
 	})
